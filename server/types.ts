@@ -210,3 +210,44 @@ export interface ServerToClientEvents {
   voteUpdate: (vote: VoteUpdatePayload) => void;
   commentUpdate: (comment: CommentUpdatePayload) => void;
 }
+
+/**
+ * Interface representing a user of the platform, which contains:
+ * - username - The unique identifier for teh user.
+ * - bio - A short description of the user.
+ * - profilePictureURL - The URL of the user's profile picture (if they have one)
+ */
+export interface User {
+  username: string;
+  bio: string;
+  profilePictureURL: string;
+}
+
+export interface AddUserRequest extends Request {
+  body: User;
+}
+
+/**
+ * Interface representing the request to add a biography to a user, which contains:
+ * - username - The unique identifier for the user.
+ * - bio - The biography to add to the user.
+ */
+export interface AddUserBioRequest extends Request {
+  body: {
+    username: string;
+    bio: string;
+  };
+}
+
+export interface AddUserProfilePicRequest extends Request {
+  body: {
+    username: string;
+    profilePictureFile: Express.Multer.File;
+  };
+}
+
+/**
+ * Interface representing the response for a user-related operation, which contains:
+ * - user - The user document.
+ */
+export type UserResponse = User | { error: string };
