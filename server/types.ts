@@ -213,14 +213,15 @@ export interface ServerToClientEvents {
 
 /**
  * Interface representing a user of the platform, which contains:
- * - username - The unique identifier for teh user.
- * - bio - A short description of the user.
- * - profilePictureURL - The URL of the user's profile picture (if they have one)
+ * - username - The unique identifier for the user.
+ * - bio - A short description of the user. Optional field.
+ * - profilePictureURL - The URL of the user's profile picture (if they have one). Optional field.
  */
 export interface User {
   username: string;
   bio: string;
   profilePictureURL: string;
+  // add bookmark fields here, most likely need to create a bookmark collection type
 }
 
 export interface AddUserRequest extends Request {
@@ -251,3 +252,17 @@ export interface AddUserProfilePicRequest extends Request {
  * - user - The user document.
  */
 export type UserResponse = User | { error: string };
+
+/**
+ * Interface representing the request to find a user by their username
+ * - username - The unique identifier for the user to be found.
+ * - requesterUsername - The username of the user making the request.
+ */
+export interface FindUserByUsernameRequest extends Request {
+  params: {
+    username: string;
+  };
+  query: {
+    requesterUsername: string;
+  };
+}

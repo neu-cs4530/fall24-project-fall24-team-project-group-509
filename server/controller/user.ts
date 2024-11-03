@@ -7,8 +7,14 @@ import {
   FakeSOSocket,
   AddUserBioRequest,
   AddUserProfilePicRequest,
+  FindUserByUsernameRequest,
 } from '../types';
-import { saveUser, addUserBio, addUserProfilePicture } from '../models/application';
+import {
+  saveUser,
+  addUserBio,
+  addUserProfilePicture,
+  getUserByUsername,
+} from '../models/application';
 
 const userController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -27,7 +33,7 @@ const userController = (socket: FakeSOSocket) => {
    * @returns 'true' if the request is valid, otherwise 'false'.
    */
   const isAddUserBioRequestValid = (req: AddUserBioRequest): boolean =>
-    !!req.body.username && !!req.body.bio && req.body.bio !== '';
+    !!req.body.username && req.body.bio !== undefined && req.body.bio !== null;
 
   /**
    * Adds a new user to the database. The user is first validated and then saved.
@@ -67,7 +73,7 @@ const userController = (socket: FakeSOSocket) => {
    * @param res The HTTP response object used to send back the result of the operation.
    */
   const addUserBioRoute = async (req: AddUserBioRequest, res: Response): Promise<void> => {
-    if (isAddUserBioRequestValid(req)) {
+    if (!isAddUserBioRequestValid(req)) {
       res.status(400).send('Invalid request');
       return;
     }
@@ -129,9 +135,52 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
+  // INCOMPLETE
+  // need to account for the requester's username
+  /**
+   * Retrieves a user by their username. The user is first validated and then retrieved.
+   * @param req The HTTP request object used to send back the user profile details.
+   * @param res
+   * @returns A Promise that resolves to void.
+   */
+  const getUserByUsernameRoute = async (
+    req: FindUserByUsernameRequest,
+    res: Response,
+  ): Promise<void> => {
+    const { username } = req.params;
+    const { requesterUsername } = req.query;
+
+    if (!username || username.trim() === '' || username === undefined) {
+      res.status(400).send('Invalid username');
+      return;
+    }
+    if (requesterUsername === undefined) {
+      res.status(400).send('Invalid username requesting user');
+      return;
+    }
+    try {
+      const u = await getUserByUsername(username, requesterUsername);
+
+      if (u && !('error' in u)) {
+        // need to deal with socket emit updates here
+        // TODO
+        res.json(u);
+        return;
+      }
+      throw new Error('Error while fetching user by username');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        res.status(500).send(`Error when fetching user by username: ${err.message}`);
+      } else {
+        res.status(500).send(`Error when fetching user by username`);
+      }
+    }
+  };
+
   router.post('/addUser', addUser);
   router.post('/addUserBio', addUserBioRoute);
   router.post('/addUserProfilePic', addUserProfilePicRoute);
+  router.get('/getUser/:username', getUserByUsernameRoute);
 
   return router;
 };

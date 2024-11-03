@@ -15,10 +15,14 @@ import {
   saveComment,
   addComment,
   addVoteToQuestion,
+  saveUser,
+  getUserByUsername,
+  addUserBio,
 } from '../models/application';
-import { Answer, Question, Tag, Comment } from '../types';
+import { Answer, Question, Tag, Comment, User } from '../types';
 import { T1_DESC, T2_DESC, T3_DESC } from '../data/posts_strings';
 import AnswerModel from '../models/answers';
+import UserModel from '../models/user';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mockingoose = require('mockingoose');
@@ -134,6 +138,27 @@ const QUESTIONS: Question[] = [
     comments: [],
   },
 ];
+
+const user1: User = {
+  username: 'marcus',
+  bio: 'I am a software developer',
+  profilePictureURL: 'cats',
+};
+const user2: User = {
+  username: 'petersmith',
+  bio: '',
+  profilePictureURL: '',
+};
+const user3: User = {
+  username: 'john_doe',
+  bio: 'I like turtles',
+  profilePictureURL: '',
+};
+const user4: User = {
+  username: 'jane_doe',
+  bio: '',
+  profilePictureURL: '',
+};
 
 describe('application module', () => {
   beforeEach(() => {
@@ -883,5 +908,91 @@ describe('application module', () => {
         }
       });
     });
+  });
+
+  describe('User model', () => {
+    describe('saveUser', () => {
+      test('saveUser should return the saved user', async () => {
+        const result = (await saveUser(user1)) as User;
+        const result2 = (await saveUser(user2)) as User;
+
+        expect(result.username).toEqual(user1.username);
+        expect(result.bio).toEqual(user1.bio);
+        expect(result.profilePictureURL).toEqual(user1.profilePictureURL);
+
+        expect(result2.username).toEqual(user2.username);
+        expect(result2.bio).toEqual(user2.bio);
+        expect(result2.profilePictureURL).toEqual(user2.profilePictureURL);
+      });
+    });
+
+    describe('getUserByUsername', () => {
+      test('getUserByUsername should return the user with the given username', async () => {
+        mockingoose(UserModel).toReturn(user1, 'findOne');
+
+        const result = (await getUserByUsername('marcus', 'requesterUsername')) as User;
+
+        expect(result.username).toEqual('marcus');
+        expect(result.bio).toEqual('I am a software developer');
+        expect(result.profilePictureURL).toEqual('cats');
+      });
+
+      test('getUserByUsername should return null if the username does not exist', async () => {
+        mockingoose(UserModel).toReturn(null, 'findOne');
+
+        const result = await getUserByUsername('nonExistentUsername', 'requesterUsername');
+
+        expect(result).toBeNull();
+      });
+
+      test('getUserByUsername should return an object with error if findOne throws an error', async () => {
+        mockingoose(UserModel).toReturn(new Error('error'), 'findOne');
+
+        const result = (await getUserByUsername('marcus', 'requesterUsername')) as {
+          error: string;
+        };
+
+        expect(result.error).toEqual('Error when fetching user by username');
+      });
+
+      // TODO
+      // most likely need to add more tests when bookmarking is implemented
+      // if a requesterUsername is different from username, both public and private bookmark collections should still be returned
+    });
+
+    describe('addUserBio', () => {
+      test('addUserBio should return the updated user', async () => {
+        const user = { ...user2, bio: 'I like dogs' };
+        mockingoose(UserModel).toReturn(user, 'findOneAndUpdate');
+
+        const result = (await addUserBio('petersmith', 'I like dogs')) as User;
+        expect(result.bio).toEqual('I like dogs');
+      });
+
+      test('addUserBio should return the updated user if a biography is removed', async () => {
+        const user = { ...user1, bio: '' };
+        mockingoose(UserModel).toReturn(user, 'findOneAndUpdate');
+
+        const result = (await addUserBio('marcus', '')) as User;
+        expect(result.bio).toEqual('');
+      });
+
+      test('addUserBio should return an object with error if findOneAndUpdate throws an error', async () => {
+        mockingoose(UserModel).toReturn(new Error('error'), 'findOneAndUpdate');
+
+        const result = await addUserBio('marcus', 'I like dogs');
+
+        expect(result).toEqual({ error: 'Error when adding bio to user' });
+      });
+      test('addUserBio should return an object with error if username does not exist', async () => {
+        mockingoose(UserModel).toReturn(null, 'findOneAndUpdate');
+
+        const result = await addUserBio('nonExistentUsername', 'I like dogs');
+
+        expect(result).toEqual({ error: 'Error when adding bio to user' });
+      });
+    });
+    // TODO:
+    // need some kind of testing for profile picture uploading
   });
 });
