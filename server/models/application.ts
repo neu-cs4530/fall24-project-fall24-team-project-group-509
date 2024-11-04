@@ -1,5 +1,8 @@
 import { ObjectId } from 'mongodb';
 import { QueryOptions } from 'mongoose';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { Storage } from '@google-cloud/storage';
+import path from 'path';
 import {
   Answer,
   AnswerResponse,
@@ -9,11 +12,14 @@ import {
   Question,
   QuestionResponse,
   Tag,
+  User,
+  UserResponse,
 } from '../types';
 import AnswerModel from './answers';
 import QuestionModel from './questions';
 import TagModel from './tags';
 import CommentModel from './comments';
+import UserModel from './user';
 
 /**
  * Parses tags from a search string.
@@ -640,5 +646,105 @@ export const getTagCountMap = async (): Promise<Map<string, number> | null | { e
     return tmap;
   } catch (error) {
     return { error: 'Error when construction tag map' };
+  }
+};
+
+/**
+ * Saves a new user to the database.
+ * @param user - the user to save
+ * @returns user - the user saved to the database
+ */
+export const saveUser = async (user: User): Promise<UserResponse> => {
+  try {
+    const result = await UserModel.create(user);
+    return result;
+  } catch (error) {
+    return { error: 'Error when saving a user' };
+  }
+};
+
+/**
+ * adds a biography to a user
+ * @param username - the username of the user to add a bio to
+ * @param bio - the biograpyh to add to the user
+ * @returns the updated user
+ */
+export const addUserBio = async (username: string, bio: string): Promise<UserResponse> => {
+  try {
+    const result = await UserModel.findOneAndUpdate({ username }, { bio }, { new: true });
+    if (result === null) {
+      throw new Error('Error when adding bio to user');
+    }
+    return result;
+  } catch (error) {
+    return { error: 'Error when adding bio to user' };
+  }
+};
+
+const CREDENTIALS_PATH = path.join(__dirname, '../googleCloudCredentials.json');
+const storage = new Storage({ keyFilename: CREDENTIALS_PATH }); // google Cloud Storage client
+const bucket = storage.bucket('cs4530-509-userprofile-pictures'); // google Cloud Storage bucket
+/**
+ * adds a profile picture to a user given a file
+ * uploads the file to the Google Cloud Storage bucket and receives the URL of the uploaded file
+ * updates the user's profilePictureURL to the Google Cloud Storage URL of the uploaded file
+ * @param username - the username of the user to add a profile picture to
+ * @param file - the file containing the profile picture
+ */
+export const addUserProfilePicture = async (
+  username: string,
+  file: Express.Multer.File,
+): Promise<UserResponse> => {
+  try {
+    // define the destination of the file in the bucket
+    const destination = `${username}/${file.originalname}`;
+    const gcsFile = bucket.file(destination);
+
+    // upload the file buffer to the bucket
+    await gcsFile.save(file.buffer, { contentType: file.mimetype });
+
+    await gcsFile.makePublic(); // make the file public
+
+    // get the URL of the uploaded file
+    const publicURL = `https://storage.googleapis.com/cs4530-509-userprofile-pictures/${destination}`;
+
+    // update the user's profilePictureURL to the URL of the uploaded file
+    const result = await UserModel.findOneAndUpdate(
+      { username },
+      { profilePictureURL: publicURL },
+      { new: true },
+    );
+    if (result === null) {
+      throw new Error('Error when adding profile picture to user');
+    }
+    return result;
+  } catch (error) {
+    return { error: 'Error when adding profile picture to user' };
+  }
+};
+
+// requesterUsername needs to be used for public/private bookmarks when implemented
+// if requesterUsername is not the same as username, then only public bookmarks should be returned
+/**
+ * Fetches and populates a user document based on the provided username.
+ * @param username - the username of the user to fetch
+ * @param requesterUsername - the username of the user requesting the user document
+ *
+ * @returns the user document
+ */
+export const getUserByUsername = async (
+  username: string,
+  requesterUsername: string,
+): Promise<UserResponse | null> => {
+  try {
+    if (!username || username === '') {
+      throw new Error('Invalid username');
+    }
+
+    // most likely need to use populate() when fetching bookmarks, implement later
+    const result = await UserModel.findOne({ username });
+    return result;
+  } catch (error) {
+    return { error: 'Error when fetching user by username' };
   }
 };
