@@ -2,7 +2,7 @@ import { Schema } from 'mongoose';
 
 /**
  * Mongoose schema for the BookmarkCollection collection.
- * 
+ *
  * This schema defines the structure for storing bookmark collections in the database.
  * Each bookmark collection includes the following fields:
  * - `title`: The title of the bookmark collection.
