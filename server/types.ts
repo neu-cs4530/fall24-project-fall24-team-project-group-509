@@ -266,3 +266,17 @@ export interface FindUserByUsernameRequest extends Request {
     requesterUsername: string;
   };
 }
+
+/**
+ * Interface representing a bookmark collection, which contains:
+ * - _id - The unique identifier for the bookmark collection. Optional field.
+ * - title - The title of the bookmark collection.
+ * - isPublic - A boolean indicating whether the bookmark collection is public or private.
+ * - savedPosts - An array of questions that have been saved to the collection.
+ */
+export interface BookmarkCollection {
+  _id?: ObjectId;
+  title: string;
+  isPublic: boolean;
+  savedPosts: Question[]; 
+}

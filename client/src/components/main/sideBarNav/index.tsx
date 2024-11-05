@@ -12,13 +12,15 @@ const SideBarNav = () => (
     <NavLink
       to='/home'
       id='menu_questions'
-      className={({ isActive }) => `menu_button ${isActive ? 'menu_selected' : ''}`}>
+      className={({ isActive }) => `menu_button ${isActive ? 'menu_selected' : ''}`}
+    >
       Questions
     </NavLink>
     <NavLink
       to='/tags'
       id='menu_tag'
-      className={({ isActive }) => `menu_button ${isActive ? 'menu_selected' : ''}`}>
+      className={({ isActive }) => `menu_button ${isActive ? 'menu_selected' : ''}`}
+    >
       Tags
     </NavLink>
   </div>
