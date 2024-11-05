@@ -7,6 +7,9 @@ export type FakeSOSocket = Socket<ServerToClientEvents>;
  */
 export interface User {
   username: string;
+  bio: string;
+  profilePictureURL: string;
+  // add bookmark fields here, most likely need to create a bookmark collection type
 }
 
 /**
