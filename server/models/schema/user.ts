@@ -1,5 +1,4 @@
 import { Schema } from 'mongoose';
-
 /**
  * Mongoose schema for the User collection.
  *
@@ -9,8 +8,6 @@ import { Schema } from 'mongoose';
  * - bio: A short description of the user.
  * - profilePictureURL: The URL of the user's profile picture.
  * - activityHistory: A record of posts and answers made by the user.
- * - createdAt: The timestamp of when the user profile was created.
- * - updatedAt: The timestamp of when the user profile was last updated.
  */
 const userSchema: Schema = new Schema(
   {
