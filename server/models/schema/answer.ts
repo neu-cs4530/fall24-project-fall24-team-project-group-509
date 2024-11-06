@@ -18,8 +18,7 @@ const answerSchema: Schema = new Schema(
       trim: true,
     },
     ansBy: {
-      type: Schema.Types.ObjectId,
-      ref: 'User', // Reference to the User model for consistency
+      type: String,
       required: true,
     },
     ansDateTime: {
