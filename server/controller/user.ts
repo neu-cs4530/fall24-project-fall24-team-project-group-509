@@ -1,5 +1,4 @@
 import express, { Response } from 'express';
-import { ObjectId } from 'mongodb';
 import path from 'path';
 import {
   User,
