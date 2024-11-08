@@ -1,4 +1,4 @@
-import express, { Response, Request } from 'express';
+import express, { Response } from 'express';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 import {
@@ -15,7 +15,6 @@ import {
   addUserProfilePicture,
   getUserByUsername,
 } from '../models/application';
-import UserModel from '../models/user';
 
 const userController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -58,7 +57,7 @@ const userController = (socket: FakeSOSocket) => {
       }
 
       // do I need to deal with populateDocument here?
-      // YUVRAJ: I guess no for both
+
       // do I need to deal with socket emit updates here?
 
       res.json(result);
@@ -93,7 +92,7 @@ const userController = (socket: FakeSOSocket) => {
       // do I need to deal with socket emit updates here?
       // most likely since it should add a biography in real time
       // INCOMPLETE
-      socket.emit('profileUpdate', { username, bio });
+
       res.json(result);
     } catch (err: unknown) {
       res.status(500).send(`Error when adding user bio: ${(err as Error).message}`);
@@ -129,11 +128,7 @@ const userController = (socket: FakeSOSocket) => {
       // do I need to deal with socket emit updates here?
       // most likely since it should update the profile picture in real time
       // INCOMPLETE
-      if (result.profilePictureURL) {
-        socket.emit('profileUpdate', { username, profilePictureURL: result.profilePictureURL });
-      } else {
-        console.error('Error: profilePictureURL is undefined');
-      }
+
       res.json(result);
     } catch (err: unknown) {
       res.status(500).send(`Error when adding user profile picture: ${(err as Error).message}`);
@@ -182,29 +177,10 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
-  /**
-   * Searches for users based on a keyword in their bio or username.
-   * @param req The HTTP request object containing the keyword in params.
-   * @param res The HTTP response object used to send back the list of users.
-   */
-  const searchUsers = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { keyword } = req.params;
-      const users = await UserModel.find(
-        { $text: { $search: keyword } },
-        { score: { $meta: 'textScore' } },
-      ).sort({ score: { $meta: 'textScore' } });
-      res.json(users);
-    } catch (err: unknown) {
-      res.status(500).send(`Error when searching for users: ${(err as Error).message}`);
-    }
-  };
-
   router.post('/addUser', addUser);
   router.post('/addUserBio', addUserBioRoute);
   router.post('/addUserProfilePic', addUserProfilePicRoute);
   router.get('/getUser/:username', getUserByUsernameRoute);
-  router.get('/search/:keyword', searchUsers);
 
   return router;
 };
