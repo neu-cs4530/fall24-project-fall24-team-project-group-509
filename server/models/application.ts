@@ -726,10 +726,11 @@ export const addUserProfilePicture = async (
 // requesterUsername needs to be used for public/private bookmarks when implemented
 // if requesterUsername is not the same as username, then only public bookmarks should be returned
 /**
- * Retrieves a user by their username.
- * @param username - the username of the user
- * @param requesterUsername - the username of the user making the request
- * @returns the user profile document
+ * Fetches and populates a user document based on the provided username.
+ * @param username - the username of the user to fetch
+ * @param requesterUsername - the username of the user requesting the user document
+ *
+ * @returns the user document
  */
 export const getUserByUsername = async (
   username: string,
@@ -739,7 +740,6 @@ export const getUserByUsername = async (
     if (!username || username === '') {
       throw new Error('Invalid username');
     }
-    const result = await UserModel.findOne({ username }).populate('activityHistory.postId');
 
     // most likely need to use populate() when fetching bookmarks, implement later
     const result = await UserModel.findOne({ username });

@@ -1,38 +1,28 @@
 import { Schema } from 'mongoose';
-
 /**
  * Mongoose schema for the Answer collection.
  *
  * This schema defines the structure for storing answers in the database.
  * Each answer includes the following fields:
- * - text: The content of the answer.
- * - ansBy: A reference to the user who provided the answer.
- * - ansDateTime: The date and time when the answer was given.
- * - comments: An array of references to Comment documents associated with the answer.
+ * - `text`: The content of the answer.
+ * - `ansBy`: The username of the user who provided the answer.
+ * - `ansDateTime`: The date and time when the answer was given.
+ * - `comments`: Comments that have been added to the answer by users.
  */
 const answerSchema: Schema = new Schema(
   {
     text: {
       type: String,
-      required: true,
-      trim: true,
     },
     ansBy: {
       type: String,
-      required: true,
     },
     ansDateTime: {
       type: Date,
-      default: Date.now,
     },
-    comments: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Comment',
-      },
-    ],
+    comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
   },
-  { collection: 'Answer', timestamps: true },
+  { collection: 'Answer' },
 );
 
 export default answerSchema;
