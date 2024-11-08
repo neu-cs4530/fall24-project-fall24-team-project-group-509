@@ -57,10 +57,6 @@ const userController = (socket: FakeSOSocket) => {
         throw new Error(result.error as string);
       }
 
-      // do I need to deal with populateDocument here?
-      // YUVRAJ: I guess no for both
-      // do I need to deal with socket emit updates here?
-
       res.json(result);
     } catch (err: unknown) {
       res.status(500).send(`Error when adding user: ${(err as Error).message}`);
@@ -90,9 +86,6 @@ const userController = (socket: FakeSOSocket) => {
 
       // do I need to deal with populateDocument here?
 
-      // do I need to deal with socket emit updates here?
-      // most likely since it should add a biography in real time
-      // INCOMPLETE
       socket.emit('profileUpdate', { username, bio });
       res.json(result);
     } catch (err: unknown) {
@@ -126,12 +119,10 @@ const userController = (socket: FakeSOSocket) => {
 
       // do I need to deal with populateDocument here?
 
-      // do I need to deal with socket emit updates here?
-      // most likely since it should update the profile picture in real time
-      // INCOMPLETE
       if (result.profilePictureURL) {
         socket.emit('profileUpdate', { username, profilePictureURL: result.profilePictureURL });
       } else {
+        // eslint-disable-next-line no-console
         console.error('Error: profilePictureURL is undefined');
       }
       res.json(result);
