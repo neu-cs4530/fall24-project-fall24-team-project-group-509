@@ -159,7 +159,6 @@ const userController = (socket: FakeSOSocket) => {
 
       if (u && !('error' in u)) {
         // need to deal with socket emit updates here
-        // TODO
         res.json(u);
         return;
       }
