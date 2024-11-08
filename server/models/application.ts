@@ -740,9 +740,6 @@ export const getUserByUsername = async (
       throw new Error('Invalid username');
     }
     const result = await UserModel.findOne({ username }).populate('activityHistory.postId');
-
-    // most likely need to use populate() when fetching bookmarks, implement later
-    const result = await UserModel.findOne({ username });
     return result;
   } catch (error) {
     return { error: 'Error when fetching user by username' };
