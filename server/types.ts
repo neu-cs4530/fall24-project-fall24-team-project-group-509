@@ -201,32 +201,6 @@ export interface AnswerUpdatePayload {
 }
 
 /**
- * Interface representing the payload for an user bio update event, which contains:
- * - username - The unique username of the person.
- * - bio - The bio of the user.
- */
-export interface BioUpdatePayload {
-  username: string;
-  bio: string;
-}
-
-/**
- * Interface representing the payload for an user profile picture update event, which contains:
- * - username - The unique username of the person.
- * - profilePictureURL - The  URL of the user's profile picture.
- */
-export interface ProfilePictureUpdatePayload {
-  username: string;
-  profilePictureURL: string;
-}
-
-/**
- * Interface representing the payload for an user profile event, which contains:
- * Either ProfilePictureUpdatePayload or  BioUpdatePayload.
- */
-export type ProfileUpdatePayload = BioUpdatePayload | ProfilePictureUpdatePayload;
-
-/**
  * Interface representing the possible events that the server can emit to the client.
  */
 export interface ServerToClientEvents {
@@ -235,7 +209,6 @@ export interface ServerToClientEvents {
   viewsUpdate: (question: QuestionResponse) => void;
   voteUpdate: (vote: VoteUpdatePayload) => void;
   commentUpdate: (comment: CommentUpdatePayload) => void;
-  profileUpdate: (update: ProfileUpdatePayload) => void;
 }
 
 /**
@@ -297,4 +270,18 @@ export interface FindUserByUsernameRequest extends Request {
   query: {
     requesterUsername: string;
   };
+}
+
+/**
+ * Interface representing a bookmark collection, which contains:
+ * - _id - The unique identifier for the bookmark collection. Optional field.
+ * - title - The title of the bookmark collection.
+ * - isPublic - A boolean indicating whether the bookmark collection is public or private.
+ * - savedPosts - An array of questions that have been saved to the collection.
+ */
+export interface BookmarkCollection {
+  _id?: ObjectId;
+  title: string;
+  isPublic: boolean;
+  savedPosts: Question[]; 
 }
