@@ -18,10 +18,12 @@ const userSchema: Schema = new Schema(
     bio: {
       type: String,
       required: false,
+      default: '',
     },
     profilePictureURL: {
       type: String,
       required: false,
+      default: '',
     },
   },
   { collection: 'User' },

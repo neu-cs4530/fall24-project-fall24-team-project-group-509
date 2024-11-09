@@ -219,11 +219,15 @@ export interface ServerToClientEvents {
  */
 export interface User {
   username: string;
-  bio: string;
-  profilePictureURL: string;
+  bio?: string;
+  profilePictureURL?: string;
   // add bookmark fields here, most likely need to create a bookmark collection type
 }
 
+/**
+ * Interface representing the request body when adding a new user, which contains:
+ * - body - The user being added.
+ */
 export interface AddUserRequest extends Request {
   body: User;
 }
@@ -278,5 +282,5 @@ export interface BookmarkCollection {
   _id?: ObjectId;
   title: string;
   isPublic: boolean;
-  savedPosts: Question[]; 
+  savedPosts: Question[];
 }
