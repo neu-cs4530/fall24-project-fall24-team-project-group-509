@@ -17,15 +17,28 @@ const userSchema: Schema = new Schema(
     },
     bio: {
       type: String,
-      required: false,
     },
     profilePictureURL: {
       type: String,
-      required: false,
     },
+    activityHistory: [
+      {
+        postId: {
+          type: Schema.Types.ObjectId,
+          required: true,
+          refPath: 'activityHistory.postType',
+        },
+        postType: { type: String, required: true, enum: ['Question', 'Answer', 'Comment'] },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    bookmarkCollections: [{ type: Schema.Types.ObjectId, ref: 'BookmarkCollection' }],
+    followedBookmarkCollections: [{ type: Schema.Types.ObjectId, ref: 'BookmarkCollection' }],
   },
   { collection: 'User' },
 );
+
 // Adding a full-text index to username and bio to support searching users.
 userSchema.index({ username: 'text', bio: 'text' });
+
 export default userSchema;
