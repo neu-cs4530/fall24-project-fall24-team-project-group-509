@@ -34,6 +34,8 @@ const useLogin = () => {
     try {
       await addUser({ username });
     } catch (error) {
+      // REMOVE THIS LATER
+      // eslint-disable-next-line no-console
       console.error('Error adding user:', error);
       // Proceed with login as usual if there is an error (e.g., user already exists)
     }
