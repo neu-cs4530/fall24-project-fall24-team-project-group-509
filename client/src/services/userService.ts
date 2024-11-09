@@ -1,5 +1,5 @@
 import api from './config';
-import { User } from '../types';
+import { User, UserProfile } from '../types';
 
 const USER_API_URL = `${process.env.REACT_APP_SERVER_URL}/user`;
 
@@ -10,7 +10,10 @@ const USER_API_URL = `${process.env.REACT_APP_SERVER_URL}/user`;
  * @param profilePictureFile - The file of the profile picture to upload.
  * @throws Error if there is an issue adding the profile picture.
  */
-const addUserProfilePicture = async (username: string, profilePictureFile: File): Promise<User> => {
+const addUserProfilePicture = async (
+  username: string,
+  profilePictureFile: File,
+): Promise<UserProfile> => {
   const formData = new FormData();
   formData.append('username', username);
   formData.append('profilePictureFile', profilePictureFile);
@@ -34,7 +37,7 @@ const addUserProfilePicture = async (username: string, profilePictureFile: File)
  *
  * @returns A Promise that resolves to void.
  */
-const addUser = async (user: User): Promise<User> => {
+const addUser = async (user: User): Promise<UserProfile> => {
   // need to convert user to AddUserRequest, which it should be satisfied
   const res = await api.post(`${USER_API_URL}/addUser`, user);
   if (res.status !== 200) {
@@ -50,7 +53,7 @@ const addUser = async (user: User): Promise<User> => {
  * @param bio - The biography content to add to the user profile.
  * @throws Error if there is an issue adding the bio.
  */
-const addUserBio = async (username: string, bio: string): Promise<User> => {
+const addUserBio = async (username: string, bio: string): Promise<UserProfile> => {
   const data = { username, bio };
   const res = await api.post(`${USER_API_URL}/addUserBio`, data);
   if (res.status !== 200) {
@@ -66,7 +69,10 @@ const addUserBio = async (username: string, bio: string): Promise<User> => {
  * @param requesterUsername - The username of the requester.
  * @throws Error if there is an issue fetching the user by username.
  */
-const getUserByUsername = async (username: string, requesterUsername: string): Promise<User> => {
+const getUserByUsername = async (
+  username: string,
+  requesterUsername: string,
+): Promise<UserProfile> => {
   const res = await api.get(`${USER_API_URL}/getUser/${username}`, {
     params: { requesterUsername },
   });
