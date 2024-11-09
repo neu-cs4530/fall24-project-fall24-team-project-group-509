@@ -201,6 +201,34 @@ export interface AnswerUpdatePayload {
 }
 
 /**
+ * Interface representing the payload for an user update event, which contains:
+ * - username - The unique identifier of the user.
+ * - bio - The bio of the user.
+ */
+export interface BioUpdatePayload {
+  username: string; 
+  bio: string;      
+}
+
+
+/**
+ * Interface representing the payload for an user update event, which contains:
+ * - username - The unique identifier of the user.
+ * - profilePictureURL - The url of the profile picture of the user.
+ */
+export interface ProfilePictureUpdatePayload {
+  username: string;           // Username of the profile being updated
+  profilePictureURL: string;  // URL of the updated profile picture
+}
+
+/**
+ * Union type representing the payload for a profile update event.
+ * 
+ * Ensures that each update contains only the relevant fields for that type of update.
+ */
+export type ProfileUpdatePayload = BioUpdatePayload | ProfilePictureUpdatePayload;
+
+/**
  * Interface representing the possible events that the server can emit to the client.
  */
 export interface ServerToClientEvents {
@@ -209,6 +237,7 @@ export interface ServerToClientEvents {
   viewsUpdate: (question: QuestionResponse) => void;
   voteUpdate: (vote: VoteUpdatePayload) => void;
   commentUpdate: (comment: CommentUpdatePayload) => void;
+  profileUpdate: (update: ProfileUpdatePayload) => void;
 }
 
 /**
@@ -216,6 +245,7 @@ export interface ServerToClientEvents {
  * - username - The unique identifier for the user.
  * - bio - A short description of the user. Optional field.
  * - profilePictureURL - The URL of the user's profile picture (if they have one). Optional field.
+ * - activityHistory - The history of  the user's activity on the platform.
  */
 export interface User {
   username: string;
