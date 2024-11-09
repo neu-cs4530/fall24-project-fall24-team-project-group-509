@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ChangeEvent, useState } from 'react';
 import useLoginContext from './useLoginContext';
+import { addUser } from '../services/userService';
 
 /**
  * Custom hook to handle login input and submission.
@@ -28,8 +29,14 @@ const useLogin = () => {
    *
    * @param event - the form event object.
    */
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    try {
+      await addUser({ username });
+    } catch (error) {
+      console.error('Error adding user:', error);
+      // Proceed with login as usual if there is an error (e.g., user already exists)
+    }
     setUser({ username });
     navigate('/home');
   };

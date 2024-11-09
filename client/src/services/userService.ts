@@ -35,6 +35,7 @@ const addUserProfilePicture = async (username: string, profilePictureFile: File)
  * @returns A Promise that resolves to void.
  */
 const addUser = async (user: User): Promise<User> => {
+  // need to convert user to AddUserRequest, which it should be satisfied
   const res = await api.post(`${USER_API_URL}/addUser`, user);
   if (res.status !== 200) {
     throw new Error('Error while adding a new user');
