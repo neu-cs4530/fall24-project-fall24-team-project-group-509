@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './index.css';
-import { io, Socket } from 'socket.io-client';
+import { useParams } from 'react-router-dom';
 import TextArea from '../../baseComponents/textarea';
 import { BookmarkCollection, Question } from '../../../../types';
 import useUserContext from '../../../../hooks/useUserContext';

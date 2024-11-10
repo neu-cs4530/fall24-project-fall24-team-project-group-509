@@ -73,9 +73,9 @@ const getUserByUsername = async (
   username: string,
   requesterUsername: string,
 ): Promise<UserProfile> => {
-  const res = await api.get(`${USER_API_URL}/getUser/${username}`, {
-    params: { requesterUsername },
-  });
+  const res = await api.get(
+    `${USER_API_URL}/getUser/${username}?requesterUsername=${requesterUsername}`,
+  );
   if (res.status !== 200) {
     throw new Error('Error while fetching user by username');
   }
@@ -89,7 +89,7 @@ const getUserByUsername = async (
  * @returns A list of users matching the search criteria.
  */
 const searchUsersByUsername = async (username: string): Promise<User[]> => {
-  const res = await api.get(`${USER_API_URL}/search`, { params: { username } });
+  const res = await api.get(`${USER_API_URL}/search/${username}?username=${username}`);
   if (res.status !== 200) {
     throw new Error('Error while searching for users by username');
   }
