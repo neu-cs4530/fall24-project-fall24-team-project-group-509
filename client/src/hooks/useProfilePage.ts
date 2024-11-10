@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { BookmarkCollection, Question, UserProfile } from '../types';
 import useUserContext from './useUserContext';
 import { addUserBio, addUserProfilePicture, getUserByUsername } from '../services/userService';
 
-const useProfilePage = (username: string) => {
+const useProfilePage = () => {
   const { user, socket } = useUserContext();
+  const { username } = useParams();
   const requesterUsername = user.username;
   const [bio, setBio] = useState('');
   // list of questions for history and saved posts in a bookmark collection  --> Important
@@ -16,7 +18,10 @@ const useProfilePage = (username: string) => {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const userProfile: UserProfile = await getUserByUsername(username, requesterUsername);
+        const userProfile: UserProfile = await getUserByUsername(
+          username as string,
+          requesterUsername,
+        );
         setBio(userProfile.bio);
         setPfp(userProfile.profilePictureURL);
         setActivityHistory(userProfile.activityHistory || []);
@@ -51,7 +56,7 @@ const useProfilePage = (username: string) => {
   };
 
   const handleBioUpdate = async () => {
-    await addUserBio(username, bio);
+    await addUserBio(username as string, bio);
   };
 
   return {
@@ -66,6 +71,7 @@ const useProfilePage = (username: string) => {
     setPfp,
     handleImgUpdate,
     handleBioUpdate,
+    username,
   };
 };
 

@@ -19,7 +19,7 @@ interface ProfileProps {
  *
  * @param username The user's unique username.
  */
-const ProfileView = ({ username }: ProfileProps) => {
+const ProfileView = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -31,7 +31,8 @@ const ProfileView = ({ username }: ProfileProps) => {
     pfp,
     handleImgUpdate,
     handleBioUpdate,
-  } = useProfilePage(username);
+    username,
+  } = useProfilePage();
 
   return (
     <div className='user-profile'>
@@ -52,7 +53,7 @@ const ProfileView = ({ username }: ProfileProps) => {
           title='Biography'
           err='Error with biography'
           mandatory={false}
-          id={username}
+          id={username as string}
           val={bio}
           setState={setBio}
         />
