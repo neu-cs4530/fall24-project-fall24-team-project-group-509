@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { validateHyperlink } from '../tool';
 import { addQuestion } from '../services/questionService';
 import useUserContext from './useUserContext';
-import { Question } from '../types';
+import { Question, UserProfile } from '../types';
 
 /**
  * Custom hook to handle question submission and form validation

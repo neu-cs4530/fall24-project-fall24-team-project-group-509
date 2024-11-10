@@ -17,11 +17,15 @@ export interface User {
  * - username: The username of the user. This is unique.
  * - bio: A short description of the user.
  * - profilePictureURL: The URL of the user's profile picture.
+ * - activityHistory: The list of questions the user has interacted with.
+ * - bookmarks: The collections of posts the user has saved.
  */
 export interface UserProfile {
   username: string;
   bio: string;
   profilePictureURL: string;
+  activityHistory: Question[];
+  bookmarks: BookmarkCollection[];
   // add fields for activityHistory
   // add fields for bookmarks
 }
@@ -164,6 +168,8 @@ export interface ServerToClientEvents {
   viewsUpdate: (question: Question) => void;
   voteUpdate: (vote: VoteUpdatePayload) => void;
   commentUpdate: (update: CommentUpdatePayload) => void;
+  activityHistoryUpdate: (update: Question[]) => void;
+  bookmarkUpdate: (update: BookmarkCollection[]) => void;
 }
 
 /**

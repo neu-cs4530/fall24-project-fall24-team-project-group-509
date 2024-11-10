@@ -1,9 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import './index.css';
-import { io, Socket } from 'socket.io-client';
 import TextArea from '../../baseComponents/textarea';
-import { BookmarkCollection, Question } from '../../../../types';
-import useUserContext from '../../../../hooks/useUserContext';
+import useProfilePage from '../../../../hooks/useProfilePage';
 
 /**
  * Interface representing the props for the ProfielView component.
@@ -22,51 +20,18 @@ interface ProfileProps {
  * @param username The user's unique username.
  */
 const ProfileView = ({ username }: ProfileProps) => {
-  const requesterUsername = useUserContext().user.username;
-  const { socket } = useUserContext();
-  const [bio, setBio] = useState('');
-  // list of questions for history and saved posts in a bookmark collection  --> Important
-  // need to be sorted in chronological order prior to being sent here
-  const [activityHistory, setActivityHistory] = useState<Question[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [pfp, setPfp] = useState<string>('');
-  const [bookmarks, setBookmarks] = useState<BookmarkCollection[]>([]);
 
-  /**
-   * Function to handle the submission of a new image as a profile picture.
-   */
-  const handleImgUpdate = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      setPfp(URL.createObjectURL(file));
-      // need to add controller method here
-    }
-  };
-
-  /**
-   * Function to handle when a user edits their bio.
-   */
-  const handleBioUpdate = async () => {
-    // need API call for this (controller)
-  };
-
-  useEffect(() => {
-    // need getters for activity history and bookmarks for initial data
-    // TODO: need to declare updateActivityHistory and updateBookmarks as events in controller (i think)
-    /*
-    socket.on('updateActivityHistory', (newActivityHistory: Question[]) => {
-      setActivityHistory(newActivityHistory);
-    });
-    socket.on('updateBookmarks', (newBookmarks: BookmarkCollection[]) => {
-      setBookmarks(newBookmarks);
-    })
-
-    return () => {
-      socket.off('updateActivityHistory');
-      socket.off('updateBookmarks');
-    }
-    */
-  }, [username]);
+  const {
+    requesterUsername,
+    bio,
+    setBio,
+    activityHistory,
+    bookmarks,
+    pfp,
+    handleImgUpdate,
+    handleBioUpdate,
+  } = useProfilePage(username);
 
   return (
     <div className='user-profile'>

@@ -209,6 +209,8 @@ export interface ServerToClientEvents {
   viewsUpdate: (question: QuestionResponse) => void;
   voteUpdate: (vote: VoteUpdatePayload) => void;
   commentUpdate: (comment: CommentUpdatePayload) => void;
+  activityHistoryUpdate: (update: Question[]) => void;
+  bookmarkUpdate: (update: BookmarkCollection[]) => void;
 }
 
 /**
