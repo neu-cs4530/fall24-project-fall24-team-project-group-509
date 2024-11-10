@@ -219,11 +219,15 @@ export interface ServerToClientEvents {
  */
 export interface User {
   username: string;
-  bio: string;
-  profilePictureURL: string;
+  bio?: string;
+  profilePictureURL?: string;
   // add bookmark fields here, most likely need to create a bookmark collection type
 }
 
+/**
+ * Interface representing the request body when adding a new user, which contains:
+ * - body - The user being added.
+ */
 export interface AddUserRequest extends Request {
   body: User;
 }
@@ -265,4 +269,18 @@ export interface FindUserByUsernameRequest extends Request {
   query: {
     requesterUsername: string;
   };
+}
+
+/**
+ * Interface representing a bookmark collection, which contains:
+ * - _id - The unique identifier for the bookmark collection. Optional field.
+ * - title - The title of the bookmark collection.
+ * - isPublic - A boolean indicating whether the bookmark collection is public or private.
+ * - savedPosts - An array of questions that have been saved to the collection.
+ */
+export interface BookmarkCollection {
+  _id?: ObjectId;
+  title: string;
+  isPublic: boolean;
+  savedPosts: Question[];
 }
