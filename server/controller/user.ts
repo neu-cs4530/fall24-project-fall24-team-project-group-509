@@ -1,4 +1,4 @@
-import express, { Response } from 'express';
+import express, { Response, Request } from 'express';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 import {
@@ -8,12 +8,14 @@ import {
   AddUserBioRequest,
   AddUserProfilePicRequest,
   FindUserByUsernameRequest,
+  SearchUserByUsernameRequest,
 } from '../types';
 import {
   saveUser,
   addUserBio,
   addUserProfilePicture,
   getUserByUsername,
+  searchUsersByUsername,
 } from '../models/application';
 
 const userController = (socket: FakeSOSocket) => {
@@ -177,10 +179,38 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Searches for users by a partial or full username.
+   *
+   * @param req The HTTP request object containing the `username` query parameter.
+   * @param res The HTTP response object used to send back the list of matching users.
+   */
+  const searchUserByUsernameRoute = async (
+    req: SearchUserByUsernameRequest,
+    res: Response,
+  ): Promise<void> => {
+    const { username } = req.query;
+
+    // Check if the username query parameter is provided
+    if (!username || typeof username !== 'string' || username.trim() === '') {
+      res.status(400).send('Username query parameter is required');
+      return;
+    }
+
+    try {
+      // Call the search function from the model to get matching users
+      const users = await searchUsersByUsername(username);
+      res.json(users); // Send the list of matching users as JSON
+    } catch (error) {
+      res.status(500).send('Error searching for users');
+    }
+  };
+
   router.post('/addUser', addUser);
   router.post('/addUserBio', addUserBioRoute);
   router.post('/addUserProfilePic', addUserProfilePicRoute);
   router.get('/getUser/:username', getUserByUsernameRoute);
+  router.get('/search', searchUserByUsernameRoute);
 
   return router;
 };

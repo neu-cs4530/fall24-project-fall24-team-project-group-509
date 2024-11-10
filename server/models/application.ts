@@ -748,3 +748,21 @@ export const getUserByUsername = async (
     return { error: 'Error when fetching user by username' };
   }
 };
+
+/**
+ * Searches for users by a partial or full username, using a case-insensitive regular expression.
+ *
+ * @param username - The partial or full username to search for.
+ * @returns A list of users matching the search criteria or an empty array if no matches are found.
+ */
+export const searchUsersByUsername = async (username: string): Promise<UserResponse[]> => {
+  try {
+    // Perform a case-insensitive search using a regular expression
+    const users = await UserModel.find({
+      username: { $regex: username, $options: 'i' },
+    });
+    return users;
+  } catch (error) {
+    return [];
+  }
+};
