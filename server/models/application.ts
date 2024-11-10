@@ -1,6 +1,5 @@
 import { ObjectId } from 'mongodb';
 import { QueryOptions } from 'mongoose';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { Storage } from '@google-cloud/storage';
 import path from 'path';
 import {
