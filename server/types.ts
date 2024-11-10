@@ -220,7 +220,7 @@ export interface ProfilePictureUpdatePayload {
   profilePictureURL: string;  // URL of the updated profile picture
 }
 
-/**
+/**profilePictureFile: Express.Multer.File;
  * Union type representing the payload for a profile update event.
  * 
  * Ensures that each update contains only the relevant fields for that type of update.
@@ -292,15 +292,15 @@ export interface BookmarkCollection {
  */
 export interface User {
   username: string;
-  bio: string;
-  profilePictureURL: string;
-  activityHistory: Array<{
+  bio?: string;
+  profilePictureURL?: string;
+  activityHistory?: Array<{
     postId: ObjectId;
     postType: 'Question' | 'Answer' | 'Comment';
     createdAt: Date;
   }>;
-  bookmarkCollections: BookmarkCollection[];
-  followedBookmarkCollections: ObjectId[];
+  bookmarkCollections?: BookmarkCollection[];
+  followedBookmarkCollections?: ObjectId[];
 }
 
 export interface AddUserRequest extends Request {
@@ -357,6 +357,8 @@ export type BookmarkSortOption = 'date' | 'numberOfAnswers' | 'views' | 'title' 
  */
 export interface GetBookmarksRequest extends Request {
   query: {
+    username: string | undefined;
+    requesterUsername: string | undefined;
     sortOption: BookmarkSortOption;
   };
 }
