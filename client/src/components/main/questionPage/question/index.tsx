@@ -1,9 +1,8 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './index.css';
 import { getMetaData } from '../../../../tool';
 import { Question } from '../../../../types';
-import { getUserByUsername } from '../../../../services/userService';
 import useUserContext from '../../../../hooks/useUserContext';
 
 /**
@@ -24,7 +23,6 @@ interface QuestionProps {
  */
 const QuestionView = ({ q }: QuestionProps) => {
   const navigate = useNavigate();
-  const { user } = useUserContext();
 
   /**
    * Function to navigate to the home page with the specified tag as a search parameter.

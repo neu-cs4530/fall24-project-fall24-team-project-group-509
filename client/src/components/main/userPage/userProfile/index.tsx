@@ -3,14 +3,6 @@ import './index.css';
 import TextArea from '../../baseComponents/textarea';
 import useProfilePage from '../../../../hooks/useProfilePage';
 
-/**
- * Interface representing the props for the ProfielView component.
- *
- */
-interface ProfileProps {
-  username: string;
-}
-
 // TODO: add functionality abt following bookmarked collections (when implemented)
 
 /**

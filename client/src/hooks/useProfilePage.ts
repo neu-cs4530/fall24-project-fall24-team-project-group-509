@@ -27,6 +27,7 @@ const useProfilePage = () => {
         setActivityHistory(userProfile.activityHistory || []);
         setBookmarks(userProfile.bookmarks || []);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error fetching user details:', error);
       }
     };
