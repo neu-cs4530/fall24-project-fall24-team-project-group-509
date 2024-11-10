@@ -10,6 +10,23 @@ export interface User {
 }
 
 /**
+ * Represents the user profile data.
+ * This is used for displaying a user's profile information on their profile page.
+ * This should be used as the return type for all user-related operations.
+ * This contains:
+ * - username: The username of the user. This is unique.
+ * - bio: A short description of the user.
+ * - profilePictureURL: The URL of the user's profile picture.
+ */
+export interface UserProfile {
+  username: string;
+  bio: string;
+  profilePictureURL: string;
+  // add fields for activityHistory
+  // add fields for bookmarks
+}
+
+/**
  * Enum representing the possible ordering options for questions.
  * and their display names.
  */

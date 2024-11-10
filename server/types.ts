@@ -303,6 +303,10 @@ export interface User {
   followedBookmarkCollections?: ObjectId[];
 }
 
+/**
+ * Interface representing the request body when adding a new user, which contains:
+ * - body - The user being added.
+ */
 export interface AddUserRequest extends Request {
   body: User;
 }
