@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import './index.css';
 import { getMetaData } from '../../../../tool';
 import { Question } from '../../../../types';
-import useUserContext from '../../../../hooks/useUserContext';
 
 /**
  * Interface representing the props for the Question component.

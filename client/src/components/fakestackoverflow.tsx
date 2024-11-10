@@ -10,7 +10,6 @@ import TagPage from './main/tagPage';
 import NewQuestionPage from './main/newQuestion';
 import NewAnswerPage from './main/newAnswer';
 import AnswerPage from './main/answerPage';
-import UserProfile from './main/userPage';
 import ProfileView from './main/userPage/userProfile';
 
 const ProtectedRoute = ({
