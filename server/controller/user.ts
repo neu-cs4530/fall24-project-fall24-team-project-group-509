@@ -1,5 +1,6 @@
 import express, { Response } from 'express';
 import path from 'path';
+import multer from 'multer';
 import {
   User,
   AddUserRequest,
@@ -7,16 +8,22 @@ import {
   AddUserBioRequest,
   AddUserProfilePicRequest,
   FindUserByUsernameRequest,
+  SearchUserRequest,
 } from '../types';
 import {
   saveUser,
   addUserBio,
   addUserProfilePicture,
   getUserByUsername,
+  searchUsers,
 } from '../models/application';
 
 const userController = (socket: FakeSOSocket) => {
   const router = express.Router();
+
+  // Set up Multer for file uploads using memory storage
+  const storage = multer.memoryStorage();
+  const upload = multer({ storage });
 
   /**
    * Validates the user object to ensure all required fields are present.
@@ -55,10 +62,6 @@ const userController = (socket: FakeSOSocket) => {
         throw new Error(result.error as string);
       }
 
-      // do I need to deal with populateDocument here?
-
-      // do I need to deal with socket emit updates here?
-
       res.json(result);
     } catch (err: unknown) {
       res.status(500).send(`Error when adding user: ${(err as Error).message}`);
@@ -86,30 +89,31 @@ const userController = (socket: FakeSOSocket) => {
         throw new Error(result.error as string);
       }
 
-      // do I need to deal with populateDocument here?
-
-      // do I need to deal with socket emit updates here?
-      // most likely since it should add a biography in real time
-      // INCOMPLETE
-
+      socket.emit('profileUpdate', { username, bio });
       res.json(result);
     } catch (err: unknown) {
       res.status(500).send(`Error when adding user bio: ${(err as Error).message}`);
     }
   };
 
+  /**
+   * Adds a profile picture to the user profile. Validates the file type and uploads it.
+   * @param req The AddUserProfilePicRequest object containing the username and profile picture file.
+   * @param res The HTTP response object used to send back the result of the operation.
+   */
   const addUserProfilePicRoute = async (
     req: AddUserProfilePicRequest,
     res: Response,
   ): Promise<void> => {
-    const { username, profilePictureFile } = req.body;
+    const { username } = req.body;
+    const profilePictureFile = req.file;
 
     if (!username || !profilePictureFile) {
       res.status(400).send('Invalid request');
       return;
     }
 
-    const allowedExtensions = ['jpg', 'jpeg', 'png'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png'];
     const fileExtension = path.extname(profilePictureFile.originalname).toLowerCase();
     if (!allowedExtensions.includes(fileExtension)) {
       res.status(400).send('Invalid file type. File must be a jpg, jpeg, or png');
@@ -122,25 +126,20 @@ const userController = (socket: FakeSOSocket) => {
         throw new Error(result.error as string);
       }
 
-      // do I need to deal with populateDocument here?
-
-      // do I need to deal with socket emit updates here?
-      // most likely since it should update the profile picture in real time
-      // INCOMPLETE
-
+      socket.emit('profileUpdate', {
+        username,
+        profilePictureURL: result.profilePictureURL!,
+      });
       res.json(result);
     } catch (err: unknown) {
       res.status(500).send(`Error when adding user profile picture: ${(err as Error).message}`);
     }
   };
 
-  // INCOMPLETE
-  // need to account for the requester's username
   /**
-   * Retrieves a user by their username. The user is first validated and then retrieved.
-   * @param req The HTTP request object used to send back the user profile details.
-   * @param res
-   * @returns A Promise that resolves to void.
+   * Retrieves a user by their username, including activity history.
+   * @param req The HTTP request object containing the username and requesterUsername.
+   * @param res The HTTP response object used to send back the user profile details.
    */
   const getUserByUsernameRoute = async (
     req: FindUserByUsernameRequest,
@@ -149,21 +148,19 @@ const userController = (socket: FakeSOSocket) => {
     const { username } = req.params;
     const { requesterUsername } = req.query;
 
-    if (!username || username.trim() === '' || username === undefined) {
+    if (!username || username.trim() === '') {
       res.status(400).send('Invalid username');
       return;
     }
-    if (requesterUsername === undefined) {
-      res.status(400).send('Invalid username requesting user');
+    if (!requesterUsername || requesterUsername.trim() === '') {
+      res.status(400).send('Invalid requester username');
       return;
     }
     try {
-      const u = await getUserByUsername(username, requesterUsername);
+      const user = await getUserByUsername(username, requesterUsername);
 
-      if (u && !('error' in u)) {
-        // need to deal with socket emit updates here
-        // TODO
-        res.json(u);
+      if (user && !('error' in user)) {
+        res.json(user);
         return;
       }
       throw new Error('Error while fetching user by username');
@@ -176,10 +173,35 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Searches for users based on a keyword in their bio or username.
+   * @param req The HTTP request object containing the search query parameter.
+   * @param res The HTTP response object used to send back the list of users.
+   */
+  const searchUsersRoute = async (req: SearchUserRequest, res: Response): Promise<void> => {
+    try {
+      const { search } = req.query;
+      if (!search) {
+        res.status(400).send('Search query parameter is missing');
+        return;
+      }
+
+      const users = await searchUsers(search);
+      if ('error' in users) {
+        throw new Error(users.error);
+      }
+
+      res.json(users);
+    } catch (err: unknown) {
+      res.status(500).send(`Error when searching for users: ${(err as Error).message}`);
+    }
+  };
+
   router.post('/addUser', addUser);
   router.post('/addUserBio', addUserBioRoute);
-  router.post('/addUserProfilePic', addUserProfilePicRoute);
+  router.post('/addUserProfilePic', upload.single('profilePictureFile'), addUserProfilePicRoute);
   router.get('/getUser/:username', getUserByUsernameRoute);
+  router.get('/search', searchUsersRoute);
 
   return router;
 };

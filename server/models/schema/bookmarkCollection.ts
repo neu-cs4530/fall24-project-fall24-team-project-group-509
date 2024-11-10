@@ -13,12 +13,27 @@ const bookmarkCollectionSchema: Schema = new Schema(
   {
     title: {
       type: String,
+      required: true,
+    },
+    owner: {
+      type: String,
+      required: true,
+      ref: 'User',
     },
     isPublic: {
       type: Boolean,
+      required: true,
     },
-    savedPost: [{ type: Schema.Types.ObjectId, ref: 'Question' }],
+    permittedUsers: [{ type: String, ref: 'User' }],
+    followers: [{ type: String, ref: 'User' }],
+    savedPosts: [
+      {
+        postId: { type: Schema.Types.ObjectId, required: true, refPath: 'Question' },
+        savedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { collection: 'BookmarkCollection' },
 );
+
 export default bookmarkCollectionSchema;

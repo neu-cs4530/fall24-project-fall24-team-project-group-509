@@ -56,7 +56,7 @@ describe('Get /getUser/:username', () => {
 
     // Asserting the response
     expect(response.status).toBe(400);
-    expect(response.text).toBe('Invalid username requesting user');
+    expect(response.text).toBe('Invalid requester username');
   });
 
   it('should return database error if requested user does not exist', async () => {

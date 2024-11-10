@@ -1,11 +1,12 @@
 import { ObjectId } from 'mongodb';
 import { QueryOptions } from 'mongoose';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { Storage } from '@google-cloud/storage';
 import path from 'path';
 import {
   Answer,
   AnswerResponse,
+  BookmarkCollection,
+  BookmarkSortOption,
   Comment,
   CommentResponse,
   OrderType,
@@ -20,6 +21,7 @@ import QuestionModel from './questions';
 import TagModel from './tags';
 import CommentModel from './comments';
 import UserModel from './user';
+import BookmarkCollectionModel from './bookmarkCollections';
 
 /**
  * Parses tags from a search string.
@@ -87,17 +89,7 @@ const checkKeywordInQuestion = (q: Question, keywordlist: string[]): boolean => 
  * @returns {Question[]} - The sorted list of questions
  */
 const sortQuestionsByNewest = (qlist: Question[]): Question[] =>
-  qlist.sort((a, b) => {
-    if (a.askDateTime > b.askDateTime) {
-      return -1;
-    }
-
-    if (a.askDateTime < b.askDateTime) {
-      return 1;
-    }
-
-    return 0;
-  });
+  qlist.sort((a, b) => b.askDateTime.getTime() - a.askDateTime.getTime());
 
 /**
  * Gets unanswered questions from a list, sorted by the asking date in descending order.
@@ -136,34 +128,26 @@ const getMostRecentAnswerTime = (question: Question, mp: Map<string, Date>): voi
  * @returns {Question[]} - The filtered and sorted list of active questions
  */
 const sortQuestionsByActive = (qlist: Question[]): Question[] => {
-  const mp = new Map();
+  const mp = new Map<string, Date>();
   qlist.forEach(q => {
     getMostRecentAnswerTime(q, mp);
   });
 
   return sortQuestionsByNewest(qlist).sort((a, b) => {
-    const adate = mp.get(a._id?.toString());
-    const bdate = mp.get(b._id?.toString());
+    const adate = mp.get(a._id?.toString() || '');
+    const bdate = mp.get(b._id?.toString() || '');
     if (!adate) {
       return 1;
     }
     if (!bdate) {
       return -1;
     }
-    if (adate > bdate) {
-      return -1;
-    }
-    if (adate < bdate) {
-      return 1;
-    }
-    return 0;
+    return bdate.getTime() - adate.getTime();
   });
 };
 
 /**
- * Sorts a list of questions by the number of views in descending order. First, the questions are
- * sorted by creation date (newest first), then by number of views, from highest to lowest.
- * If questions have the same number of views, the newer question will be before the older question.
+ * Sorts a list of questions by the number of views in descending order.
  *
  * @param qlist The array of Question objects to be sorted.
  *
@@ -364,6 +348,21 @@ export const fetchAndIncrementQuestionViewsById = async (
 export const saveQuestion = async (question: Question): Promise<QuestionResponse> => {
   try {
     const result = await QuestionModel.create(question);
+
+    // Update the user's activity history
+    await UserModel.findOneAndUpdate(
+      { username: question.askedBy },
+      {
+        $push: {
+          activityHistory: {
+            postId: result._id,
+            postType: 'Question',
+            createdAt: question.askDateTime,
+          },
+        },
+      },
+    );
+
     return result;
   } catch (error) {
     return { error: 'Error when saving a question' };
@@ -380,6 +379,21 @@ export const saveQuestion = async (question: Question): Promise<QuestionResponse
 export const saveAnswer = async (answer: Answer): Promise<AnswerResponse> => {
   try {
     const result = await AnswerModel.create(answer);
+
+    // Update the user's activity history
+    await UserModel.findOneAndUpdate(
+      { username: answer.ansBy },
+      {
+        $push: {
+          activityHistory: {
+            postId: result._id,
+            postType: 'Answer',
+            createdAt: answer.ansDateTime,
+          },
+        },
+      },
+    );
+
     return result;
   } catch (error) {
     return { error: 'Error when saving an answer' };
@@ -396,6 +410,21 @@ export const saveAnswer = async (answer: Answer): Promise<AnswerResponse> => {
 export const saveComment = async (comment: Comment): Promise<CommentResponse> => {
   try {
     const result = await CommentModel.create(comment);
+
+    // Update the user's activity history
+    await UserModel.findOneAndUpdate(
+      { username: comment.commentBy },
+      {
+        $push: {
+          activityHistory: {
+            postId: result._id,
+            postType: 'Comment',
+            createdAt: comment.commentDateTime,
+          },
+        },
+      },
+    );
+
     return result;
   } catch (error) {
     return { error: 'Error when saving a comment' };
@@ -645,7 +674,7 @@ export const getTagCountMap = async (): Promise<Map<string, number> | null | { e
 
     return tmap;
   } catch (error) {
-    return { error: 'Error when construction tag map' };
+    return { error: 'Error when constructing tag map' };
   }
 };
 
@@ -664,9 +693,9 @@ export const saveUser = async (user: User): Promise<UserResponse> => {
 };
 
 /**
- * adds a biography to a user
+ * Adds a biography to a user.
  * @param username - the username of the user to add a bio to
- * @param bio - the biograpyh to add to the user
+ * @param bio - the biography to add to the user
  * @returns the updated user
  */
 export const addUserBio = async (username: string, bio: string): Promise<UserResponse> => {
@@ -682,12 +711,12 @@ export const addUserBio = async (username: string, bio: string): Promise<UserRes
 };
 
 const CREDENTIALS_PATH = path.join(__dirname, '../googleCloudCredentials.json');
-const storage = new Storage({ keyFilename: CREDENTIALS_PATH }); // google Cloud Storage client
-const bucket = storage.bucket('cs4530-509-userprofile-pictures'); // google Cloud Storage bucket
+const storage = new Storage({ keyFilename: CREDENTIALS_PATH }); // Google Cloud Storage client
+const bucket = storage.bucket('cs4530-509-userprofile-pictures'); // Google Cloud Storage bucket
 /**
- * adds a profile picture to a user given a file
- * uploads the file to the Google Cloud Storage bucket and receives the URL of the uploaded file
- * updates the user's profilePictureURL to the Google Cloud Storage URL of the uploaded file
+ * Adds a profile picture to a user given a file.
+ * Uploads the file to the Google Cloud Storage bucket and receives the URL of the uploaded file.
+ * Updates the user's profilePictureURL to the Google Cloud Storage URL of the uploaded file.
  * @param username - the username of the user to add a profile picture to
  * @param file - the file containing the profile picture
  */
@@ -696,19 +725,19 @@ export const addUserProfilePicture = async (
   file: Express.Multer.File,
 ): Promise<UserResponse> => {
   try {
-    // define the destination of the file in the bucket
+    // Define the destination of the file in the bucket
     const destination = `${username}/${file.originalname}`;
     const gcsFile = bucket.file(destination);
 
-    // upload the file buffer to the bucket
+    // Upload the file buffer to the bucket
     await gcsFile.save(file.buffer, { contentType: file.mimetype });
 
-    await gcsFile.makePublic(); // make the file public
+    await gcsFile.makePublic(); // Make the file public
 
-    // get the URL of the uploaded file
+    // Get the URL of the uploaded file
     const publicURL = `https://storage.googleapis.com/cs4530-509-userprofile-pictures/${destination}`;
 
-    // update the user's profilePictureURL to the URL of the uploaded file
+    // Update the user's profilePictureURL to the URL of the uploaded file
     const result = await UserModel.findOneAndUpdate(
       { username },
       { profilePictureURL: publicURL },
@@ -723,12 +752,10 @@ export const addUserProfilePicture = async (
   }
 };
 
-// requesterUsername needs to be used for public/private bookmarks when implemented
-// if requesterUsername is not the same as username, then only public bookmarks should be returned
 /**
  * Fetches and populates a user document based on the provided username.
  * @param username - the username of the user to fetch
- * @param requesterUsername - the username of the user requesting the user document
+ * @param requesterUsername - the username of the user making the request
  *
  * @returns the user document
  */
@@ -740,11 +767,289 @@ export const getUserByUsername = async (
     if (!username || username === '') {
       throw new Error('Invalid username');
     }
-
-    // most likely need to use populate() when fetching bookmarks, implement later
-    const result = await UserModel.findOne({ username });
+    const result = await UserModel.findOne({ username }).populate({
+      path: 'activityHistory.postId',
+    });
     return result;
   } catch (error) {
     return { error: 'Error when fetching user by username' };
+  }
+};
+
+/**
+ * Searches for users based on a search string.
+ * @param searchString - the search string used to find users
+ * @returns an array of users matching the search criteria
+ */
+export const searchUsers = async (searchString: string): Promise<User[] | { error: string }> => {
+  try {
+    const users = await UserModel.find({
+      $text: { $search: searchString },
+    });
+
+    return users;
+  } catch (error) {
+    return { error: 'Error when searching for users' };
+  }
+};
+
+/**
+ * Creates a new bookmark collection.
+ * @param username - the username of the user creating the collection
+ * @param title - the title of the collection
+ * @param isPublic - whether the collection is public
+ * @returns the created bookmark collection
+ */
+export const createBookmarkCollection = async (
+  username: string,
+  title: string,
+  isPublic: boolean,
+): Promise<BookmarkCollection | { error: string }> => {
+  try {
+    const newCollection = new BookmarkCollectionModel({
+      title,
+      owner: username,
+      isPublic,
+      savedPosts: [],
+    });
+    const savedCollection = await newCollection.save();
+
+    // Update the user's bookmarkCollections field
+    await UserModel.findOneAndUpdate(
+      { username },
+      { $push: { bookmarkCollections: savedCollection._id } },
+    );
+
+    return savedCollection;
+  } catch (error) {
+    return { error: 'Error when creating bookmark collection' };
+  }
+};
+
+/**
+ * Adds a question to a bookmark collection.
+ * @param collectionId - the ID of the bookmark collection
+ * @param questionId - the ID of the question to add
+ * @returns the updated bookmark collection
+ */
+export const addQuestionToBookmarkCollection = async (
+  collectionId: string,
+  questionId: string,
+): Promise<BookmarkCollection | { error: string }> => {
+  try {
+    const bookmark = {
+      postId: new ObjectId(questionId),
+      savedAt: new Date(),
+    };
+
+    const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
+      { _id: new ObjectId(collectionId) },
+      { $push: { savedPosts: bookmark } },
+      { new: true },
+    );
+
+    if (!updatedCollection) {
+      throw new Error('Bookmark collection not found');
+    }
+
+    return updatedCollection;
+  } catch (error) {
+    return { error: 'Error when adding question to bookmark collection' };
+  }
+};
+
+/**
+ * Removes a question from a bookmark collection.
+ * @param collectionId - the ID of the bookmark collection
+ * @param questionId - the ID of the question to remove
+ * @returns the updated bookmark collection
+ */
+export const removeQuestionFromBookmarkCollection = async (
+  collectionId: string,
+  questionId: string,
+): Promise<BookmarkCollection | { error: string }> => {
+  try {
+    const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
+      { _id: new ObjectId(collectionId) },
+      { $pull: { savedPosts: { postId: new ObjectId(questionId) } } },
+      { new: true },
+    );
+
+    if (!updatedCollection) {
+      throw new Error('Bookmark collection not found');
+    }
+
+    return updatedCollection;
+  } catch (error) {
+    return { error: 'Error when removing question from bookmark collection' };
+  }
+};
+
+/**
+ * Retrieves a user's bookmark collections.
+ * @param username - the username of the owner of the collections
+ * @param requesterUsername - the username of the user making the request
+ * @param sortOption - the option by which to sort the bookmarks (optional)
+ * @returns an array of bookmark collections
+ */
+export const getUserBookmarkCollections = async (
+  username: string,
+  requesterUsername: string,
+  sortOption?: BookmarkSortOption,
+): Promise<BookmarkCollection[] | { error: string }> => {
+  try {
+    // Find the user
+    const user = await UserModel.findOne({ username });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Determine which collections to retrieve
+    let collections;
+    if (username === requesterUsername) {
+      // If the requester is the owner, retrieve all collections
+      collections = await BookmarkCollectionModel.find({ owner: username }).populate({
+        path: 'savedPosts.postId',
+        model: 'Question',
+        populate: { path: 'tags', model: TagModel },
+      });
+    } else {
+      // If the requester is not the owner, retrieve public collections or private collections they are permitted to view
+      collections = await BookmarkCollectionModel.find({
+        owner: username,
+        $or: [{ isPublic: true }, { permittedUsers: requesterUsername }],
+      }).populate({
+        path: 'savedPosts.postId',
+        model: 'Question',
+        populate: { path: 'tags', model: TagModel },
+      });
+    }
+
+    // Apply sorting if a sortOption is provided
+    if (sortOption) {
+      collections.forEach(collection => {
+        if (sortOption === 'date') {
+          collection.savedPosts.sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime());
+        } else if (sortOption === 'numberOfAnswers') {
+          collection.savedPosts.sort((a, b) => {
+            const aAnswers = (a.postId as Question).answers.length;
+            const bAnswers = (b.postId as Question).answers.length;
+            return bAnswers - aAnswers;
+          });
+        } else if (sortOption === 'views') {
+          collection.savedPosts.sort((a, b) => {
+            const aViews = (a.postId as Question).views.length;
+            const bViews = (b.postId as Question).views.length;
+            return bViews - aViews;
+          });
+        } else if (sortOption === 'title') {
+          collection.savedPosts.sort((a, b) => {
+            const aTitle = (a.postId as Question).title.toLowerCase();
+            const bTitle = (b.postId as Question).title.toLowerCase();
+            return aTitle.localeCompare(bTitle);
+          });
+        } // Add more sorting options if needed
+      });
+    }
+
+    return collections;
+  } catch (error) {
+    return { error: 'Error when retrieving bookmark collections' };
+  }
+};
+
+/**
+ * Follows a bookmark collection.
+ * @param collectionId - the ID of the bookmark collection to follow
+ * @param username - the username of the user following the collection
+ * @returns the updated bookmark collection
+ */
+export const followBookmarkCollection = async (
+  collectionId: string,
+  username: string,
+): Promise<BookmarkCollection | { error: string }> => {
+  try {
+    const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
+      { _id: new ObjectId(collectionId), isPublic: true },
+      { $addToSet: { followers: username } },
+      { new: true },
+    );
+
+    if (!updatedCollection) {
+      throw new Error('Bookmark collection not found or is not public');
+    }
+
+    // Update the user's followedBookmarkCollections
+    await UserModel.findOneAndUpdate(
+      { username },
+      { $addToSet: { followedBookmarkCollections: collectionId } },
+    );
+
+    return updatedCollection;
+  } catch (error) {
+    return { error: 'Error when following bookmark collection' };
+  }
+};
+
+/**
+ * Unfollows a bookmark collection.
+ * @param collectionId - the ID of the bookmark collection to unfollow
+ * @param username - the username of the user unfollowing the collection
+ * @returns the updated bookmark collection
+ */
+export const unfollowBookmarkCollection = async (
+  collectionId: string,
+  username: string,
+): Promise<BookmarkCollection | { error: string }> => {
+  try {
+    const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
+      { _id: new ObjectId(collectionId) },
+      { $pull: { followers: username } },
+      { new: true },
+    );
+
+    if (!updatedCollection) {
+      throw new Error('Bookmark collection not found');
+    }
+
+    // Update the user's followedBookmarkCollections
+    await UserModel.findOneAndUpdate(
+      { username },
+      { $pull: { followedBookmarkCollections: collectionId } },
+    );
+
+    return updatedCollection;
+  } catch (error) {
+    return { error: 'Error when unfollowing bookmark collection' };
+  }
+};
+
+/**
+ * Retrieves content from followed bookmark collections.
+ * @param username - the username of the user
+ * @returns an array of bookmark collections the user is following
+ */
+export const getFollowedBookmarkCollections = async (
+  username: string,
+): Promise<BookmarkCollection[] | { error: string }> => {
+  try {
+    const user = await UserModel.findOne({ username });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const collections = await BookmarkCollectionModel.find({
+      _id: { $in: user.followedBookmarkCollections },
+    }).populate({
+      path: 'savedPosts.postId',
+      model: 'Question',
+      populate: { path: 'tags', model: TagModel },
+    });
+
+    return collections;
+  } catch (error) {
+    return { error: 'Error when retrieving followed bookmark collections' };
   }
 };

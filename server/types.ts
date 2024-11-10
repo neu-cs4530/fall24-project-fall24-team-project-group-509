@@ -201,6 +201,43 @@ export interface AnswerUpdatePayload {
 }
 
 /**
+ * Interface representing the payload for an user update event, which contains:
+ * - username - The unique identifier of the user.
+ * - bio - The bio of the user.
+ */
+export interface BioUpdatePayload {
+  username: string; 
+  bio: string;      
+}
+
+/**
+ * Interface representing the payload for an user update event, which contains:
+ * - username - The unique identifier of the user.
+ * - profilePictureURL - The url of the profile picture of the user.
+ */
+export interface ProfilePictureUpdatePayload {
+  username: string;           // Username of the profile being updated
+  profilePictureURL: string;  // URL of the updated profile picture
+}
+
+/**profilePictureFile: Express.Multer.File;
+ * Union type representing the payload for a profile update event.
+ * 
+ * Ensures that each update contains only the relevant fields for that type of update.
+ */
+export type ProfileUpdatePayload = BioUpdatePayload | ProfilePictureUpdatePayload;
+
+/**
+ * Interface representing the payload for a bookmark collection update event, which contains:
+ * - collectionId - The unique identifier of the bookmark collection.
+ * - updatedCollection - The updated bookmark collection.
+ */
+export interface BookmarkCollectionUpdatePayload {
+  collectionId: string;
+  updatedCollection: BookmarkCollection;
+}
+
+/**
  * Interface representing the possible events that the server can emit to the client.
  */
 export interface ServerToClientEvents {
@@ -209,8 +246,39 @@ export interface ServerToClientEvents {
   viewsUpdate: (question: QuestionResponse) => void;
   voteUpdate: (vote: VoteUpdatePayload) => void;
   commentUpdate: (comment: CommentUpdatePayload) => void;
-  activityHistoryUpdate: (update: Question[]) => void;
-  bookmarkUpdate: (update: BookmarkCollection[]) => void;
+  profileUpdate: (update: ProfileUpdatePayload) => void;
+  collectionUpdate: (update: BookmarkCollectionUpdatePayload) => void;
+}
+
+/**
+ * Interface representing a bookmark, which contains:
+ * - postId - The unique identifier of the post (question or answer).
+ * - savedAt - The date and time when the post was bookmarked.
+ */
+export interface Bookmark {
+  postId: ObjectId | Question;
+  savedAt: Date;
+  //  continue leveraging the tags from the Question documents without modifying the Bookmark structure for 1.5
+}
+
+/**
+ * Interface representing a bookmark collection, which contains:
+ * - _id - The unique identifier for the bookmark collection. Optional field.
+ * - title - The title of the bookmark collection.
+ * - owner - The username of the user who owns the collection.
+ * - isPublic - A boolean indicating whether the bookmark collection is public.
+ * - permittedUsers - An array of usernames permitted to access the collection if it's private.
+ * - followers - An array of usernames who follow the collection.
+ * - savedPosts - An array of bookmarks that have been saved to the collection.
+ */
+export interface BookmarkCollection {
+  _id?: ObjectId;
+  title: string;
+  owner: string;
+  isPublic: boolean;
+  permittedUsers?: string[];
+  followers?: string[];
+  savedPosts: Bookmark[];
 }
 
 /**
@@ -218,12 +286,21 @@ export interface ServerToClientEvents {
  * - username - The unique identifier for the user.
  * - bio - A short description of the user. Optional field.
  * - profilePictureURL - The URL of the user's profile picture (if they have one). Optional field.
+ * - activityHistory - The history of the user's activity on the platform.
+ * - bookmarkCollections - An array of bookmark collections owned by the user.
+ * - followedBookmarkCollections - An array of IDs of bookmark collections the user is following.
  */
 export interface User {
   username: string;
   bio?: string;
   profilePictureURL?: string;
-  // add bookmark fields here, most likely need to create a bookmark collection type
+  activityHistory?: Array<{
+    postId: ObjectId;
+    postType: 'Question' | 'Answer' | 'Comment';
+    createdAt: Date;
+  }>;
+  bookmarkCollections?: BookmarkCollection[];
+  followedBookmarkCollections?: ObjectId[];
 }
 
 /**
@@ -274,15 +351,111 @@ export interface FindUserByUsernameRequest extends Request {
 }
 
 /**
- * Interface representing a bookmark collection, which contains:
- * - _id - The unique identifier for the bookmark collection. Optional field.
- * - title - The title of the bookmark collection.
- * - isPublic - A boolean indicating whether the bookmark collection is public or private.
- * - savedPosts - An array of questions that have been saved to the collection.
+ * Type representing the possible sorting options for bookmarks.
  */
-export interface BookmarkCollection {
-  _id?: ObjectId;
-  title: string;
-  isPublic: boolean;
-  savedPosts: Question[];
+export type BookmarkSortOption = 'date' | 'numberOfAnswers' | 'views' | 'title' | 'tags';
+
+/**
+ * Interface representing the request to get bookmarks, which contains:
+ * - sortOption - The option by which to sort the bookmarks.
+ */
+export interface GetBookmarksRequest extends Request {
+  query: {
+    username: string | undefined;
+    requesterUsername: string | undefined;
+    sortOption: BookmarkSortOption;
+  };
 }
+
+/**
+ * Interface representing the request to create a new bookmark collection.
+ * - username - The username of the user creating the collection.
+ * - title - The title of the collection.
+ * - isPublic - Whether the collection is public.
+ */
+export interface CreateBookmarkCollectionRequest extends Request {
+  body: {
+    username: string;
+    title: string;
+    isPublic: boolean;
+  };
+}
+
+/**
+ * Interface representing the request to update an existing bookmark collection.
+ * - collectionId - The unique identifier of the collection.
+ * - title - The new title of the collection. Optional.
+ * - isPublic - The new public status of the collection. Optional.
+ * - permittedUsers - The new list of permitted users. Optional.
+ */
+export interface UpdateBookmarkCollectionRequest extends Request {
+  body: {
+    collectionId: string;
+    title?: string;
+    isPublic?: boolean;
+    permittedUsers?: string[];
+  };
+}
+
+/**
+ * Interface representing the request to add a post to a bookmark collection.
+ * - collectionId - The unique identifier of the collection.
+ * - postId - The unique identifier of the post.
+ */
+export interface AddQuestionToBookmarkCollectionRequest extends Request {
+  body: {
+    collectionId: string;
+    postId: string;
+  };
+}
+
+/**
+ * Interface representing the request to remove a post from a bookmark collection.
+ * - collectionId - The unique identifier of the collection.
+ * - postId - The unique identifier of the post.
+ */
+export interface RemovePostFromBookmarkCollectionRequest extends Request {
+  body: {
+    collectionId: string;
+    postId: string;
+  };
+}
+
+/**
+ * Interface representing the request to follow a bookmark collection.
+ * - collectionId - The unique identifier of the collection.
+ * - username - The username of the user following the collection.
+ */
+export interface FollowBookmarkCollectionRequest extends Request {
+  body: {
+    collectionId: string;
+    username: string;
+  };
+}
+
+/**
+ * Interface representing the request to unfollow a bookmark collection.
+ * - collectionId - The unique identifier of the collection.
+ * - username - The username of the user unfollowing the collection.
+ */
+export interface UnfollowBookmarkCollectionRequest extends Request {
+  body: {
+    collectionId: string;
+    username: string;
+  };
+}
+
+/**
+ * Interface representing the request to search for users.
+ * - search - The search string used to find users.
+ */
+export interface SearchUserRequest extends Request {
+  query: {
+    search: string;
+  };
+}
+
+/**
+ * Type representing the possible responses for a user search operation.
+ */
+export type UserSearchResponse = User[] | { error: string };
