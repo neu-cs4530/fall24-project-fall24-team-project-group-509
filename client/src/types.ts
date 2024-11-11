@@ -24,7 +24,11 @@ export interface UserProfile {
   username: string;
   bio: string;
   profilePictureURL: string;
-  activityHistory: Question[];
+  activityHistory?: Array<{
+    postId: string;
+    postType: string;
+    createdAt: Date;
+  }>;
   bookmarks: BookmarkCollection[];
   // add fields for activityHistory
   // add fields for bookmarks

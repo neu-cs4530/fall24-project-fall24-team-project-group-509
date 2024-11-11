@@ -11,9 +11,12 @@ const useProfilePage = () => {
   const [bio, setBio] = useState('');
   // list of questions for history and saved posts in a bookmark collection  --> Important
   // need to be sorted in chronological order prior to being sent here
-  const [activityHistory, setActivityHistory] = useState<Question[]>([]);
+  const [activityHistory, setActivityHistory] = useState<
+    Array<{ string: string; string: string; Date: Date }>
+  >([]);
   const [bookmarks, setBookmarks] = useState<BookmarkCollection[]>([]);
   const [pfp, setPfp] = useState<string>('');
+  const [isEditingBio, setIsEditingBio] = useState(false);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -24,8 +27,10 @@ const useProfilePage = () => {
         );
         setBio(userProfile.bio);
         setPfp(userProfile.profilePictureURL);
-        setActivityHistory(userProfile.activityHistory || []);
-        setBookmarks(userProfile.bookmarks || []);
+        // eslint-disable-next-line no-console
+        console.log(userProfile.activityHistory);
+        setActivityHistory(userProfile.activityHistory);
+        setBookmarks(userProfile.bookmarks);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Error fetching user details:', error);
@@ -56,8 +61,13 @@ const useProfilePage = () => {
     }
   };
 
-  const handleBioUpdate = async () => {
+  const handleEditClick = () => {
+    setIsEditingBio(true);
+  };
+
+  const handleSaveClick = async () => {
     await addUserBio(username as string, bio);
+    setIsEditingBio(false);
   };
 
   return {
@@ -71,8 +81,10 @@ const useProfilePage = () => {
     pfp,
     setPfp,
     handleImgUpdate,
-    handleBioUpdate,
+    handleEditClick,
+    handleSaveClick,
     username,
+    isEditingBio,
   };
 };
 
