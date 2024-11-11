@@ -1056,7 +1056,7 @@ export const getFollowedBookmarkCollections = async (
  */
 export const updateActivityHistoryWithQuestionID = async (
   username: string,
-  qid: string | undefined,
+  qid: string,
   type: 'comment' | 'answer',
   date: Date,
 ): Promise<void> => {
