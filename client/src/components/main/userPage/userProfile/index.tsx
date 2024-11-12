@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import './index.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import TextArea from '../../baseComponents/textarea';
 import useProfilePage from '../../../../hooks/useProfilePage';
 
@@ -14,7 +14,6 @@ import useProfilePage from '../../../../hooks/useProfilePage';
  */
 const ProfileView = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
 
   const {
     requesterUsername,
@@ -29,10 +28,6 @@ const ProfileView = () => {
     username,
     isEditingBio,
   } = useProfilePage();
-
-  const handleRedirectToQuestion = (questionID: string) => {
-    navigate(`/question/${questionID}`);
-  };
 
   /*
   const word = (type: string): string => {
