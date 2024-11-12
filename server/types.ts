@@ -274,6 +274,16 @@ export interface FindUserByUsernameRequest extends Request {
 }
 
 /**
+ * Interface representing the request to search for users by a partial or full username.
+ * - username - The search term to match against usernames.
+ */
+export interface SearchUserByUsernameRequest extends Request {
+  query: {
+    username: string;
+  };
+}
+
+/**
  * Interface representing a bookmark collection, which contains:
  * - _id - The unique identifier for the bookmark collection. Optional field.
  * - title - The title of the bookmark collection.

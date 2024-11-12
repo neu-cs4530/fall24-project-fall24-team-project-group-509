@@ -7,6 +7,7 @@ import {
   AddUserBioRequest,
   AddUserProfilePicRequest,
   FindUserByUsernameRequest,
+  SearchUserByUsernameRequest,
 } from '../types';
 import {
   saveUser,
@@ -14,6 +15,7 @@ import {
   addUserProfilePicture,
   getUserByUsername,
 } from '../models/application';
+import UserModel from '../models/user';
 
 const userController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -54,10 +56,6 @@ const userController = (socket: FakeSOSocket) => {
       if ('error' in result) {
         throw new Error(result.error as string);
       }
-
-      // do I need to deal with populateDocument here?
-
-      // do I need to deal with socket emit updates here?
 
       res.json(result);
     } catch (err: unknown) {
@@ -176,10 +174,41 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Searches for users by a partial or full username.
+   * @param req The request object containing the query parameter `username`.
+   * @param res The response object to send back the list of matching users.
+   */
+  const searchUsersByUsername = async (
+    req: SearchUserByUsernameRequest,
+    res: Response,
+  ): Promise<void> => {
+    const { username } = req.params;
+
+    if (!username || typeof username !== 'string') {
+      res.status(400).send('Username query parameter is required');
+      return;
+    }
+
+    try {
+      // Search for users by a case-insensitive partial match on the username
+      const users = await UserModel.find({ username: new RegExp(username, 'i') }).select(
+        'username',
+      );
+      res.json(users);
+    } catch (error) {
+      // REMOVE THIS LATER
+      // eslint-disable-next-line no-console
+      console.error('Error searching users:', error);
+      res.status(500).send('Failed to search users');
+    }
+  };
+
   router.post('/addUser', addUser);
   router.post('/addUserBio', addUserBioRoute);
   router.post('/addUserProfilePic', addUserProfilePicRoute);
   router.get('/getUser/:username', getUserByUsernameRoute);
+  router.get('/search/:username', searchUsersByUsername);
 
   return router;
 };

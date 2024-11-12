@@ -1,5 +1,6 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import './index.css';
+import { useNavigate } from 'react-router-dom';
 import TextArea from '../../baseComponents/textarea';
 import useProfilePage from '../../../../hooks/useProfilePage';
 
@@ -13,6 +14,8 @@ import useProfilePage from '../../../../hooks/useProfilePage';
  */
 const ProfileView = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const {
     requesterUsername,
@@ -25,6 +28,13 @@ const ProfileView = () => {
     handleBioUpdate,
     username,
   } = useProfilePage();
+
+  // Handle search functionality
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/search-results?query=${encodeURIComponent(searchQuery)}`);
+    }
+  };
 
   return (
     <div className='user-profile'>
@@ -59,6 +69,16 @@ const ProfileView = () => {
             <a href={`/questions/${question._id}`}>{question.title}</a>
           </div>
         ))}
+      </div>
+      {/* Search Bar */}
+      <div className='search-bar'>
+        <input
+          type='text'
+          placeholder='Search for users...'
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
+        <button onClick={handleSearch}>Search</button>
       </div>
       <div className='collections'>
         {bookmarks.map(bookmark => (
