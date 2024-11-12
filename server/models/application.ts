@@ -355,7 +355,7 @@ export const saveQuestion = async (question: Question): Promise<QuestionResponse
       {
         $push: {
           activityHistory: {
-            postId: result._id,
+            postId: result._id.toString(),
             postType: 'Question',
             createdAt: question.askDateTime,
           },
@@ -1111,6 +1111,7 @@ export const findQuestionIDByAnswerID = async (answerID: string): Promise<string
     if (!question) {
       throw new Error('Question not found');
     }
+    // eslint-disable-next-line no-console
     console.log(question._id.toString());
     return question._id.toString();
   } catch (error) {

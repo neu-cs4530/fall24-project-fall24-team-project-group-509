@@ -74,7 +74,8 @@ const ProfileView = () => {
             activityHistory.map((post, index) => (
               <li key={index} className='history-item'>
                 <p className='history-text'>
-                  {username} made a {post.postType} on <Link to=''>{post.postID}</Link>
+                  {username} made a {post.postType} on{' '}
+                  <Link to={`/question/${post.postID}`}>hi</Link>
                 </p>
               </li>
             ))

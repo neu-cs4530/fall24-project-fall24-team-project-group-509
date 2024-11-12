@@ -295,7 +295,7 @@ export interface User {
   bio?: string;
   profilePictureURL?: string;
   activityHistory?: Array<{
-    postId: ObjectId;
+    postId: string;
     postType: 'Question' | 'Answer' | 'Comment';
     createdAt: Date;
   }>;
