@@ -9,14 +9,15 @@ const useProfilePage = () => {
   const { username } = useParams();
   const requesterUsername = user.username;
   const [bio, setBio] = useState('');
-  // list of questions for history and saved posts in a bookmark collection  --> Important
-  // need to be sorted in chronological order prior to being sent here
-  const [activityHistory, setActivityHistory] = useState<Question[]>([]);
+  const initialActivityHistory = [{ postID: '', postType: '', createdAt: new Date() }];
+  const [activityHistory, setActivityHistory] =
+    useState<Array<{ postID: string; postType: string; createdAt: Date }>>(initialActivityHistory);
   const [bookmarks, setBookmarks] = useState<BookmarkCollection[]>([]);
   const [pfp, setPfp] = useState<string>('');
   // for handle Search routing
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isEditingBio, setIsEditingBio] = useState(false);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -27,8 +28,16 @@ const useProfilePage = () => {
         );
         setBio(userProfile.bio);
         setPfp(userProfile.profilePictureURL);
-        setActivityHistory(userProfile.activityHistory || []);
-        setBookmarks(userProfile.bookmarks || []);
+        if (userProfile.activityHistory) {
+          setActivityHistory(
+            userProfile.activityHistory.map(a => ({
+              postID: a.postId,
+              postType: a.postType,
+              createdAt: new Date(a.createdAt),
+            })),
+          );
+        }
+        setBookmarks(userProfile.bookmarks);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Error fetching user details:', error);
@@ -37,9 +46,12 @@ const useProfilePage = () => {
 
     fetchUserDetails();
 
-    socket.on('activityHistoryUpdate', (newActivityHistory: Question[]) => {
-      setActivityHistory(newActivityHistory);
-    });
+    socket.on(
+      'activityHistoryUpdate',
+      (newActivityHistory: Array<{ postID: string; postType: string; createdAt: Date }>) => {
+        setActivityHistory(newActivityHistory);
+      },
+    );
 
     socket.on('bookmarkUpdate', (newBookmarks: BookmarkCollection[]) => {
       setBookmarks(newBookmarks);
@@ -59,8 +71,13 @@ const useProfilePage = () => {
     }
   };
 
-  const handleBioUpdate = async () => {
+  const handleEditClick = () => {
+    setIsEditingBio(true);
+  };
+
+  const handleSaveClick = async () => {
     await addUserBio(username as string, bio);
+    setIsEditingBio(false);
   };
 
   // Handle search functionality
@@ -81,11 +98,13 @@ const useProfilePage = () => {
     pfp,
     setPfp,
     handleImgUpdate,
-    handleBioUpdate,
+    handleEditClick,
+    handleSaveClick,
     username,
     searchQuery,
     setSearchQuery,
     handleSearch,
+    isEditingBio,
   };
 };
 

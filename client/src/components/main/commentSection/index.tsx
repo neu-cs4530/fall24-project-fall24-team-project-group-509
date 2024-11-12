@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getMetaData } from '../../../tool';
 import { Comment } from '../../../types';
 import './index.css';
@@ -61,7 +62,8 @@ const CommentSection = ({ comments, handleAddComment }: CommentSectionProps) => 
                 <li key={index} className='comment-item'>
                   <p className='comment-text'>{comment.text}</p>
                   <small className='comment-meta'>
-                    {comment.commentBy}, {getMetaData(new Date(comment.commentDateTime))}
+                    <Link to={`/user/${comment.commentBy}`}>{comment.commentBy}</Link>,{' '}
+                    {getMetaData(new Date(comment.commentDateTime))}
                   </small>
                 </li>
               ))

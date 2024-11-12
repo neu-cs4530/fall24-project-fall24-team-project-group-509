@@ -24,7 +24,11 @@ export interface UserProfile {
   username: string;
   bio: string;
   profilePictureURL: string;
-  activityHistory: Question[];
+  activityHistory?: Array<{
+    postId: string;
+    postType: string;
+    createdAt: Date;
+  }>;
   bookmarks: BookmarkCollection[];
   // add fields for activityHistory
   // add fields for bookmarks
@@ -168,7 +172,9 @@ export interface ServerToClientEvents {
   viewsUpdate: (question: Question) => void;
   voteUpdate: (vote: VoteUpdatePayload) => void;
   commentUpdate: (update: CommentUpdatePayload) => void;
-  activityHistoryUpdate: (update: Question[]) => void;
+  activityHistoryUpdate: (
+    update: Array<{ postID: string; postType: string; createdAt: Date }>,
+  ) => void;
   bookmarkUpdate: (update: BookmarkCollection[]) => void;
 }
 

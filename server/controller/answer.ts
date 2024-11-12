@@ -1,6 +1,11 @@
 import express, { Response } from 'express';
 import { Answer, AnswerRequest, AnswerResponse, FakeSOSocket } from '../types';
-import { addAnswerToQuestion, populateDocument, saveAnswer } from '../models/application';
+import {
+  addAnswerToQuestion,
+  populateDocument,
+  saveAnswer,
+  updateActivityHistoryWithQuestionID,
+} from '../models/application';
 
 const answerController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -62,6 +67,9 @@ const answerController = (socket: FakeSOSocket) => {
       if (status && 'error' in status) {
         throw new Error(status.error as string);
       }
+
+      // update user activity history with the question ID
+      await updateActivityHistoryWithQuestionID(ansInfo.ansBy, qid, 'answer', ansInfo.ansDateTime);
 
       const populatedAns = await populateDocument(ansFromDb._id?.toString(), 'answer');
 
