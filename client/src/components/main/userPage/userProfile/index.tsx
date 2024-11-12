@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import './index.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import TextArea from '../../baseComponents/textarea';
 import useProfilePage from '../../../../hooks/useProfilePage';
 
@@ -14,6 +14,7 @@ import useProfilePage from '../../../../hooks/useProfilePage';
  */
 const ProfileView = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const {
     requesterUsername,
@@ -28,6 +29,20 @@ const ProfileView = () => {
     username,
     isEditingBio,
   } = useProfilePage();
+
+  const handleRedirectToQuestion = (questionID: string) => {
+    navigate(`/question/${questionID}`);
+  };
+
+  /*
+  const word = (type: string): string => {
+    if (type === 'Answer') {
+      return 'an';
+    } else {
+      return 'a';
+    }
+  }
+    */
 
   return (
     <div className='user-profile'>
@@ -74,8 +89,8 @@ const ProfileView = () => {
             activityHistory.map((post, index) => (
               <li key={index} className='history-item'>
                 <p className='history-text'>
-                  {username} made a {post.postType} on{' '}
-                  <Link to={`/question/${post.postID}`}>hi</Link>
+                  {username} added a {post.postType} on{' '}
+                  <Link to={`/question/${post.postID}`}>{post.postID}</Link>
                 </p>
               </li>
             ))

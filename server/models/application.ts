@@ -760,9 +760,10 @@ export const getUserByUsername = async (
     if (!username || username === '') {
       throw new Error('Invalid username');
     }
-    const result = await UserModel.findOne({ username }).populate({
-      path: 'activityHistory.postId',
-    });
+    const result = await UserModel.findOne({ username });
+    // .populate({
+    //   path: 'activityHistory.postId',
+    // });
     return result;
   } catch (error) {
     return { error: 'Error when fetching user by username' };
