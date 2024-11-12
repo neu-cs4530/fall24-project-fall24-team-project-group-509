@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import './index.css';
+import { Link } from 'react-router-dom';
 import TextArea from '../../baseComponents/textarea';
 import useProfilePage from '../../../../hooks/useProfilePage';
 
@@ -70,9 +71,11 @@ const ProfileView = () => {
         <h3>Activity History</h3>
         <ul className='history-list'>
           {activityHistory.length > 0 ? (
-            activityHistory.map((q, index) => (
+            activityHistory.map((post, index) => (
               <li key={index} className='history-item'>
-                <p className='history-text'>{q.title}</p>
+                <p className='history-text'>
+                  {username} made a {post.postType} on <Link to=''>{post.postID}</Link>
+                </p>
               </li>
             ))
           ) : (

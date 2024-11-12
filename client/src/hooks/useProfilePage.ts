@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { BookmarkCollection, Question, UserProfile } from '../types';
+import { BookmarkCollection, UserProfile } from '../types';
 import useUserContext from './useUserContext';
 import { addUserBio, addUserProfilePicture, getUserByUsername } from '../services/userService';
 
@@ -9,11 +9,9 @@ const useProfilePage = () => {
   const { username } = useParams();
   const requesterUsername = user.username;
   const [bio, setBio] = useState('');
-  // list of questions for history and saved posts in a bookmark collection  --> Important
-  // need to be sorted in chronological order prior to being sent here
-  const [activityHistory, setActivityHistory] = useState<
-    Array<{ string: string; string: string; Date: Date }>
-  >([]);
+  const initialActivityHistory = [{ postID: '', postType: '', createdAt: new Date() }];
+  const [activityHistory, setActivityHistory] =
+    useState<Array<{ postID: string; postType: string; createdAt: Date }>>(initialActivityHistory);
   const [bookmarks, setBookmarks] = useState<BookmarkCollection[]>([]);
   const [pfp, setPfp] = useState<string>('');
   const [isEditingBio, setIsEditingBio] = useState(false);
@@ -27,9 +25,15 @@ const useProfilePage = () => {
         );
         setBio(userProfile.bio);
         setPfp(userProfile.profilePictureURL);
-        // eslint-disable-next-line no-console
-        console.log(userProfile.activityHistory);
-        setActivityHistory(userProfile.activityHistory);
+        if (userProfile.activityHistory) {
+          setActivityHistory(
+            userProfile.activityHistory.map(a => ({
+              postID: a.postId,
+              postType: a.postType,
+              createdAt: new Date(a.createdAt),
+            })),
+          );
+        }
         setBookmarks(userProfile.bookmarks);
       } catch (error) {
         // eslint-disable-next-line no-console
@@ -39,9 +43,12 @@ const useProfilePage = () => {
 
     fetchUserDetails();
 
-    socket.on('activityHistoryUpdate', (newActivityHistory: Question[]) => {
-      setActivityHistory(newActivityHistory);
-    });
+    socket.on(
+      'activityHistoryUpdate',
+      (newActivityHistory: Array<{ postID: string; postType: string; createdAt: Date }>) => {
+        setActivityHistory(newActivityHistory);
+      },
+    );
 
     socket.on('bookmarkUpdate', (newBookmarks: BookmarkCollection[]) => {
       setBookmarks(newBookmarks);

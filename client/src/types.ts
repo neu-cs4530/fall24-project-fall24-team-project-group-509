@@ -172,7 +172,9 @@ export interface ServerToClientEvents {
   viewsUpdate: (question: Question) => void;
   voteUpdate: (vote: VoteUpdatePayload) => void;
   commentUpdate: (update: CommentUpdatePayload) => void;
-  activityHistoryUpdate: (update: Question[]) => void;
+  activityHistoryUpdate: (
+    update: Array<{ postID: string; postType: string; createdAt: Date }>,
+  ) => void;
   bookmarkUpdate: (update: BookmarkCollection[]) => void;
 }
 
