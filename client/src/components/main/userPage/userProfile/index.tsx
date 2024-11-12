@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import './index.css';
-import { useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import TextArea from '../../baseComponents/textarea';
 import useProfilePage from '../../../../hooks/useProfilePage';
 
@@ -14,8 +14,7 @@ import useProfilePage from '../../../../hooks/useProfilePage';
  */
 const ProfileView = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { username: profileUsername } = useParams();
 
   const {
     requesterUsername,
@@ -26,21 +25,19 @@ const ProfileView = () => {
     pfp,
     handleImgUpdate,
     handleBioUpdate,
-    username,
+    username, // This will be updated based on the profileUsername from useParams
+    searchQuery,
+    setSearchQuery,
+    handleSearch,
   } = useProfilePage();
 
-  // Handle search functionality
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      navigate(`/search-results?query=${encodeURIComponent(searchQuery)}`);
-    }
-  };
+  const isOwnProfile = requesterUsername === profileUsername;
 
   return (
     <div className='user-profile'>
       <div className='profile-image'>
         <img src={pfp || 'defaultpfp.jpg'}></img>
-        {requesterUsername === username && (
+        {isOwnProfile && (
           <>
             <input type='file' ref={fileInputRef} onChange={handleImgUpdate} />
             <button onClick={() => fileInputRef.current && fileInputRef.current.click()}>
@@ -51,17 +48,19 @@ const ProfileView = () => {
       </div>
       <div className='username-display'>{username}</div>
       <div className='biography'>
-        <TextArea
-          title='Biography'
-          err='Error with biography'
-          mandatory={false}
-          id={username as string}
-          val={bio}
-          setState={setBio}
-        />
-        {requesterUsername === username && (
-          <button onClick={() => handleBioUpdate()}>Edit biography</button>
+        {isOwnProfile ? (
+          <TextArea
+            title='Biography'
+            err='Error with biography'
+            mandatory={false}
+            id={username as string}
+            val={bio}
+            setState={setBio}
+          />
+        ) : (
+          <p>{bio}</p>
         )}
+        {isOwnProfile && <button onClick={() => handleBioUpdate()}>Edit biography</button>}
       </div>
       <div className='history'>
         {activityHistory.map(question => (
@@ -83,7 +82,7 @@ const ProfileView = () => {
       <div className='collections'>
         {bookmarks.map(bookmark => (
           <div key={bookmark._id}>
-            {(bookmark.isPublic || requesterUsername === username) && (
+            {(bookmark.isPublic || isOwnProfile) && (
               <div className='bookmarks'>
                 {bookmark.title}
                 {bookmark.savedPosts.map(post => (

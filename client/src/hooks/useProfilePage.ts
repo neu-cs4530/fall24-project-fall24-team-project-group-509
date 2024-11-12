@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { BookmarkCollection, Question, UserProfile } from '../types';
 import useUserContext from './useUserContext';
 import { addUserBio, addUserProfilePicture, getUserByUsername } from '../services/userService';
@@ -14,6 +14,9 @@ const useProfilePage = () => {
   const [activityHistory, setActivityHistory] = useState<Question[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkCollection[]>([]);
   const [pfp, setPfp] = useState<string>('');
+  // for handle Search routing
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -60,6 +63,13 @@ const useProfilePage = () => {
     await addUserBio(username as string, bio);
   };
 
+  // Handle search functionality
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/search-results?query=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
   return {
     requesterUsername,
     bio,
@@ -73,6 +83,9 @@ const useProfilePage = () => {
     handleImgUpdate,
     handleBioUpdate,
     username,
+    searchQuery,
+    setSearchQuery,
+    handleSearch,
   };
 };
 

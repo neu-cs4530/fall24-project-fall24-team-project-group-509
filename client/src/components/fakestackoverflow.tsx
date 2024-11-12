@@ -57,6 +57,7 @@ const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
             <Route path='/new/answer/:qid' element={<NewAnswerPage />} />
             <Route path='/user/:username' element={<ProfileView />} />
             <Route path='/search-results' element={<SearchResultsPage />} />
+            <Route path='/profile/:username' element={<ProfileView />} />
           </Route>
         }
       </Routes>
