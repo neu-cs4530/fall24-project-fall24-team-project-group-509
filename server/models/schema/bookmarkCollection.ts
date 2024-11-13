@@ -18,14 +18,14 @@ const bookmarkCollectionSchema: Schema = new Schema(
     owner: {
       type: String,
       required: true,
-      ref: 'User',
+      ref: 'User', // may or may not need ref, delete if needed
     },
     isPublic: {
       type: Boolean,
       required: true,
     },
-    permittedUsers: [{ type: String, ref: 'User' }],
-    followers: [{ type: String, ref: 'User' }],
+    // permittedUsers: [{ type: String, ref: 'User' }],
+    followers: [{ type: String, ref: 'User' }], // may or may not need ref, delete if needed
     savedPosts: [
       {
         postId: { type: Schema.Types.ObjectId, required: true, refPath: 'Question' },

@@ -5,6 +5,7 @@ import path from 'path';
 import {
   Answer,
   AnswerResponse,
+  Bookmark,
   BookmarkCollection,
   BookmarkSortOption,
   Comment,
@@ -831,7 +832,7 @@ export const addQuestionToBookmarkCollection = async (
   questionId: string,
 ): Promise<BookmarkCollection | { error: string }> => {
   try {
-    const bookmark = {
+    const bookmark: Bookmark = {
       postId: new ObjectId(questionId),
       savedAt: new Date(),
     };
@@ -912,7 +913,7 @@ export const getUserBookmarkCollections = async (
       // If the requester is not the owner, retrieve public collections or private collections they are permitted to view
       collections = await BookmarkCollectionModel.find({
         owner: username,
-        $or: [{ isPublic: true }, { permittedUsers: requesterUsername }],
+        $or: [{ isPublic: true }, { followers: requesterUsername }],
       }).populate({
         path: 'savedPosts.postId',
         model: 'Question',
@@ -954,7 +955,8 @@ export const getUserBookmarkCollections = async (
 };
 
 /**
- * Follows a bookmark collection.
+ * Follows a user to a bookmark collection.
+ * This can be used to grant view access to a private bookmark collection for a non-owner user.
  * @param collectionId - the ID of the bookmark collection to follow
  * @param username - the username of the user following the collection
  * @returns the updated bookmark collection
@@ -965,7 +967,10 @@ export const followBookmarkCollection = async (
 ): Promise<BookmarkCollection | { error: string }> => {
   try {
     const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
-      { _id: new ObjectId(collectionId), isPublic: true },
+      {
+        _id: new ObjectId(collectionId),
+        // isPublic: true
+      },
       { $addToSet: { followers: username } },
       { new: true },
     );
@@ -1117,5 +1122,28 @@ export const findQuestionIDByAnswerID = async (answerID: string): Promise<string
     return question._id.toString();
   } catch (error) {
     throw new Error('Error when finding question ID by answer ID');
+  }
+};
+
+/**
+ * Finds and retrieves a bookmark collection by its ID.
+ * @param collectionId - the ID of the bookmarkCollection to retrieve
+ * @returns - the bookmarkCollection with the given ID
+ */
+export const getBookmarkCollectionById = async (
+  collectionId: string,
+): Promise<BookmarkCollection | { error: string }> => {
+  try {
+    const collection = await BookmarkCollectionModel.findOne({ _id: collectionId }).populate({
+      path: 'savedPosts.postId',
+      model: 'Question',
+      populate: { path: 'questions', model: QuestionModel },
+    });
+    if (!collection) {
+      throw new Error('Bookmark collection not found');
+    }
+    return collection;
+  } catch (error) {
+    return { error: 'Error when retrieving bookmark collection' };
   }
 };
