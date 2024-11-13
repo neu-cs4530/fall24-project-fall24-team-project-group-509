@@ -88,9 +88,13 @@ const commentController = (socket: FakeSOSocket) => {
 
       // update user's activityHistory
       if (type === 'question') {
+        // get title of question
+        const qTitle = await findQuestionIDByAnswerID(id);
+
         await updateActivityHistoryWithQuestionID(
           comment.commentBy,
           id,
+          qTitle as string,
           'comment',
           comment.commentDateTime,
         );

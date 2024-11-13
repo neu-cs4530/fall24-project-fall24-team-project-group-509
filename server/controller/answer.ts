@@ -2,6 +2,7 @@ import express, { Response } from 'express';
 import { Answer, AnswerRequest, AnswerResponse, FakeSOSocket } from '../types';
 import {
   addAnswerToQuestion,
+  findQuestionIDByAnswerID,
   populateDocument,
   saveAnswer,
   updateActivityHistoryWithQuestionID,
@@ -69,7 +70,15 @@ const answerController = (socket: FakeSOSocket) => {
       }
 
       // update user activity history with the question ID
-      await updateActivityHistoryWithQuestionID(ansInfo.ansBy, qid, 'answer', ansInfo.ansDateTime);
+      // get title of the question that the answer is for
+      const qTitle = await findQuestionIDByAnswerID(qid);
+      await updateActivityHistoryWithQuestionID(
+        ansInfo.ansBy,
+        qid,
+        qTitle as string,
+        'answer',
+        ansInfo.ansDateTime,
+      );
 
       const populatedAns = await populateDocument(ansFromDb._id?.toString(), 'answer');
 

@@ -356,6 +356,7 @@ export const saveQuestion = async (question: Question): Promise<QuestionResponse
         $push: {
           activityHistory: {
             postId: result._id,
+            questionTitle: question.title,
             postType: 'Question',
             createdAt: question.askDateTime,
           },
@@ -1051,12 +1052,14 @@ export const getFollowedBookmarkCollections = async (
  * Updates a user's activityHistory in the database with the question that they commented or answered on.
  * @param username - the username of the user
  * @param qid - the ID of the question
+ * @param qTitle - the title of the question
  * @param type - the type of post (comment or answer)
  * @param date - the date of the comment or answer
  */
 export const updateActivityHistoryWithQuestionID = async (
   username: string,
   qid: string,
+  qTitle: string,
   type: 'comment' | 'answer',
   date: Date,
 ): Promise<void> => {
@@ -1071,6 +1074,7 @@ export const updateActivityHistoryWithQuestionID = async (
           $push: {
             activityHistory: {
               postId: qid,
+              questionTitle: qTitle,
               postType: 'Comment',
               createdAt: date,
             },
@@ -1084,6 +1088,7 @@ export const updateActivityHistoryWithQuestionID = async (
           $push: {
             activityHistory: {
               postId: qid,
+              questionTitle: qTitle,
               postType: 'Answer',
               createdAt: date,
             },
@@ -1115,5 +1120,24 @@ export const findQuestionIDByAnswerID = async (answerID: string): Promise<string
     return question._id.toString();
   } catch (error) {
     throw new Error('Error when finding question ID by answer ID');
+  }
+};
+
+/**
+ * Gets a question's title by its ID in the database.
+ * @param questionID - the ID of the question
+ * @returns the title of the corresponding question
+ */
+export const getQuestionTitleByID = async (questionID: string): Promise<string | null> => {
+  try {
+    const question = await QuestionModel.findOne({ _id: new ObjectId(questionID) });
+
+    if (!question) {
+      throw new Error('Question not found');
+    }
+
+    return question.title;
+  } catch (error) {
+    throw new Error('Error when finding question title by ID');
   }
 };
