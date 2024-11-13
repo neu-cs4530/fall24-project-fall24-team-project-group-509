@@ -226,6 +226,12 @@ const bookmarkController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Retrieves a bookmark collection by its ID.
+   * @param req - the GetBookmarkCollectionByIdRequest object containing the collectionId
+   * @param res - the response object
+   * @returns - a Promise that resolves to void
+   */
   const getBookmarkCollectionByIdRoute = async (
     req: GetBookmarkCollectionByIdRequest,
     res: Response,
@@ -253,7 +259,7 @@ const bookmarkController = (socket: FakeSOSocket) => {
   router.post('/createCollection', createBookmarkCollectionRoute);
   router.post('/addQuestionToCollection', addQuestionToBookmarkCollectionRoute);
   router.post('/removeQuestionFromCollection', removeQuestionFromBookmarkCollectionRoute);
-  router.get('/getUserCollections', getUserBookmarkCollectionsRoute);
+  router.get('/getUserCollections/:username/:requesterUsername', getUserBookmarkCollectionsRoute);
   router.post('/followCollection', followBookmarkCollectionRoute);
   router.post('/unfollowCollection', unfollowBookmarkCollectionRoute);
   router.get('/getBookmarkCollectionById/:collectionId', getBookmarkCollectionByIdRoute);

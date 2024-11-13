@@ -5,6 +5,7 @@ import path from 'path';
 import {
   Answer,
   AnswerResponse,
+  Bookmark,
   BookmarkCollection,
   BookmarkSortOption,
   Comment,
@@ -837,7 +838,7 @@ export const addQuestionToBookmarkCollection = async (
   questionId: string,
 ): Promise<BookmarkCollection | { error: string }> => {
   try {
-    const bookmark = {
+    const bookmark: Bookmark = {
       postId: new ObjectId(questionId),
       savedAt: new Date(),
     };
@@ -960,7 +961,8 @@ export const getUserBookmarkCollections = async (
 };
 
 /**
- * Follows a bookmark collection.
+ * Follows a user to a bookmark collection.
+ * This can be used to grant view access to a private bookmark collection for a non-owner user.
  * @param collectionId - the ID of the bookmark collection to follow
  * @param username - the username of the user following the collection
  * @returns the updated bookmark collection
@@ -971,7 +973,10 @@ export const followBookmarkCollection = async (
 ): Promise<BookmarkCollection | { error: string }> => {
   try {
     const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
-      { _id: new ObjectId(collectionId), isPublic: true },
+      {
+        _id: new ObjectId(collectionId),
+        // isPublic: true
+      },
       { $addToSet: { followers: username } },
       { new: true },
     );
@@ -1054,6 +1059,11 @@ export const getFollowedBookmarkCollections = async (
   }
 };
 
+/**
+ * Finds and retrieves a bookmark collection by its ID.
+ * @param collectionId - the ID of the bookmarkCollection to retrieve
+ * @returns - the bookmarkCollection with the given ID
+ */
 export const getBookmarkCollectionById = async (
   collectionId: string,
 ): Promise<BookmarkCollection | { error: string }> => {
