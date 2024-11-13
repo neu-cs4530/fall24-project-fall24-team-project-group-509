@@ -9,6 +9,7 @@ import {
   FakeSOSocket,
   BookmarkCollectionUpdatePayload,
   BookmarkSortOption,
+  GetBookmarkCollectionByIdRequest,
 } from '../types';
 import {
   createBookmarkCollection,
@@ -17,6 +18,7 @@ import {
   getUserBookmarkCollections,
   followBookmarkCollection,
   unfollowBookmarkCollection,
+  getBookmarkCollectionById,
 } from '../models/application';
 
 const bookmarkController = (socket: FakeSOSocket) => {
@@ -224,6 +226,29 @@ const bookmarkController = (socket: FakeSOSocket) => {
     }
   };
 
+  const getBookmarkCollectionByIdRoute = async (
+    req: GetBookmarkCollectionByIdRequest,
+    res: Response,
+  ): Promise<void> => {
+    const { collectionId } = req.params;
+
+    if (!collectionId) {
+      res.status(400).send('Invalid request');
+      return;
+    }
+
+    try {
+      const collection = await getBookmarkCollectionById(collectionId);
+      if ('error' in collection) {
+        throw new Error(collection.error);
+      }
+
+      res.json(collection);
+    } catch (err: unknown) {
+      res.status(500).send(`Error when retrieving bookmark collection: ${(err as Error).message}`);
+    }
+  };
+
   // Define routes
   router.post('/createCollection', createBookmarkCollectionRoute);
   router.post('/addQuestionToCollection', addQuestionToBookmarkCollectionRoute);
@@ -231,6 +256,7 @@ const bookmarkController = (socket: FakeSOSocket) => {
   router.get('/getUserCollections', getUserBookmarkCollectionsRoute);
   router.post('/followCollection', followBookmarkCollectionRoute);
   router.post('/unfollowCollection', unfollowBookmarkCollectionRoute);
+  router.get('/getBookmarkCollectionById/:collectionId', getBookmarkCollectionByIdRoute);
 
   return router;
 };

@@ -24,7 +24,7 @@ const bookmarkCollectionSchema: Schema = new Schema(
       type: Boolean,
       required: true,
     },
-    permittedUsers: [{ type: String, ref: 'User' }],
+    // permittedUsers: [{ type: String, ref: 'User' }],
     followers: [{ type: String, ref: 'User' }],
     savedPosts: [
       {

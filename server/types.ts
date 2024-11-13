@@ -206,8 +206,8 @@ export interface AnswerUpdatePayload {
  * - bio - The bio of the user.
  */
 export interface BioUpdatePayload {
-  username: string; 
-  bio: string;      
+  username: string;
+  bio: string;
 }
 
 /**
@@ -216,13 +216,13 @@ export interface BioUpdatePayload {
  * - profilePictureURL - The url of the profile picture of the user.
  */
 export interface ProfilePictureUpdatePayload {
-  username: string;           // Username of the profile being updated
-  profilePictureURL: string;  // URL of the updated profile picture
+  username: string; // Username of the profile being updated
+  profilePictureURL: string; // URL of the updated profile picture
 }
 
 /**profilePictureFile: Express.Multer.File;
  * Union type representing the payload for a profile update event.
- * 
+ *
  * Ensures that each update contains only the relevant fields for that type of update.
  */
 export type ProfileUpdatePayload = BioUpdatePayload | ProfilePictureUpdatePayload;
@@ -276,7 +276,7 @@ export interface BookmarkCollection {
   title: string;
   owner: string;
   isPublic: boolean;
-  permittedUsers?: string[];
+  // permittedUsers?: string[];
   followers?: string[];
   savedPosts: Bookmark[];
 }
@@ -442,6 +442,16 @@ export interface UnfollowBookmarkCollectionRequest extends Request {
   body: {
     collectionId: string;
     username: string;
+  };
+}
+
+/**
+ * Interface representing the request to get a bookmark collection by its ID.
+ * - collectionId - The unique identifier of the collection.
+ */
+export interface GetBookmarkCollectionByIdRequest extends Request {
+  params: {
+    collectionId: string;
   };
 }
 

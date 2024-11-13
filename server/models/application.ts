@@ -918,7 +918,7 @@ export const getUserBookmarkCollections = async (
       // If the requester is not the owner, retrieve public collections or private collections they are permitted to view
       collections = await BookmarkCollectionModel.find({
         owner: username,
-        $or: [{ isPublic: true }, { permittedUsers: requesterUsername }],
+        $or: [{ isPublic: true }, { followers: requesterUsername }],
       }).populate({
         path: 'savedPosts.postId',
         model: 'Question',
@@ -1051,5 +1051,23 @@ export const getFollowedBookmarkCollections = async (
     return collections;
   } catch (error) {
     return { error: 'Error when retrieving followed bookmark collections' };
+  }
+};
+
+export const getBookmarkCollectionById = async (
+  collectionId: string,
+): Promise<BookmarkCollection | { error: string }> => {
+  try {
+    const collection = await BookmarkCollectionModel.findOne({ _id: collectionId }).populate({
+      path: 'savedPosts.postId',
+      model: 'Question',
+      populate: { path: 'questions', model: QuestionModel },
+    });
+    if (!collection) {
+      throw new Error('Bookmark collection not found');
+    }
+    return collection;
+  } catch (error) {
+    return { error: 'Error when retrieving bookmark collection' };
   }
 };
