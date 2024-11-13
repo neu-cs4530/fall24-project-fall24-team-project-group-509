@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { handleHyperlink } from '../../../../tool';
 import CommentSection from '../../commentSection';
 import './index.css';
@@ -37,7 +38,9 @@ const AnswerView = ({ text, ansBy, meta, comments, handleAddComment }: AnswerPro
       {handleHyperlink(text)}
     </div>
     <div className='answerAuthor'>
-      <div className='answer_author'>{ansBy}</div>
+      <div className='answer_author'>
+        <Link to={`/user/${ansBy}`}>{ansBy}</Link>
+      </div>
       <div className='answer_question_meta'>{meta}</div>
     </div>
     <CommentSection comments={comments} handleAddComment={handleAddComment} />

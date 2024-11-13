@@ -35,7 +35,7 @@ const userSchema: Schema = new Schema(
           postId: {
             type: Schema.Types.ObjectId,
             required: true,
-            refPath: 'activityHistory.postType',
+            // refPath: 'activityHistory.postType',
           },
           postType: { type: String, required: true, enum: ['Question', 'Answer', 'Comment'] },
           createdAt: { type: Date, default: Date.now },

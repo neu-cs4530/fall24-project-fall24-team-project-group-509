@@ -355,7 +355,7 @@ export const saveQuestion = async (question: Question): Promise<QuestionResponse
       {
         $push: {
           activityHistory: {
-            postId: result._id,
+            postId: result._id.toString(),
             postType: 'Question',
             createdAt: question.askDateTime,
           },
@@ -380,19 +380,26 @@ export const saveAnswer = async (answer: Answer): Promise<AnswerResponse> => {
   try {
     const result = await AnswerModel.create(answer);
 
-    // Update the user's activity history
-    await UserModel.findOneAndUpdate(
-      { username: answer.ansBy },
-      {
-        $push: {
-          activityHistory: {
-            postId: result._id,
-            postType: 'Answer',
-            createdAt: answer.ansDateTime,
-          },
-        },
-      },
-    );
+    // // find the question that contains the answer
+    // const question = await QuestionModel.findOne({ answers: result._id });
+
+    // // if (!question) {
+    // //   throw new Error('Question not found for the answer');
+    // // }
+
+    // // Update the user's activity history
+    // await UserModel.findOneAndUpdate(
+    //   { username: answer.ansBy },
+    //   {
+    //     $push: {
+    //       activityHistory: {
+    //         postId: question ? question._id : null,
+    //         postType: 'Answer',
+    //         createdAt: answer.ansDateTime,
+    //       },
+    //     },
+    //   },
+    // );
 
     return result;
   } catch (error) {
@@ -410,20 +417,6 @@ export const saveAnswer = async (answer: Answer): Promise<AnswerResponse> => {
 export const saveComment = async (comment: Comment): Promise<CommentResponse> => {
   try {
     const result = await CommentModel.create(comment);
-
-    // Update the user's activity history
-    await UserModel.findOneAndUpdate(
-      { username: comment.commentBy },
-      {
-        $push: {
-          activityHistory: {
-            postId: result._id,
-            postType: 'Comment',
-            createdAt: comment.commentDateTime,
-          },
-        },
-      },
-    );
 
     return result;
   } catch (error) {
@@ -767,9 +760,10 @@ export const getUserByUsername = async (
     if (!username || username === '') {
       throw new Error('Invalid username');
     }
-    const result = await UserModel.findOne({ username }).populate({
-      path: 'activityHistory.postId',
-    });
+    const result = await UserModel.findOne({ username });
+    // .populate({
+    //   path: 'activityHistory.postId',
+    // });
     return result;
   } catch (error) {
     return { error: 'Error when fetching user by username' };
@@ -1051,5 +1045,77 @@ export const getFollowedBookmarkCollections = async (
     return collections;
   } catch (error) {
     return { error: 'Error when retrieving followed bookmark collections' };
+  }
+};
+
+/**
+ * Updates a user's activityHistory in the database with the question that they commented or answered on.
+ * @param username - the username of the user
+ * @param qid - the ID of the question
+ * @param type - the type of post (comment or answer)
+ * @param date - the date of the comment or answer
+ */
+export const updateActivityHistoryWithQuestionID = async (
+  username: string,
+  qid: string,
+  type: 'comment' | 'answer',
+  date: Date,
+): Promise<void> => {
+  try {
+    if (!qid) {
+      throw new Error('Provided question ID is undefined.');
+    }
+    if (type === 'comment') {
+      await UserModel.findOneAndUpdate(
+        { username },
+        {
+          $push: {
+            activityHistory: {
+              postId: qid,
+              postType: 'Comment',
+              createdAt: date,
+            },
+          },
+        },
+      );
+    } else if (type === 'answer') {
+      await UserModel.findOneAndUpdate(
+        { username },
+        {
+          $push: {
+            activityHistory: {
+              postId: qid,
+              postType: 'Answer',
+              createdAt: date,
+            },
+          },
+        },
+      );
+    }
+  } catch (error) {
+    // Log the error for debugging purposes
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    // eslint-disable-next-line no-console
+    console.log('Error when updating activity history with question ID:', errorMessage);
+  }
+};
+
+/**
+ * Gets the question ID that contains the answer with the given answer ID.
+ * @param answerID - the ID of the answer
+ * @returns the ID of the question containing the answer.
+ */
+export const findQuestionIDByAnswerID = async (answerID: string): Promise<string | null> => {
+  try {
+    const question = await QuestionModel.findOne({ answers: new ObjectId(answerID) });
+
+    if (!question) {
+      throw new Error('Question not found');
+    }
+    // eslint-disable-next-line no-console
+    console.log(question._id.toString());
+    return question._id.toString();
+  } catch (error) {
+    throw new Error('Error when finding question ID by answer ID');
   }
 };
