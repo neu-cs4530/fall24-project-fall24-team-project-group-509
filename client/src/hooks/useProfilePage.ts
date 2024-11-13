@@ -16,6 +16,10 @@ const useProfilePage = () => {
   const [pfp, setPfp] = useState<string>('');
   const [isEditingBio, setIsEditingBio] = useState(false);
 
+  const sortActivityHistory = (
+    history: Array<{ postID: string; postType: string; createdAt: Date }>,
+  ) => history.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
@@ -26,13 +30,14 @@ const useProfilePage = () => {
         setBio(userProfile.bio);
         setPfp(userProfile.profilePictureURL);
         if (userProfile.activityHistory) {
-          setActivityHistory(
+          const sortedHistory = sortActivityHistory(
             userProfile.activityHistory.map(a => ({
               postID: a.postId,
               postType: a.postType,
               createdAt: new Date(a.createdAt),
             })),
           );
+          setActivityHistory(sortedHistory);
         }
         setBookmarks(userProfile.bookmarks);
       } catch (error) {
@@ -46,7 +51,7 @@ const useProfilePage = () => {
     socket.on(
       'activityHistoryUpdate',
       (newActivityHistory: Array<{ postID: string; postType: string; createdAt: Date }>) => {
-        setActivityHistory(newActivityHistory);
+        setActivityHistory(sortActivityHistory(newActivityHistory));
       },
     );
 

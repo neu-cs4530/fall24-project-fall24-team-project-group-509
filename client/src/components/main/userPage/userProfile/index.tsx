@@ -29,15 +29,7 @@ const ProfileView = () => {
     isEditingBio,
   } = useProfilePage();
 
-  /*
-  const word = (type: string): string => {
-    if (type === 'Answer') {
-      return 'an';
-    } else {
-      return 'a';
-    }
-  }
-    */
+  const getArticle = (type: string) => (type.toLowerCase() === 'answer' ? 'an' : 'a');
 
   return (
     <div className='user-profile'>
@@ -81,10 +73,10 @@ const ProfileView = () => {
         <h3>Activity History</h3>
         <ul className='history-list'>
           {activityHistory.length > 0 ? (
-            activityHistory.map((post, index) => (
-              <li key={index} className='history-item'>
+            activityHistory.map(post => (
+              <li key={post.postID} className='history-item'>
                 <p className='history-text'>
-                  {username} added a {post.postType} on{' '}
+                  {username} added {getArticle(post.postType)} {post.postType.toLowerCase()} on{' '}
                   <Link to={`/question/${post.postID}`}>{post.postID}</Link>
                 </p>
               </li>
