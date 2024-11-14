@@ -5,6 +5,7 @@ import TextArea from '../../baseComponents/textarea';
 import useProfilePage from '../../../../hooks/useProfilePage';
 
 // TODO: add functionality abt following bookmarked collections (when implemented)
+// TODO: Link a collection's title to a new page with its contents
 
 /**
  * ProfileView component that displays the content of a user profile with the username, profile picture,
@@ -87,21 +88,16 @@ const ProfileView = () => {
         </ul>
       </div>
       <div className='collections'>
-        <h3>Saved Posts</h3>
-        {bookmarks && bookmarks.length === 0 && <p>No saved posts for {username}</p>}
-        {bookmarks &&
-          bookmarks.map(bookmark => (
-            <div key={bookmark._id}>
-              {(bookmark.isPublic || requesterUsername === username) && (
-                <div className='bookmarks'>
-                  {bookmark.title}
-                  {bookmark.savedPosts.map(post => (
-                    <div key={post._id}>{post.title}</div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+        <h3>Bookmarks</h3>
+        {bookmarks && bookmarks.length > 0 ? (
+          bookmarks.map(collection => (
+            <li key={collection._id} className='bookmark-collection'>
+              <Link to={``}>{collection.title}</Link>
+            </li>
+          ))
+        ) : (
+          <p>{username} has no bookmarked posts</p>
+        )}
       </div>
     </div>
   );
