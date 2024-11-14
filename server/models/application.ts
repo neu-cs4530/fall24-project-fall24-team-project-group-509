@@ -7,6 +7,7 @@ import {
   AnswerResponse,
   Bookmark,
   BookmarkCollection,
+  BookmarkCollectionResponse,
   BookmarkSortOption,
   Comment,
   CommentResponse,
@@ -799,7 +800,7 @@ export const createBookmarkCollection = async (
   username: string,
   title: string,
   isPublic: boolean,
-): Promise<BookmarkCollection | { error: string }> => {
+): Promise<BookmarkCollectionResponse> => {
   try {
     const newCollection = new BookmarkCollectionModel({
       title,
@@ -830,7 +831,7 @@ export const createBookmarkCollection = async (
 export const addQuestionToBookmarkCollection = async (
   collectionId: string,
   questionId: string,
-): Promise<BookmarkCollection | { error: string }> => {
+): Promise<BookmarkCollectionResponse> => {
   try {
     const bookmark: Bookmark = {
       postId: new ObjectId(questionId),
@@ -862,7 +863,7 @@ export const addQuestionToBookmarkCollection = async (
 export const removeQuestionFromBookmarkCollection = async (
   collectionId: string,
   questionId: string,
-): Promise<BookmarkCollection | { error: string }> => {
+): Promise<BookmarkCollectionResponse> => {
   try {
     const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
       { _id: new ObjectId(collectionId) },
@@ -964,7 +965,7 @@ export const getUserBookmarkCollections = async (
 export const followBookmarkCollection = async (
   collectionId: string,
   username: string,
-): Promise<BookmarkCollection | { error: string }> => {
+): Promise<BookmarkCollectionResponse> => {
   try {
     const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
       {
@@ -1000,7 +1001,7 @@ export const followBookmarkCollection = async (
 export const unfollowBookmarkCollection = async (
   collectionId: string,
   username: string,
-): Promise<BookmarkCollection | { error: string }> => {
+): Promise<BookmarkCollectionResponse> => {
   try {
     const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
       { _id: new ObjectId(collectionId) },
@@ -1132,7 +1133,7 @@ export const findQuestionIDByAnswerID = async (answerID: string): Promise<string
  */
 export const getBookmarkCollectionById = async (
   collectionId: string,
-): Promise<BookmarkCollection | { error: string }> => {
+): Promise<BookmarkCollectionResponse> => {
   try {
     const collection = await BookmarkCollectionModel.findOne({ _id: collectionId }).populate({
       path: 'savedPosts.postId',
