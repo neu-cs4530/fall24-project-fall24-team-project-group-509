@@ -1149,6 +1149,6 @@ export const getBookmarkCollectionById = async (
     }
     return collection;
   } catch (error) {
-    return { error: 'Error when retrieving bookmark collection' };
+    return { error: `Error when retrieving bookmark collection: ${(error as Error).message}` };
   }
 };

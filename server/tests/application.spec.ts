@@ -1430,7 +1430,10 @@ describe('getBookmarkCollectionById', () => {
       _id: new ObjectId('507f191e810c19729de860ea'),
       owner: 'testUsername',
       title: 'testBookmarkCollectionTitle',
-      savedPosts: [],
+      savedPosts: [
+        { postId: QUESTIONS[0], savedAt: new Date() },
+        { postId: QUESTIONS[1], savedAt: new Date() },
+      ],
       isPublic: true,
     };
 
@@ -1438,7 +1441,20 @@ describe('getBookmarkCollectionById', () => {
 
     const result = await getBookmarkCollectionById('507f191e810c19729de860ea');
 
-    // expect(result as ._id).toEqual(new ObjectId('507f191e810c19729de860ea'));
-    // expect(result?.title).toEqual('testBookmarkCollectionTitle');
+    expect((result as BookmarkCollection)._id).toEqual(new ObjectId('507f191e810c19729de860ea'));
+    expect((result as BookmarkCollection).title).toEqual('testBookmarkCollectionTitle');
+    expect((result as BookmarkCollection).savedPosts.length).toEqual(2);
+    expect((result as BookmarkCollection).savedPosts[0].postId).toEqual(QUESTIONS[0]._id);
+    expect((result as BookmarkCollection).savedPosts[1].postId).toEqual(QUESTIONS[1]._id);
+  });
+
+  test('getBookmarkCollectionById should return an object with error if the bookmark collection id does not exist', async () => {
+    mockingoose(BookmarkCollectionModel).toReturn(null, 'findOne');
+
+    const result = await getBookmarkCollectionById('507f191e810c19729de860ea');
+
+    expect(result).toEqual({
+      error: 'Error when retrieving bookmark collection: Bookmark collection not found',
+    });
   });
 });
