@@ -1,7 +1,7 @@
 import { BookmarkCollection } from '../types';
 import api from './config';
 
-const BOOKMARK_API_URL = `${process.env.REACT_APP_API_URL}/bookmark`;
+const BOOKMARK_API_URL = `${process.env.REACT_APP_SERVER_URL}/bookmark`;
 
 /**
  *
@@ -15,7 +15,7 @@ const createBookmarkCollection = async (
   title: string,
   isPublic: boolean,
 ): Promise<BookmarkCollection> => {
-  const res = await api.post(`${BOOKMARK_API_URL}/createBookmarkCollection`, {
+  const res = await api.post(`${BOOKMARK_API_URL}/createCollection`, {
     username,
     title,
     isPublic,
@@ -31,7 +31,7 @@ const addQuestionToBookmarkCollection = async (
   collectionID: string,
   postID: string,
 ): Promise<BookmarkCollection> => {
-  const res = await api.post(`${BOOKMARK_API_URL}/addQuestionToBookmarkCollection`, {
+  const res = await api.post(`${BOOKMARK_API_URL}/addQuestionToCollection`, {
     collectionID,
     postID,
   });
@@ -52,7 +52,7 @@ const removeQuestionFromBookmarkCollection = async (
   collectionID: string,
   postID: string,
 ): Promise<BookmarkCollection> => {
-  const res = await api.post(`${BOOKMARK_API_URL}/removeQuestionFromBookmarkCollection`, {
+  const res = await api.post(`${BOOKMARK_API_URL}/removeQuestionFromCollection`, {
     collectionID,
     postID,
   });
@@ -132,9 +132,19 @@ const unfollowBookmarkCollection = async (
  * @returns - the bookmark collection
  */
 const getBookmarkCollectionById = async (collectionID: string): Promise<BookmarkCollection> => {
-  const res = await api.get(`${BOOKMARK_API_URL}/getCollectionById/${collectionID}`);
+  const res = await api.get(`${BOOKMARK_API_URL}/getBookmarkCollectionById/${collectionID}`);
   if (res.status !== 200) {
     throw new Error('Error when fetching bookmark collection by id');
   }
   return res.data;
+};
+
+export {
+  createBookmarkCollection,
+  addQuestionToBookmarkCollection,
+  removeQuestionFromBookmarkCollection,
+  getUserBookmarkCollections,
+  followBookmarkCollection,
+  unfollowBookmarkCollection,
+  getBookmarkCollectionById,
 };

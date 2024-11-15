@@ -363,8 +363,8 @@ export type BookmarkCollectionResponse = BookmarkCollection | { error: string };
  */
 export interface GetBookmarksRequest extends Request {
   query: {
-    username: string | undefined;
-    requesterUsername: string | undefined;
+    username: string;
+    requesterUsername: string;
     sortOption: BookmarkSortOption;
   };
 }
