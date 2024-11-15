@@ -27,7 +27,7 @@ const userSchema: Schema = new Schema(
     profilePictureURL: {
       type: String,
       required: false,
-      default: '',
+      default: 'https://storage.googleapis.com/cs4530-509-userprofile-pictures/Dog-cloud.jpg',
     },
     activityHistory: {
       type: [

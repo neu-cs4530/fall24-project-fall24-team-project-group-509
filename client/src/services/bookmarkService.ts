@@ -138,3 +138,13 @@ const getBookmarkCollectionById = async (collectionID: string): Promise<Bookmark
   }
   return res.data;
 };
+
+export {
+  createBookmarkCollection,
+  addQuestionToBookmarkCollection,
+  removeQuestionFromBookmarkCollection,
+  getUserBookmarkCollections,
+  followBookmarkCollection,
+  unfollowBookmarkCollection,
+  getBookmarkCollectionById,
+};
