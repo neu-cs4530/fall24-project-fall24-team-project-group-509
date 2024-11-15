@@ -48,3 +48,21 @@
 .question_meta {
   color: #bbbbbb;
 }
+
+.bookmark-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  display: flex;
+  align-items: center;
+}
+
+.bookmark-button:focus {
+  outline: none;
+}
+
+.bookmark-button:hover svg {
+  color: #007bff; 
+}
