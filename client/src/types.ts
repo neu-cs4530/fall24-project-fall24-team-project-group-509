@@ -182,12 +182,28 @@ export interface ServerToClientEvents {
  * Interface representing a bookmark collection, which contains:
  * - _id - The unique identifier for the bookmark collection. Optional field.
  * - title - The title of the bookmark collection.
+ * - owner - The username of the owner of the bookmark collection.
  * - isPublic - A boolean indicating whether the bookmark collection is public or private.
+ * - followers - An array of usernames who follow the bookmark collection.
  * - savedPosts - An array of questions that have been saved to the collection.
  */
 export interface BookmarkCollection {
   _id?: string;
   title: string;
+  owner: string;
   isPublic: boolean;
+  followers: string[];
   savedPosts: Question[];
+}
+
+/**
+ * Interface representing a bookmark, which contains:
+ * - _id - The unique identifier for the bookmark. Optional field.
+ * - postID - The Question that has been bookmarked.
+ * - savedAt - The date and time when the bookmark was created.
+ */
+export interface Bookmark {
+  _id?: string;
+  postID: Question;
+  savedAt: Date;
 }
