@@ -1,7 +1,7 @@
 import { BookmarkCollection } from '../types';
 import api from './config';
 
-const BOOKMARK_API_URL = `${process.env.REACT_APP_API_URL}/bookmark`;
+const BOOKMARK_API_URL = `${process.env.REACT_APP_SERVER_URL}/bookmark`;
 
 /**
  *
@@ -15,12 +15,11 @@ const createBookmarkCollection = async (
   title: string,
   isPublic: boolean,
 ): Promise<BookmarkCollection> => {
-  const res = await api.post(`${BOOKMARK_API_URL}/createBookmarkCollection`, {
+  const res = await api.post(`${BOOKMARK_API_URL}/createCollection`, {
     username,
     title,
     isPublic,
   });
-
   if (res.status !== 200) {
     throw new Error('Error when creating bookmark collection');
   }
@@ -28,12 +27,12 @@ const createBookmarkCollection = async (
 };
 
 const addQuestionToBookmarkCollection = async (
-  collectionID: string,
-  postID: string,
+  collectionId: string,
+  postId: string,
 ): Promise<BookmarkCollection> => {
-  const res = await api.post(`${BOOKMARK_API_URL}/addQuestionToBookmarkCollection`, {
-    collectionID,
-    postID,
+  const res = await api.post(`${BOOKMARK_API_URL}/addQuestionToCollection`, {
+    collectionId,
+    postId,
   });
 
   if (res.status !== 200) {
@@ -137,4 +136,11 @@ const getBookmarkCollectionById = async (collectionID: string): Promise<Bookmark
     throw new Error('Error when fetching bookmark collection by id');
   }
   return res.data;
+};
+
+export {
+  getUserBookmarkCollections,
+  createBookmarkCollection,
+  addQuestionToBookmarkCollection,
+  removeQuestionFromBookmarkCollection,
 };

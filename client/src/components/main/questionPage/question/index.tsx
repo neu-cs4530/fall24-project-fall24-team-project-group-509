@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './index.css';
 import { getMetaData } from '../../../../tool';
 import { Question } from '../../../../types';
+import BookmarkButton from '../../bookmarkButton';
 
 /**
  * Interface representing the props for the Question component.
@@ -76,6 +77,15 @@ const QuestionView = ({ q }: QuestionProps) => {
         <div className='question_author'>{q.askedBy}</div>
         <div>&nbsp;</div>
         <div className='question_meta'>asked {getMetaData(new Date(q.askDateTime))}</div>
+        {/* Bookmark button */}
+        {q._id && (
+          <div
+            className='bookmark-icon-container'
+            onClick={e => e.stopPropagation()} // Prevent navigation on icon click
+          >
+            <BookmarkButton questionId={q._id} />
+          </div>
+        )}
       </div>
     </div>
   );
