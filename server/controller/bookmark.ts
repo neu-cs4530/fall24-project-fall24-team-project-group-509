@@ -161,7 +161,7 @@ const bookmarkController = (socket: FakeSOSocket) => {
     try {
       const collections = await getUserBookmarkCollections(username, requesterUsername, sortOption);
       if ('error' in collections) {
-        throw new Error(collections.error);
+        throw new Error(collections.error as string);
       }
 
       res.json(collections);

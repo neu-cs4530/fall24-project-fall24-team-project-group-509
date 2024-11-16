@@ -850,7 +850,9 @@ export const addQuestionToBookmarkCollection = async (
 
     return updatedCollection;
   } catch (error) {
-    return { error: 'Error when adding question to bookmark collection' };
+    return {
+      error: `Error when adding question to bookmark collection: ${(error as Error).message}`,
+    };
   }
 };
 
@@ -877,7 +879,9 @@ export const removeQuestionFromBookmarkCollection = async (
 
     return updatedCollection;
   } catch (error) {
-    return { error: 'Error when removing question from bookmark collection' };
+    return {
+      error: `Error when removing question from bookmark collection: ${(error as Error).message}`,
+    };
   }
 };
 
@@ -892,7 +896,7 @@ export const getUserBookmarkCollections = async (
   username: string,
   requesterUsername: string,
   sortOption?: BookmarkSortOption,
-): Promise<BookmarkCollection[] | { error: string }> => {
+): Promise<BookmarkCollection[]> => {
   try {
     // Find the user
     const user = await UserModel.findOne({ username });
@@ -951,7 +955,7 @@ export const getUserBookmarkCollections = async (
 
     return collections;
   } catch (error) {
-    return { error: 'Error when retrieving bookmark collections' };
+    return [];
   }
 };
 
@@ -988,7 +992,7 @@ export const followBookmarkCollection = async (
 
     return updatedCollection;
   } catch (error) {
-    return { error: 'Error when following bookmark collection' };
+    return { error: `Error when following bookmark collection: ${(error as Error).message}` };
   }
 };
 
@@ -1021,7 +1025,7 @@ export const unfollowBookmarkCollection = async (
 
     return updatedCollection;
   } catch (error) {
-    return { error: 'Error when unfollowing bookmark collection' };
+    return { error: `Error when unfollowing bookmark collection: ${(error as Error).message}` };
   }
 };
 
@@ -1032,7 +1036,7 @@ export const unfollowBookmarkCollection = async (
  */
 export const getFollowedBookmarkCollections = async (
   username: string,
-): Promise<BookmarkCollection[] | { error: string }> => {
+): Promise<BookmarkCollection[]> => {
   try {
     const user = await UserModel.findOne({ username });
 
@@ -1050,7 +1054,7 @@ export const getFollowedBookmarkCollections = async (
 
     return collections;
   } catch (error) {
-    return { error: 'Error when retrieving followed bookmark collections' };
+    return [];
   }
 };
 
@@ -1145,6 +1149,6 @@ export const getBookmarkCollectionById = async (
     }
     return collection;
   } catch (error) {
-    return { error: 'Error when retrieving bookmark collection' };
+    return { error: `Error when retrieving bookmark collection: ${(error as Error).message}` };
   }
 };
