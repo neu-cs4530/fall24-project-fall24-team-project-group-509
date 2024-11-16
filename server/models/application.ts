@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb';
 import { QueryOptions } from 'mongoose';
 import { Storage } from '@google-cloud/storage';
 import path from 'path';
-import axios from 'axios';
+import axios from 'axios'; // For making HTTP requests
 import {
   Answer,
   AnswerResponse,
@@ -11,6 +11,9 @@ import {
   BookmarkSortOption,
   Comment,
   CommentResponse,
+  Flag,
+  FlagContentRequest,
+  FlagResponse,
   OrderType,
   Question,
   QuestionResponse,
@@ -114,7 +117,7 @@ const getMostRecentAnswerTime = (question: Question, mp: Map<string, Date>): voi
   const answers = question.answers as Answer[];
   answers.forEach((answer: Answer) => {
     if (question._id !== undefined) {
-      const currentMostRecent = mp.get(question?._id.toString());
+      const currentMostRecent = mp.get(question._id.toString());
       if (!currentMostRecent || currentMostRecent < answer.ansDateTime) {
         mp.set(question._id.toString(), answer.ansDateTime);
       }
@@ -213,20 +216,30 @@ export const addTag = async (tag: Tag): Promise<Tag | null> => {
  * Retrieves questions from the database, ordered by the specified criteria.
  *
  * @param {OrderType} order - The order type to filter the questions
+ * @param {string} username - The username of the user requesting the questions
  *
  * @returns {Promise<Question[]>} - Promise that resolves to a list of ordered questions
  */
-export const getQuestionsByOrder = async (order: OrderType): Promise<Question[]> => {
+export const getQuestionsByOrder = async (
+  order: OrderType,
+  username: string,
+): Promise<Question[]> => {
   try {
     let qlist = [];
     if (order === 'active') {
-      qlist = await QuestionModel.find().populate([
+      qlist = await QuestionModel.find({ isRemoved: false }).populate([
         { path: 'tags', model: TagModel },
         { path: 'answers', model: AnswerModel },
       ]);
       return sortQuestionsByActive(qlist);
     }
-    qlist = await QuestionModel.find().populate([{ path: 'tags', model: TagModel }]);
+    qlist = await QuestionModel.find({ isRemoved: false }).populate([
+      { path: 'tags', model: TagModel },
+    ]);
+
+    // Exclude questions flagged by the user
+    qlist = qlist.filter(q => !q.flags?.some(f => f.flaggedBy === username));
+
     if (order === 'unanswered') {
       return sortQuestionsByUnanswered(qlist);
     }
@@ -359,6 +372,12 @@ export const fetchAndIncrementQuestionViewsById = async (
       },
       { path: 'comments', model: CommentModel },
     ]);
+
+    // Exclude content flagged by the user
+    if (q?.flags?.some(f => f.flaggedBy === username)) {
+      return { error: 'This content has been flagged by you and is hidden.' };
+    }
+
     return q;
   } catch (error) {
     return { error: 'Error when fetching and updating a question' };
@@ -1204,6 +1223,123 @@ export const getBookmarkCollectionById = async (
     return collection;
   } catch (error) {
     return { error: 'Error when retrieving bookmark collection' };
+  }
+};
+
+/**
+ * Flags content (question, answer, or comment) as inappropriate.
+ *
+ * @param {FlagContentRequest} flagRequest - The flag request containing contentId, contentType, flaggedBy, and reason.
+ * @returns {Promise<FlagResponse>} - The saved flag or an error message.
+ */
+export const flagContent = async (flagRequest: FlagContentRequest): Promise<FlagResponse> => {
+  try {
+    const { contentId, contentType, flaggedBy, reason } = flagRequest.body;
+    const flag: Flag = {
+      flaggedBy,
+      reason,
+      dateFlagged: new Date(),
+      status: 'pending',
+    };
+
+    let content;
+    if (contentType === 'question') {
+      content = await QuestionModel.findOneAndUpdate(
+        { _id: contentId },
+        { $push: { flags: flag } },
+        { new: true },
+      );
+    } else if (contentType === 'answer') {
+      content = await AnswerModel.findOneAndUpdate(
+        { _id: contentId },
+        { $push: { flags: flag } },
+        { new: true },
+      );
+    } else if (contentType === 'comment') {
+      content = await CommentModel.findOneAndUpdate(
+        { _id: contentId },
+        { $push: { flags: flag } },
+        { new: true },
+      );
+    } else {
+      throw new Error('Invalid content type');
+    }
+
+    if (!content) {
+      throw new Error('Content not found');
+    }
+
+    return flag;
+  } catch (error) {
+    return { error: `Error when flagging content: ${(error as Error).message}` };
+  }
+};
+
+/**
+ * Reviews flagged content by a moderator.
+ *
+ * @param contentId - The ID of the content being reviewed.
+ * @param contentType - The type of content ('question', 'answer', 'comment').
+ * @param moderatorAction - The action taken by the moderator ('removed', 'allowed', 'userBanned').
+ * @param moderatorComment - Optional comments from the moderator.
+ * @param moderatorUsername - The username of the moderator performing the action.
+ *
+ * @returns A Promise resolving to the updated content or an error message.
+ */
+export const reviewFlaggedContent = async (
+  contentId: string,
+  contentType: 'question' | 'answer' | 'comment',
+  moderatorAction: 'removed' | 'allowed' | 'userBanned',
+  moderatorComment: string | undefined,
+  moderatorUsername: string,
+): Promise<QuestionResponse | AnswerResponse | CommentResponse | { error: string }> => {
+  try {
+    let content;
+    if (contentType === 'question') {
+      content = await QuestionModel.findOne({ _id: contentId });
+    } else if (contentType === 'answer') {
+      content = await AnswerModel.findOne({ _id: contentId });
+    } else if (contentType === 'comment') {
+      content = await CommentModel.findOne({ _id: contentId });
+    } else {
+      throw new Error('Invalid content type');
+    }
+
+    if (!content) {
+      throw new Error('Content not found');
+    }
+
+    // Update the flags
+    content.flags = content.flags?.map(flag => ({
+      ...flag,
+      status: 'reviewed',
+      moderatorAction,
+      moderatorComment,
+    }));
+
+    // Perform moderator action
+    if (moderatorAction === 'removed') {
+      content.isRemoved = true;
+    } else if (moderatorAction === 'userBanned') {
+      // Ban the user who created the content
+      let usernameToBan = '';
+      if (contentType === 'question') {
+        usernameToBan = (content as Question).askedBy;
+      } else if (contentType === 'answer') {
+        usernameToBan = (content as Answer).ansBy;
+      } else if (contentType === 'comment') {
+        usernameToBan = (content as Comment).commentBy;
+      }
+
+      await UserModel.findOneAndUpdate({ username: usernameToBan }, { isBanned: true });
+    }
+
+    // Save the content
+    await content.save();
+
+    return content;
+  } catch (error) {
+    return { error: `Error when reviewing flagged content: ${(error as Error).message}` };
   }
 };
 
