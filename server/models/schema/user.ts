@@ -11,6 +11,8 @@ import { Schema } from 'mongoose';
  * - `activityHistory`: An array of the user's activities.
  * - `bookmarkCollections`: An array of bookmark collections owned by the user.
  * - `followedBookmarkCollections`: An array of bookmark collections the user is following.
+ * - `role`: The role of the user ('user' or 'moderator').
+ * - `isBanned`: A boolean indicating whether the user is banned.
  */
 const userSchema: Schema = new Schema(
   {
@@ -21,12 +23,10 @@ const userSchema: Schema = new Schema(
     },
     bio: {
       type: String,
-      required: false,
       default: '',
     },
     profilePictureURL: {
       type: String,
-      required: false,
       default: '',
     },
     activityHistory: {
@@ -50,6 +50,15 @@ const userSchema: Schema = new Schema(
     followedBookmarkCollections: {
       type: [{ type: Schema.Types.ObjectId, ref: 'BookmarkCollection' }],
       default: [],
+    },
+    role: {
+      type: String,
+      enum: ['user', 'moderator'],
+      default: 'user',
+    },
+    isBanned: {
+      type: Boolean,
+      default: false,
     },
   },
   { collection: 'User' },

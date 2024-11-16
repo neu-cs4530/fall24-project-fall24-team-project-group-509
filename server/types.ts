@@ -10,12 +10,38 @@ export type FakeSOSocket = Server<ServerToClientEvents>;
 export type OrderType = 'newest' | 'unanswered' | 'active' | 'mostViewed';
 
 /**
+ * Type representing possible reasons for flagging content.
+ */
+export type FlagReason = 'spam' | 'offensive language' | 'irrelevant content' | 'other';
+
+
+/**
+ * Interface representing a flag on content.
+ * - flaggedBy - The username of the user who flagged the content.
+ * - reason - The reason for flagging the content.
+ * - dateFlagged - The date and time when the content was flagged.
+ * - status - The status of the flag ('pending', 'reviewed', 'rejected').
+ * - moderatorAction - The action taken by the moderator ('removed', 'allowed', 'userBanned'). Optional.
+ * - moderatorComment - Comments added by the moderator. Optional.
+ */
+export interface Flag {
+  flaggedBy: string;
+  reason: FlagReason;
+  dateFlagged: Date;
+  status: 'pending' | 'reviewed' | 'rejected';
+  moderatorAction?: 'removed' | 'allowed' | 'userBanned';
+  moderatorComment?: string;
+}
+
+/**
  * Interface representing an Answer document, which contains:
  * - _id - The unique identifier for the answer. Optional field
  * - text - The content of the answer
  * - ansBy - The username of the user who wrote the answer
  * - ansDateTime - The date and time when the answer was created
  * - comments - Object IDs of comments that have been added to the answer by users, or comments themselves if populated
+ * - flags - An array of flags associated with the answer. Optional.
+ * - isRemoved - A boolean indicating whether the answer has been removed by a moderator. Optional.
  */
 export interface Answer {
   _id?: ObjectId;
@@ -23,17 +49,21 @@ export interface Answer {
   ansBy: string;
   ansDateTime: Date;
   comments: Comment[] | ObjectId[];
+  flags?: Flag[];
+  isRemoved?: boolean;
 }
 
 /**
  * Interface extending the request body when adding an answer to a question, which contains:
  * - qid - The unique identifier of the question being answered
  * - ans - The answer being added
+ * Note: The answer text will be automatically tested for profanity and may be rejected if inappropriate content is found.
  */
 export interface AnswerRequest extends Request {
   body: {
     qid: string;
     ans: Answer;
+    
   };
 }
 
@@ -66,6 +96,8 @@ export interface Tag {
  * - upVotes - An array of usernames that have upvoted the question.
  * - downVotes - An array of usernames that have downvoted the question.
  * - comments - Object IDs of comments that have been added to the question by users, or comments themselves if populated.
+ * - flags - An array of flags associated with the question. Optional.
+ * - isRemoved - A boolean indicating whether the question has been removed by a moderator. Optional.
  */
 export interface Question {
   _id?: ObjectId;
@@ -79,6 +111,8 @@ export interface Question {
   upVotes: string[];
   downVotes: string[];
   comments: Comment[] | ObjectId[];
+  flags?: Flag[];
+  isRemoved?: boolean;
 }
 
 /**
@@ -140,13 +174,16 @@ export interface VoteRequest extends Request {
  * - text - The content of the comment.
  * - commentBy - The username of the user who commented.
  * - commentDateTime - The date and time when the comment was posted.
- *
+ * - flags - An array of flags associated with the question. Optional.
+ * - isRemoved - A boolean indicating whether the question has been removed by a moderator. Optional.
  */
 export interface Comment {
   _id?: ObjectId;
   text: string;
   commentBy: string;
   commentDateTime: Date;
+  flags?: Flag[];
+  isRemoved?: boolean;
 }
 
 /**
@@ -238,6 +275,21 @@ export interface BookmarkCollectionUpdatePayload {
 }
 
 /**
+ * Interface representing the payload for a content removed event.
+ */
+export interface ContentRemovedPayload {
+  contentId: string;
+  contentType: 'question' | 'answer' | 'comment';
+}
+
+/**
+ * Interface representing the payload for a user banned event.
+ */
+export interface UserBannedPayload {
+  username: string;
+}
+
+/**
  * Interface representing the possible events that the server can emit to the client.
  */
 export interface ServerToClientEvents {
@@ -248,6 +300,8 @@ export interface ServerToClientEvents {
   commentUpdate: (comment: CommentUpdatePayload) => void;
   profileUpdate: (update: ProfileUpdatePayload) => void;
   collectionUpdate: (update: BookmarkCollectionUpdatePayload) => void;
+  contentRemoved: (payload: ContentRemovedPayload) => void;
+  userBanned: (payload: UserBannedPayload) => void;
 }
 
 /**
@@ -282,6 +336,12 @@ export interface BookmarkCollection {
 }
 
 /**
+ * Type representing possible user roles.
+ */
+export type UserRole = 'user' | 'moderator';
+
+
+/**
  * Interface representing a user of the platform, which contains:
  * - username - The unique identifier for the user.
  * - bio - A short description of the user. Optional field.
@@ -289,6 +349,8 @@ export interface BookmarkCollection {
  * - activityHistory - The history of the user's activity on the platform.
  * - bookmarkCollections - An array of bookmark collections owned by the user.
  * - followedBookmarkCollections - An array of IDs of bookmark collections the user is following.
+ * - role - The role of the user ('user' or 'moderator'). Optional field.
+ * - isBanned - A boolean indicating whether the user is banned. Optional field.
  */
 export interface User {
   username: string;
@@ -301,6 +363,8 @@ export interface User {
   }>;
   bookmarkCollections?: BookmarkCollection[];
   followedBookmarkCollections?: ObjectId[];
+  role?: UserRole;
+  isBanned?: boolean;
 }
 
 /**
@@ -469,3 +533,41 @@ export interface SearchUserRequest extends Request {
  * Type representing the possible responses for a user search operation.
  */
 export type UserSearchResponse = User[] | { error: string };
+
+
+/**
+ * Interface representing the request body when flagging content.
+ * - contentId - The unique identifier of the content being flagged.
+ * - contentType - The type of content being flagged ('question', 'answer', 'comment').
+ * - flaggedBy - The username of the user flagging the content.
+ * - reason - The reason for flagging the content.
+ */
+export interface FlagContentRequest extends Request {
+  body: {
+    contentId: string;
+    contentType: 'question' | 'answer' | 'comment';
+    flaggedBy: string;
+    reason: FlagReason;
+  };
+}
+
+/**
+ * Interface representing the request body when a moderator reviews a flagged content.
+ * - contentId - The unique identifier of the content being reviewed.
+ * - contentType - The type of content being reviewed ('question', 'answer', 'comment').
+ * - moderatorAction - The action taken by the moderator ('removed', 'allowed', 'userBanned').
+ * - moderatorComment - Comments added by the moderator. Optional.
+ */
+export interface ReviewFlagRequest extends Request {
+  body: {
+    contentId: string;
+    contentType: 'question' | 'answer' | 'comment';
+    moderatorAction: 'removed' | 'allowed' | 'userBanned';
+    moderatorComment?: string;
+  };
+}
+
+/**
+ * Type representing the possible responses for a flag-related operation.
+ */
+export type FlagResponse = Flag | { error: string };
