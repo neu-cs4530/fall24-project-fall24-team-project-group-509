@@ -471,3 +471,16 @@ export interface SearchUserRequest extends Request {
  * Type representing the possible responses for a user search operation.
  */
 export type UserSearchResponse = User[] | { error: string };
+
+export type FlagType = 'spam' | 'offensive' | 'irrelevant' | 'other';
+
+/**
+ * Interface representing a flagged post (question, answer, or comment).
+ */
+export interface FlaggedContent {
+  postId: string; // ID of the flagged post
+  flaggedBy: string; // Username of the user who flagged it
+  flagType: FlagType; // Type of flag (e.g., spam, offensive, etc.)
+  createdAt: Date; // Timestamp of when the post was flagged
+  status: 'pending' | 'reviewed'; // Status of the flag (for moderators)
+}

@@ -207,3 +207,27 @@ export interface Bookmark {
   postID: Question;
   savedAt: Date;
 }
+
+export type FlagType = 'spam' | 'offensive' | 'irrelevant' | 'other';
+
+/**
+ * Interface representing a flagged post.
+ * - postId -  ID of the flagged post
+ * - flaggedBy - Username of the user who flagged it
+ * - flagType -  Type of flag
+ * - createdAt - The date and time when the bookmark was created.
+ * - status - The status of the flag (for moderators)
+ * - resolved - Optional field indicating whether the flag has been resolved
+ * - resolvedBy - Username of the moderator who resolved the flag
+ * - resolvedDate - Date when the flag was resolved
+ */
+export interface FlaggedContent {
+  postId: string;
+  flaggedBy: string;
+  flagType: FlagType;
+  createdAt: Date;
+  status: 'pending' | 'reviewed';
+  resolved?: boolean;
+  resolvedBy?: string;
+  resolvedDate?: Date;
+}
