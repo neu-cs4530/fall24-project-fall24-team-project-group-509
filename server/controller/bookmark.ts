@@ -131,9 +131,9 @@ const bookmarkController = (socket: FakeSOSocket) => {
     req: GetBookmarksRequest,
     res: Response,
   ): Promise<void> => {
-    const username = req.query.username as string | undefined;
-    const requesterUsername = req.query.requesterUsername as string | undefined;
-    const sortOptionParam = req.query.sortOption as string | undefined;
+    const { username } = req.params;
+    const { requesterUsername } = req.params;
+    const sortOptionParam = req.query.sortOption as string;
 
     if (!username || !requesterUsername) {
       res.status(400).send('Invalid request: missing username or requesterUsername');
