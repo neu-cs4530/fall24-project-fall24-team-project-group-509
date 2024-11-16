@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb';
 import { QueryOptions } from 'mongoose';
 import { Storage } from '@google-cloud/storage';
 import path from 'path';
+import axios from 'axios';
 import {
   Answer,
   AnswerResponse,
@@ -50,7 +51,7 @@ const parseKeyword = (search: string): string[] =>
  * @param {Question} q - The question to check
  * @param {string[]} taglist - The list of tags to check for
  *
- * @returns {boolean} - `true` if any tag is present in the question, `false` otherwise
+ * @returns {boolean} - true if any tag is present in the question, false otherwise
  */
 const checkTagInQuestion = (q: Question, taglist: string[]): boolean => {
   for (const tagname of taglist) {
@@ -70,7 +71,7 @@ const checkTagInQuestion = (q: Question, taglist: string[]): boolean => {
  * @param {Question} q - The question to check
  * @param {string[]} keywordlist - The list of keywords to check for
  *
- * @returns {boolean} - `true` if any keyword is present, `false` otherwise.
+ * @returns {boolean} - true if any keyword is present, false otherwise.
  */
 const checkKeywordInQuestion = (q: Question, keywordlist: string[]): boolean => {
   for (const w of keywordlist) {
@@ -162,10 +163,32 @@ const sortQuestionsByMostViews = (qlist: Question[]): Question[] =>
  *
  * @param {Tag} tag - The tag to add
  *
- * @returns {Promise<Tag | null>} - The added or existing tag, or `null` if an error occurred
+ * @returns {Promise<Tag | null>} - The added or existing tag, or null if an error occurred
  */
 export const addTag = async (tag: Tag): Promise<Tag | null> => {
   try {
+    // Before saving, check for profanity in tag name and description
+    const textToCheck = `${tag.name} ${tag.description}`;
+    const apiUrl = `https://api.api-ninjas.com/v1/profanityfilter?text=${encodeURIComponent(
+      textToCheck,
+    )}`;
+    const response = await axios.get(apiUrl, {
+      headers: { 'X-Api-Key': process.env.API_NINJAS_KEY || '' },
+    });
+
+    if (response.status === 200) {
+      const { data } = response;
+      if (data.has_profanity) {
+        // Return null or throw error
+        // Let's throw an error
+        throw new Error('Tag contains inappropriate content and cannot be added.');
+      }
+    } else {
+      // If the API request failed, we can choose to proceed or fail
+      // For safety, let's prevent the tag from being saved
+      throw new Error('Error checking tag for profanity. Please try again later.');
+    }
+
     // Check if a tag with the given name already exists
     const existingTag = await TagModel.findOne({ name: tag.name });
 
@@ -179,6 +202,9 @@ export const addTag = async (tag: Tag): Promise<Tag | null> => {
 
     return savedTag as Tag;
   } catch (error) {
+    // Log error
+    // eslint-disable-next-line no-console
+    console.error('Error when adding tag:', error);
     return null;
   }
 };
@@ -340,7 +366,7 @@ export const fetchAndIncrementQuestionViewsById = async (
 };
 
 /**
- * Saves a new question to the database.
+ * Saves a new question to the database after checking for profanity.
  *
  * @param {Question} question - The question to save
  *
@@ -348,6 +374,24 @@ export const fetchAndIncrementQuestionViewsById = async (
  */
 export const saveQuestion = async (question: Question): Promise<QuestionResponse> => {
   try {
+    // Before saving, check for profanity
+    const apiUrl = `https://api.api-ninjas.com/v1/profanityfilter?text=${encodeURIComponent(
+      question.text,
+    )}`;
+    const response = await axios.get(apiUrl, {
+      headers: { 'X-Api-Key': process.env.API_NINJAS_KEY || '' },
+    });
+
+    if (response.status === 200) {
+      const { data } = response;
+      if (data.has_profanity) {
+        return { error: 'Your question contains inappropriate content and cannot be submitted.' };
+      }
+    } else {
+      // If the API request failed, prevent the post from being saved
+      return { error: 'Error checking for profanity. Please try again later.' };
+    }
+
     const result = await QuestionModel.create(question);
 
     // Update the user's activity history
@@ -371,7 +415,7 @@ export const saveQuestion = async (question: Question): Promise<QuestionResponse
 };
 
 /**
- * Saves a new answer to the database.
+ * Saves a new answer to the database after checking for profanity.
  *
  * @param {Answer} answer - The answer to save
  *
@@ -379,28 +423,25 @@ export const saveQuestion = async (question: Question): Promise<QuestionResponse
  */
 export const saveAnswer = async (answer: Answer): Promise<AnswerResponse> => {
   try {
+    // Before saving, check for profanity
+    const apiUrl = `https://api.api-ninjas.com/v1/profanityfilter?text=${encodeURIComponent(
+      answer.text,
+    )}`;
+    const response = await axios.get(apiUrl, {
+      headers: { 'X-Api-Key': process.env.API_NINJAS_KEY || '' },
+    });
+
+    if (response.status === 200) {
+      const { data } = response;
+      if (data.has_profanity) {
+        return { error: 'Your answer contains inappropriate content and cannot be submitted.' };
+      }
+    } else {
+      // If the API request failed, prevent the post from being saved
+      return { error: 'Error checking for profanity. Please try again later.' };
+    }
+
     const result = await AnswerModel.create(answer);
-
-    // // find the question that contains the answer
-    // const question = await QuestionModel.findOne({ answers: result._id });
-
-    // // if (!question) {
-    // //   throw new Error('Question not found for the answer');
-    // // }
-
-    // // Update the user's activity history
-    // await UserModel.findOneAndUpdate(
-    //   { username: answer.ansBy },
-    //   {
-    //     $push: {
-    //       activityHistory: {
-    //         postId: question ? question._id : null,
-    //         postType: 'Answer',
-    //         createdAt: answer.ansDateTime,
-    //       },
-    //     },
-    //   },
-    // );
 
     return result;
   } catch (error) {
@@ -409,7 +450,7 @@ export const saveAnswer = async (answer: Answer): Promise<AnswerResponse> => {
 };
 
 /**
- * Saves a new comment to the database.
+ * Saves a new comment to the database after checking for profanity.
  *
  * @param {Comment} comment - The comment to save
  *
@@ -417,6 +458,24 @@ export const saveAnswer = async (answer: Answer): Promise<AnswerResponse> => {
  */
 export const saveComment = async (comment: Comment): Promise<CommentResponse> => {
   try {
+    // Before saving, check for profanity
+    const apiUrl = `https://api.api-ninjas.com/v1/profanityfilter?text=${encodeURIComponent(
+      comment.text,
+    )}`;
+    const response = await axios.get(apiUrl, {
+      headers: { 'X-Api-Key': process.env.API_NINJAS_KEY || '' },
+    });
+
+    if (response.status === 200) {
+      const { data } = response;
+      if (data.has_profanity) {
+        return { error: 'Your comment contains inappropriate content and cannot be submitted.' };
+      }
+    } else {
+      // If the API request failed, prevent the post from being saved
+      return { error: 'Error checking for profanity. Please try again later.' };
+    }
+
     const result = await CommentModel.create(comment);
 
     return result;
@@ -642,7 +701,7 @@ export const addComment = async (
  * Gets a map of tags and their corresponding question counts.
  *
  * @returns {Promise<Map<string, number> | null | { error: string }>} - A map of tags to their
- *          counts, `null` if there are no tags in the database, or the error message.
+ *          counts, null if there are no tags in the database, or the error message.
  */
 export const getTagCountMap = async (): Promise<Map<string, number> | null | { error: string }> => {
   try {
@@ -1147,3 +1206,5 @@ export const getBookmarkCollectionById = async (
     return { error: 'Error when retrieving bookmark collection' };
   }
 };
+
+// Save API key like this in .env file API_NINJAS_KEY=YOUR_API_KEY
