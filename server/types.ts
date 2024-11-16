@@ -355,14 +355,16 @@ export interface FindUserByUsernameRequest extends Request {
  */
 export type BookmarkSortOption = 'date' | 'numberOfAnswers' | 'views' | 'title' | 'tags';
 
+export type BookmarkCollectionResponse = BookmarkCollection | { error: string };
+
 /**
  * Interface representing the request to get bookmarks, which contains:
  * - sortOption - The option by which to sort the bookmarks.
  */
 export interface GetBookmarksRequest extends Request {
   query: {
-    username: string | undefined;
-    requesterUsername: string | undefined;
+    username: string;
+    requesterUsername: string;
     sortOption: BookmarkSortOption;
   };
 }
