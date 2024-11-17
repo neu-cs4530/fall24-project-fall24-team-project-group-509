@@ -7,10 +7,13 @@ import { Question } from '../types';
 const saveCommentSpy = jest.spyOn(util, 'saveComment');
 const addCommentSpy = jest.spyOn(util, 'addComment');
 const popDocSpy = jest.spyOn(util, 'populateDocument');
+const findQIDByAID = jest.spyOn(util, 'findQuestionIDByAnswerID');
+const updateActivityHistorySpy = jest.spyOn(util, 'updateActivityHistoryWithQuestionID');
 
 describe('POST /addComment', () => {
   afterEach(async () => {
     await mongoose.connection.close(); // Ensure the connection is properly closed
+    jest.resetAllMocks(); // Reset all mocks
   });
 
   afterAll(async () => {
@@ -354,6 +357,8 @@ describe('POST /addComment', () => {
 
     saveCommentSpy.mockResolvedValueOnce(mockComment);
     addCommentSpy.mockResolvedValueOnce(mockQuestion);
+    updateActivityHistorySpy.mockResolvedValueOnce(undefined);
+    findQIDByAID.mockResolvedValueOnce('someQuestionId');
     popDocSpy.mockResolvedValueOnce({ error: 'Error when populating document' });
 
     const response = await supertest(app).post('/comment/addComment').send(mockReqBody);

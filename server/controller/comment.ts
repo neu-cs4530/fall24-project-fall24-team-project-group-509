@@ -96,16 +96,15 @@ const commentController = (socket: FakeSOSocket) => {
         );
       }
       // currently failing right now this condition
-      // else if (type === 'answer') {
-      //   const gainedQID = await findQuestionIDByAnswerID(id);
-      //   console.log(gainedQID);
-      //   await updateActivityHistoryWithQuestionID(
-      //     comment.commentBy,
-      //     gainedQID as string,
-      //     'comment',
-      //     comment.commentDateTime,
-      //   );
-      // }
+      else if (type === 'answer') {
+        const gainedQID = await findQuestionIDByAnswerID(id);
+        await updateActivityHistoryWithQuestionID(
+          comment.commentBy,
+          gainedQID as string,
+          'comment',
+          comment.commentDateTime,
+        );
+      }
 
       // Populates the fields of the question or answer that this comment
       // was added to, and emits the updated object
