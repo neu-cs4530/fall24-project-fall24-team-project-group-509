@@ -362,10 +362,12 @@ export type BookmarkCollectionResponse = BookmarkCollection | { error: string };
  * - sortOption - The option by which to sort the bookmarks.
  */
 export interface GetBookmarksRequest extends Request {
-  query: {
+  params: {
     username: string;
     requesterUsername: string;
-    sortOption: BookmarkSortOption;
+  };
+  query: {
+    sortOption: BookmarkSortOption
   };
 }
 

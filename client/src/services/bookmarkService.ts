@@ -28,12 +28,12 @@ const createBookmarkCollection = async (
 };
 
 const addQuestionToBookmarkCollection = async (
-  collectionID: string,
-  postID: string,
+  collectionId: string,
+  postId: string,
 ): Promise<BookmarkCollection> => {
   const res = await api.post(`${BOOKMARK_API_URL}/addQuestionToCollection`, {
-    collectionID,
-    postID,
+    collectionId,
+    postId,
   });
 
   if (res.status !== 200) {
@@ -44,17 +44,17 @@ const addQuestionToBookmarkCollection = async (
 
 /**
  * Removes a given question from a bookmark collection.
- * @param collectionID - the id of the bookmark collection to remove the question from
- * @param postID - the ID of the question to remove from the collection
+ * @param collectionId - the id of the bookmark collection to remove the question from
+ * @param postId - the Id of the question to remove from the collection
  * @returns- the updated bookmark collection
  */
 const removeQuestionFromBookmarkCollection = async (
-  collectionID: string,
-  postID: string,
+  collectionId: string,
+  postId: string,
 ): Promise<BookmarkCollection> => {
   const res = await api.post(`${BOOKMARK_API_URL}/removeQuestionFromCollection`, {
-    collectionID,
-    postID,
+    collectionId,
+    postId,
   });
 
   if (res.status !== 200) {
@@ -86,16 +86,16 @@ const getUserBookmarkCollections = async (
 
 /**
  * Follows a bookmark collection
- * @param collectionID - the id of the bookmark collection to follow
+ * @param collectionId - the id of the bookmark collection to follow
  * @param username - the username of the user who is following the bookmark collection
  * @returns - the updated bookmark collection
  */
 const followBookmarkCollection = async (
-  collectionID: string,
+  collectionId: string,
   username: string,
 ): Promise<BookmarkCollection> => {
   const res = await api.post(`${BOOKMARK_API_URL}/followCollection`, {
-    collectionID,
+    collectionId,
     username,
   });
 
@@ -107,16 +107,16 @@ const followBookmarkCollection = async (
 
 /**
  * Unfollows a user from a bookmark collection
- * @param collectionID - the id of the bookmark collection to unfollow
+ * @param collectionId - the id of the bookmark collection to unfollow
  * @param username - the username of the user who is unfollowing the bookmark collection
  * @returns - the updated bookmark collection
  */
 const unfollowBookmarkCollection = async (
-  collectionID: string,
+  collectionId: string,
   username: string,
 ): Promise<BookmarkCollection> => {
   const res = await api.post(`${BOOKMARK_API_URL}/unfollowCollection`, {
-    collectionID,
+    collectionId,
     username,
   });
 
@@ -128,11 +128,11 @@ const unfollowBookmarkCollection = async (
 
 /**
  * Retrieves a bookmark collection by its id
- * @param collectionID - the id of the bookmark collection to retrieve
+ * @param collectionId - the id of the bookmark collection to retrieve
  * @returns - the bookmark collection
  */
-const getBookmarkCollectionById = async (collectionID: string): Promise<BookmarkCollection> => {
-  const res = await api.get(`${BOOKMARK_API_URL}/getBookmarkCollectionById/${collectionID}`);
+const getBookmarkCollectionById = async (collectionId: string): Promise<BookmarkCollection> => {
+  const res = await api.get(`${BOOKMARK_API_URL}/getBookmarkCollectionById/${collectionId}`);
   if (res.status !== 200) {
     throw new Error('Error when fetching bookmark collection by id');
   }
