@@ -20,7 +20,6 @@ const createBookmarkCollection = async (
     title,
     isPublic,
   });
-
   if (res.status !== 200) {
     throw new Error('Error when creating bookmark collection');
   }

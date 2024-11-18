@@ -263,6 +263,9 @@ const bookmarkController = (socket: FakeSOSocket) => {
   router.post('/followCollection', followBookmarkCollectionRoute);
   router.post('/unfollowCollection', unfollowBookmarkCollectionRoute);
   router.get('/getBookmarkCollectionById/:collectionId', getBookmarkCollectionByIdRoute);
+  router.get('/test', (req, res) => {
+    res.send('test route');
+  });
 
   return router;
 };
