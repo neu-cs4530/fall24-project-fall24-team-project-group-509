@@ -92,7 +92,7 @@ const ProfileView = () => {
         {bookmarks && bookmarks.length > 0 ? (
           bookmarks.map(collection => (
             <li key={collection._id} className='bookmark-collection'>
-              <Link to={``}>{collection.title}</Link>
+              <Link to={`/user/${collection._id}`}>{collection.title}</Link>
             </li>
           ))
         ) : (

@@ -11,6 +11,7 @@ import NewQuestionPage from './main/newQuestion';
 import NewAnswerPage from './main/newAnswer';
 import AnswerPage from './main/answerPage';
 import ProfileView from './main/userPage/userProfile';
+import BookmarkPage from './main/bookmarkPage';
 
 const ProtectedRoute = ({
   user,
@@ -55,6 +56,7 @@ const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
             <Route path='/new/question' element={<NewQuestionPage />} />
             <Route path='/new/answer/:qid' element={<NewAnswerPage />} />
             <Route path='/user/:username' element={<ProfileView />} />
+            <Route path='/user/:collectionId' element={<BookmarkPage />} />
           </Route>
         }
       </Routes>

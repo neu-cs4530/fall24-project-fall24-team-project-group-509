@@ -1,52 +1,66 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getBookmarkCollectionById } from '../../../services/bookmarkService';
-import { BookmarkCollection, Question } from '../../../types';
-import useUserContext from '../../../hooks/useUserContext';
+import { OrderType, orderTypeDisplayName } from '../../../types';
+import Modal from './modal';
+import OrderButton from '../questionPage/header/orderButton';
+import useBookmarkPage from '../../../hooks/useBookmarkPage';
 
-// TODO: need to add functionality for sorting (date, # of answers), group by tags, socket updates
-// TODO: need to add button functionality
-
-const BookmarkPage = (collection_id: string) => {
-  const { user } = useUserContext();
-  const [collection, setCollection] = useState<BookmarkCollection>({
-    title: '',
-    owner: '',
-    isPublic: false,
-    followers: [],
-    savedPosts: [],
-  });
-  const [savedPosts, setSavedPosts] = useState<Question[]>([]);
-
-  const getSavedPosts = async () => {
-    setCollection(await getBookmarkCollectionById(collection_id));
-    if (collection?.savedPosts) {
-      setSavedPosts(collection.savedPosts);
-    }
-    return savedPosts;
-  };
+const BookmarkPage = () => {
+  const {
+    user,
+    collection,
+    savedPosts,
+    showModal,
+    setShowModal,
+    setQuestionOrder,
+    handleFollowCollection,
+    handleUnfollowCollection,
+    handleSharingCollection,
+    handleDeleteFromCollection,
+  } = useBookmarkPage();
 
   return (
     <div className='saved-posts'>
       <h2>{collection.title}</h2>
+      <div className='btns'>
+        {Object.keys(orderTypeDisplayName).map((order, idx) => (
+          <OrderButton
+            key={idx}
+            orderType={order as OrderType}
+            setQuestionOrder={setQuestionOrder}
+          />
+        ))}
+      </div>
       {user.username === collection.owner && (
         <>
-          <button>Make this collection public</button>
-          <button>Delete this collection</button>
+          <button onClick={() => setShowModal(true)}>Share this collection</button>
         </>
       )}
-      <button>Follow this collection</button>
+      {collection.followers.includes(user.username) ? (
+        <button onClick={handleUnfollowCollection}>Unfollow this collection</button>
+      ) : (
+        <button onClick={handleFollowCollection}>Follow this collection</button>
+      )}
       {savedPosts && savedPosts.length > 0 ? (
         savedPosts.map(q => (
           <li key={q._id}>
             <Link to={`/question/${q._id}`}>
               <p>{q.title}</p>
             </Link>
+            {user.username === collection.owner && (
+              <button onClick={() => handleDeleteFromCollection(q._id as string)}>
+                Delete from this collection
+              </button>
+            )}
           </li>
         ))
       ) : (
         <p>There are no saved posts in this bookmark collection.</p>
       )}
+      <Modal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        onSubmit={handleSharingCollection}
+      />
     </div>
   );
 };
