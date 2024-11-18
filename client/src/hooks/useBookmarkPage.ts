@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
@@ -55,7 +54,7 @@ const useBookmarkPage = () => {
   const handleDeleteFromCollection = async (q_id: string) => {
     const updatedCollection = await removeQuestionFromBookmarkCollection(collectionID, q_id);
     setCollection(updatedCollection);
-  }
+  };
 
   return {
     user,
