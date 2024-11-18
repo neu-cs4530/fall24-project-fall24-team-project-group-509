@@ -10,6 +10,7 @@ const BookmarkButton = ({ questionId }: { questionId: string }) => {
     toggleBookmark,
     selectCollection,
     createCollection,
+    removeFromCollection,
   } = useBookmark(questionId);
   const [newCollectionName, setNewCollectionName] = useState('');
 
@@ -25,10 +26,10 @@ const BookmarkButton = ({ questionId }: { questionId: string }) => {
           {collections.length > 0 ? (
             <ul>
               {collections.map(collection => (
-                <li key={collection._id}>
-                  <button onClick={() => selectCollection(collection._id!)}>
-                    {collection.title}
-                  </button>
+                <li key={collection._id} style={{ marginBottom: '10px', listStyleType: 'disc' }}>
+                  <span>{collection.title}</span>
+                  <button onClick={() => selectCollection(collection._id!)}>Add</button>
+                  <button onClick={() => removeFromCollection(collection._id!)}>Remove</button>
                 </li>
               ))}
             </ul>

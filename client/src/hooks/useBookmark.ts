@@ -3,6 +3,7 @@ import {
   getUserBookmarkCollections,
   addQuestionToBookmarkCollection,
   createBookmarkCollection,
+  removeQuestionFromBookmarkCollection,
 } from '../services/bookmarkService';
 import { BookmarkCollection } from '../types';
 import useUserContext from './useUserContext';
@@ -54,11 +55,39 @@ const useBookmark = (questionId: string) => {
   }, [isDropdownOpen, user]);
 
   /**
+   * Removes the question from a specific collection.
+   *
+   * @param collectionId - The ID of the collection to remove the question from.
+   */
+  const removeFromCollection = async (collectionId: string) => {
+    if (!user || !collectionId) return;
+    try {
+      const updatedCollection = await removeQuestionFromBookmarkCollection(
+        collectionId,
+        questionId,
+      );
+
+      setCollections(prev =>
+        prev.map(collection => (collection._id === collectionId ? updatedCollection : collection)),
+      );
+    } catch (err) {
+      setError('Error removing question from collection');
+    }
+  };
+
+  /**
    * Toggles the bookmark status.
    */
   const toggleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-    setIsDropdownOpen(!isBookmarked); // Open the dropdown only if bookmarking
+    setIsBookmarked(prev => {
+      const newBookmarkState = !prev;
+      if (!newBookmarkState) {
+        setIsDropdownOpen(false); // Ensure dropdown closes when unbookmarking
+      } else {
+        setIsDropdownOpen(true); // Open dropdown when bookmarking
+      }
+      return newBookmarkState;
+    });
   };
 
   /**
@@ -101,6 +130,7 @@ const useBookmark = (questionId: string) => {
     toggleBookmark,
     selectCollection,
     createCollection,
+    removeFromCollection,
   };
 };
 
