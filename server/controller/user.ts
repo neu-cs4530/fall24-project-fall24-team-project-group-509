@@ -202,7 +202,7 @@ const userController = (socket: FakeSOSocket) => {
   router.post('/addUserBio', addUserBioRoute);
   router.post('/addUserProfilePic', upload.single('profilePictureFile'), addUserProfilePicRoute);
   router.get('/getUser/:username', getUserByUsernameRoute);
-  router.get('/search', searchUsersByUsernameRoute);
+  router.get('/search/:username', searchUsersByUsernameRoute);
 
   return router;
 };
