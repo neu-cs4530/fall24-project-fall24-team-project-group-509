@@ -82,4 +82,18 @@ const getUserByUsername = async (
   return res.data;
 };
 
-export { addUser, addUserBio, addUserProfilePicture, getUserByUsername };
+/**
+ * Searches for users by a partial or full username.
+ *
+ * @param username - The partial or full username to search for.
+ * @returns A list of users matching the search criteria.
+ */
+const searchUsersByUsername = async (username: string): Promise<User[]> => {
+  const res = await api.get(`${USER_API_URL}/search/${username}`);
+  if (res.status !== 200) {
+    throw new Error('Error while searching for users by username');
+  }
+  return res.data;
+};
+
+export { addUser, addUserBio, addUserProfilePicture, getUserByUsername, searchUsersByUsername };
