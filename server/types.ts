@@ -367,8 +367,8 @@ export interface GetBookmarksRequest extends Request {
     requesterUsername: string;
   };
   query: {
-    sortOption: BookmarkSortOption;
-  }
+    sortOption: BookmarkSortOption
+  };
 }
 
 /**
