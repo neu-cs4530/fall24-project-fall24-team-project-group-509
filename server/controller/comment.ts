@@ -1,8 +1,9 @@
 import express, { Response } from 'express';
 import { ObjectId } from 'mongodb';
-import { Comment, AddCommentRequest, FakeSOSocket } from '../types';
+import { Comment, AddCommentRequest, FakeSOSocket, FlagContentRequest } from '../types';
 import {
   addComment,
+  flagContent,
   findQuestionIDByAnswerID,
   populateDocument,
   saveComment,
@@ -13,9 +14,9 @@ const commentController = (socket: FakeSOSocket) => {
   const router = express.Router();
 
   /**
-   * Checks if the provided answer request contains the required fields.
+   * Checks if the provided comment request contains the required fields.
    *
-   * @param req The request object containing the answer data.
+   * @param req The request object containing the comment data.
    *
    * @returns `true` if the request is valid, otherwise `false`.
    */
@@ -33,7 +34,7 @@ const commentController = (socket: FakeSOSocket) => {
    *
    * @param comment The comment to validate.
    *
-   * @returns `true` if the coment is valid, otherwise `false`.
+   * @returns `true` if the comment is valid, otherwise `false`.
    */
   const isCommentValid = (comment: Comment): boolean =>
     comment.text !== undefined &&
@@ -49,7 +50,6 @@ const commentController = (socket: FakeSOSocket) => {
    *
    * @param req The AddCommentRequest object containing the comment data.
    * @param res The HTTP response object used to send back the result of the operation.
-   * @param type The type of the comment, either 'question' or 'answer'.
    *
    * @returns A Promise that resolves to void.
    */
@@ -86,7 +86,7 @@ const commentController = (socket: FakeSOSocket) => {
         throw new Error(status.error);
       }
 
-      // update user's activityHistory
+      // Update user's activityHistory
       if (type === 'question') {
         await updateActivityHistoryWithQuestionID(
           comment.commentBy,
@@ -94,18 +94,17 @@ const commentController = (socket: FakeSOSocket) => {
           'comment',
           comment.commentDateTime,
         );
+      } else if (type === 'answer') {
+        const gainedQID = await findQuestionIDByAnswerID(id);
+        if (gainedQID) {
+          await updateActivityHistoryWithQuestionID(
+            comment.commentBy,
+            gainedQID,
+            'comment',
+            comment.commentDateTime,
+          );
+        }
       }
-      // currently failing right now this condition
-      // else if (type === 'answer') {
-      //   const gainedQID = await findQuestionIDByAnswerID(id);
-      //   console.log(gainedQID);
-      //   await updateActivityHistoryWithQuestionID(
-      //     comment.commentBy,
-      //     gainedQID as string,
-      //     'comment',
-      //     comment.commentDateTime,
-      //   );
-      // }
 
       // Populates the fields of the question or answer that this comment
       // was added to, and emits the updated object
@@ -125,7 +124,37 @@ const commentController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Flags a comment as inappropriate.
+   *
+   * @param req The FlagContentRequest object containing the contentId, flaggedBy, and reason.
+   * @param res The HTTP response object used to send back the result of the operation.
+   *
+   * @returns A Promise that resolves to void.
+   */
+  const flagComment = async (req: FlagContentRequest, res: Response): Promise<void> => {
+    const { contentId, flaggedBy, reason } = req.body;
+
+    if (!contentId || !flaggedBy || !reason) {
+      res.status(400).send('Invalid request');
+      return;
+    }
+
+    try {
+      const flagResponse = await flagContent(contentId, 'comment', flaggedBy, reason);
+
+      if ('error' in flagResponse) {
+        throw new Error(flagResponse.error);
+      }
+
+      res.json(flagResponse);
+    } catch (err: unknown) {
+      res.status(500).send(`Error when flagging comment: ${(err as Error).message}`);
+    }
+  };
+
   router.post('/addComment', addCommentRoute);
+  router.post('/flagComment', flagComment);
 
   return router;
 };

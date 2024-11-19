@@ -1,7 +1,8 @@
 import express, { Response } from 'express';
-import { Answer, AnswerRequest, AnswerResponse, FakeSOSocket } from '../types';
+import { Answer, AnswerRequest, AnswerResponse, FakeSOSocket, FlagContentRequest } from '../types';
 import {
   addAnswerToQuestion,
+  flagContent,
   populateDocument,
   saveAnswer,
   updateActivityHistoryWithQuestionID,
@@ -68,7 +69,7 @@ const answerController = (socket: FakeSOSocket) => {
         throw new Error(status.error as string);
       }
 
-      // update user activity history with the question ID
+      // Update user activity history with the question ID
       await updateActivityHistoryWithQuestionID(ansInfo.ansBy, qid, 'answer', ansInfo.ansDateTime);
 
       const populatedAns = await populateDocument(ansFromDb._id?.toString(), 'answer');
@@ -88,8 +89,38 @@ const answerController = (socket: FakeSOSocket) => {
     }
   };
 
-  // add appropriate HTTP verbs and their endpoints to the router.
+  /**
+   * Flags an answer as inappropriate.
+   *
+   * @param req The FlagContentRequest object containing the contentId, flaggedBy, and reason.
+   * @param res The HTTP response object used to send back the result of the operation.
+   *
+   * @returns A Promise that resolves to void.
+   */
+  const flagAnswer = async (req: FlagContentRequest, res: Response): Promise<void> => {
+    const { contentId, flaggedBy, reason } = req.body;
+
+    if (!contentId || !flaggedBy || !reason) {
+      res.status(400).send('Invalid request');
+      return;
+    }
+
+    try {
+      const flagResponse = await flagContent(contentId, 'answer', flaggedBy, reason);
+
+      if ('error' in flagResponse) {
+        throw new Error(flagResponse.error);
+      }
+
+      res.json(flagResponse);
+    } catch (err: unknown) {
+      res.status(500).send(`Error when flagging answer: ${(err as Error).message}`);
+    }
+  };
+
+  // Add appropriate HTTP verbs and their endpoints to the router.
   router.post('/addAnswer', addAnswer);
+  router.post('/flagAnswer', flagAnswer);
 
   return router;
 };

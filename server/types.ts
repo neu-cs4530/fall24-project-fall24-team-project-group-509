@@ -34,6 +34,20 @@ export interface Flag {
 }
 
 /**
+ * Interface representing a Flagged Content, used for moderator reviews.
+ * - contentId - The unique identifier of the content.
+ * - contentType - The type of the content ('question', 'answer', 'comment').
+ * - content - The actual content object.
+ * - flag - The flag associated with the content.
+ */
+export interface FlaggedContent {
+  contentId: string;
+  contentType: 'question' | 'answer' | 'comment';
+  content: Question | Answer | Comment;
+  flag: Flag;
+}
+
+/**
  * Interface representing an Answer document, which contains:
  * - _id - The unique identifier for the answer. Optional field
  * - text - The content of the answer
@@ -51,6 +65,7 @@ export interface Answer {
   comments: Comment[] | ObjectId[];
   flags?: Flag[];
   isRemoved?: boolean;
+  warningMessage?: string;
 }
 
 /**
@@ -98,6 +113,7 @@ export interface Tag {
  * - comments - Object IDs of comments that have been added to the question by users, or comments themselves if populated.
  * - flags - An array of flags associated with the question. Optional.
  * - isRemoved - A boolean indicating whether the question has been removed by a moderator. Optional.
+ * - warningMessage - A string added for displaying warnings. Optional.
  */
 export interface Question {
   _id?: ObjectId;
@@ -113,6 +129,7 @@ export interface Question {
   comments: Comment[] | ObjectId[];
   flags?: Flag[];
   isRemoved?: boolean;
+  warningMessage?: string;
 }
 
 /**
@@ -321,7 +338,6 @@ export interface Bookmark {
  * - title - The title of the bookmark collection.
  * - owner - The username of the user who owns the collection.
  * - isPublic - A boolean indicating whether the bookmark collection is public.
- * - permittedUsers - An array of usernames permitted to access the collection if it's private.
  * - followers - An array of usernames who follow the collection.
  * - savedPosts - An array of bookmarks that have been saved to the collection.
  */
@@ -330,7 +346,6 @@ export interface BookmarkCollection {
   title: string;
   owner: string;
   isPublic: boolean;
-  // permittedUsers?: string[];
   followers?: string[];
   savedPosts: Bookmark[];
 }
@@ -565,6 +580,34 @@ export interface ReviewFlagRequest extends Request {
     moderatorAction: 'removed' | 'allowed' | 'userBanned';
     moderatorComment?: string;
   };
+}
+
+/**
+ * Interface representing the request body when a moderator takes action on flagged content.
+ * - contentId - The unique identifier of the content being reviewed.
+ * - contentType - The type of content being reviewed ('question', 'answer', 'comment').
+ * - action - The action taken by the moderator ('removed', 'allowed', 'userBanned').
+ * - comment - Comments added by the moderator. Optional.
+ * - username - The username of the moderator performing the action.
+ */
+export interface ModeratorActionRequest extends Request {
+  body: {
+    contentId: string;
+    contentType: 'question' | 'answer' | 'comment';
+    action: 'removed' | 'allowed' | 'userBanned';
+    comment?: string;
+    username: string;
+  };
+}
+
+/**
+ * Interface representing a banned user.
+ * - username - The username of the banned user.
+ * - moderatorComment - Comments added by the moderator. Optional.
+ */
+export interface BannedUser {
+  username: string;
+  moderatorComment?: string;
 }
 
 /**

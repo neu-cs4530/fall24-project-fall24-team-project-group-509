@@ -46,6 +46,7 @@ const questionSchema: Schema = new Schema(
     comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
     flags: [flagSchema],
     isRemoved: { type: Boolean, default: false },
+    warningMessage: { type: String, default: '' },
   },
   { collection: 'Question' },
 );

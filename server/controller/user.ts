@@ -17,6 +17,7 @@ import {
   getUserByUsername,
   searchUsers,
 } from '../models/application';
+import BannedUserModel from '../models/bannedUser';
 
 const userController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -157,6 +158,15 @@ const userController = (socket: FakeSOSocket) => {
       return;
     }
     try {
+      // Check if user is banned
+      const bannedUser = await BannedUserModel.findOne({ username });
+      if (bannedUser) {
+        res
+          .status(403)
+          .send(`Your account is banned. Reason: ${bannedUser.moderatorComment || ''}`);
+        return;
+      }
+
       const user = await getUserByUsername(username, requesterUsername);
 
       if (user && !('error' in user)) {
@@ -168,7 +178,7 @@ const userController = (socket: FakeSOSocket) => {
       if (err instanceof Error) {
         res.status(500).send(`Error when fetching user by username: ${err.message}`);
       } else {
-        res.status(500).send(`Error when fetching user by username`);
+        res.status(500).send('Error when fetching user by username');
       }
     }
   };

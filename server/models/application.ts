@@ -12,7 +12,7 @@ import {
   Comment,
   CommentResponse,
   Flag,
-  FlagContentRequest,
+  FlagReason,
   FlagResponse,
   OrderType,
   Question,
@@ -20,6 +20,7 @@ import {
   Tag,
   User,
   UserResponse,
+  FlaggedContent,
 } from '../types';
 import AnswerModel from './answers';
 import QuestionModel from './questions';
@@ -27,6 +28,7 @@ import TagModel from './tags';
 import CommentModel from './comments';
 import UserModel from './user';
 import BookmarkCollectionModel from './bookmarkCollections';
+import BannedUserModel from './bannedUser';
 
 /**
  * Parses tags from a search string.
@@ -182,13 +184,9 @@ export const addTag = async (tag: Tag): Promise<Tag | null> => {
     if (response.status === 200) {
       const { data } = response;
       if (data.has_profanity) {
-        // Return null or throw error
-        // Let's throw an error
         throw new Error('Tag contains inappropriate content and cannot be added.');
       }
     } else {
-      // If the API request failed, we can choose to proceed or fail
-      // For safety, let's prevent the tag from being saved
       throw new Error('Error checking tag for profanity. Please try again later.');
     }
 
@@ -205,7 +203,6 @@ export const addTag = async (tag: Tag): Promise<Tag | null> => {
 
     return savedTag as Tag;
   } catch (error) {
-    // Log error
     // eslint-disable-next-line no-console
     console.error('Error when adding tag:', error);
     return null;
@@ -336,6 +333,12 @@ export const populateDocument = async (
     if (!result) {
       throw new Error(`Failed to fetch and populate a ${type}`);
     }
+
+    // Check if there are any pending flags
+    const hasPendingFlags = result.flags?.some(flag => flag.status === 'pending');
+    if (hasPendingFlags) {
+      result.warningMessage = 'This content has been flagged and is pending review.';
+    }
     return result;
   } catch (error) {
     return { error: `Error when fetching and populating a document: ${(error as Error).message}` };
@@ -407,7 +410,6 @@ export const saveQuestion = async (question: Question): Promise<QuestionResponse
         return { error: 'Your question contains inappropriate content and cannot be submitted.' };
       }
     } else {
-      // If the API request failed, prevent the post from being saved
       return { error: 'Error checking for profanity. Please try again later.' };
     }
 
@@ -751,16 +753,31 @@ export const getTagCountMap = async (): Promise<Map<string, number> | null | { e
 };
 
 /**
- * Saves a new user to the database.
- * @param user - the user to save
- * @returns user - the user saved to the database
+ * Saves a new user to the database after checking for existing username.
+ *
+ * @param {User} user - The user to save
+ * @returns {Promise<UserResponse>} - The saved user, or error message
  */
 export const saveUser = async (user: User): Promise<UserResponse> => {
   try {
-    const result = await UserModel.create(user);
-    return result;
+    // Check if username is banned
+    const bannedUser = await BannedUserModel.findOne({ username: user.username });
+    if (bannedUser) {
+      return { error: `Your account is banned. Reason: ${bannedUser.moderatorComment || ''}` };
+    }
+    // Check if username already exists
+    const existingUser = await UserModel.findOne({ username: user.username });
+    if (existingUser) {
+      return { error: 'Username already exists' };
+    }
+
+    // Create a new user
+    const newUser = new UserModel(user);
+    const savedUser = await newUser.save();
+
+    return savedUser;
   } catch (error) {
-    return { error: 'Error when saving a user' };
+    return { error: 'Error when saving user' };
   }
 };
 
@@ -1229,49 +1246,86 @@ export const getBookmarkCollectionById = async (
 /**
  * Flags content (question, answer, or comment) as inappropriate.
  *
- * @param {FlagContentRequest} flagRequest - The flag request containing contentId, contentType, flaggedBy, and reason.
+ * @param contentId - The ID of the content being flagged.
+ * @param contentType - The type of content ('question', 'answer', 'comment').
+ * @param flaggedBy - The username of the user flagging the content.
+ * @param reason - The reason for flagging.
+ *
  * @returns {Promise<FlagResponse>} - The saved flag or an error message.
  */
-export const flagContent = async (flagRequest: FlagContentRequest): Promise<FlagResponse> => {
+export const flagContent = async (
+  contentId: string,
+  contentType: 'question' | 'answer' | 'comment',
+  flaggedBy: string,
+  reason: FlagReason,
+): Promise<FlagResponse> => {
   try {
-    const { contentId, contentType, flaggedBy, reason } = flagRequest.body;
-    const flag: Flag = {
+    let Model;
+    switch (contentType) {
+      case 'question':
+        Model = QuestionModel;
+        break;
+      case 'answer':
+        Model = AnswerModel;
+        break;
+      case 'comment':
+        Model = CommentModel;
+        break;
+      default:
+        throw new Error('Invalid content type');
+    }
+
+    const content = await Model.findById(contentId);
+    if (!content) {
+      throw new Error('Content not found');
+    }
+
+    const newFlag: Flag = {
       flaggedBy,
       reason,
       dateFlagged: new Date(),
       status: 'pending',
     };
 
-    let content;
-    if (contentType === 'question') {
-      content = await QuestionModel.findOneAndUpdate(
-        { _id: contentId },
-        { $push: { flags: flag } },
-        { new: true },
-      );
-    } else if (contentType === 'answer') {
-      content = await AnswerModel.findOneAndUpdate(
-        { _id: contentId },
-        { $push: { flags: flag } },
-        { new: true },
-      );
-    } else if (contentType === 'comment') {
-      content = await CommentModel.findOneAndUpdate(
-        { _id: contentId },
-        { $push: { flags: flag } },
-        { new: true },
-      );
-    } else {
-      throw new Error('Invalid content type');
-    }
+    content.flags = content.flags || [];
+    content.flags.push(newFlag);
+    await content.save();
 
-    if (!content) {
-      throw new Error('Content not found');
-    }
-
-    return flag;
+    return newFlag;
   } catch (error) {
     return { error: `Error when flagging content: ${(error as Error).message}` };
+  }
+};
+
+/**
+ * Bans a user by setting their isBanned status to true.
+ *
+ * @param username - The username of the user to ban.
+ * @returns A Promise resolving to the updated user document or an error message.
+ */
+export const banUser = async (
+  username: string,
+  moderatorComment?: string,
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const user = await UserModel.findOne({ username });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Add to BannedUser collection
+    const bannedUser = new BannedUserModel({
+      username,
+      moderatorComment,
+    });
+    await bannedUser.save();
+
+    // Remove user from User collection
+    await UserModel.deleteOne({ username });
+
+    return { success: true, message: 'User banned successfully' };
+  } catch (error) {
+    return { success: false, message: (error as Error).message };
   }
 };
 
@@ -1290,57 +1344,149 @@ export const reviewFlaggedContent = async (
   contentId: string,
   contentType: 'question' | 'answer' | 'comment',
   moderatorAction: 'removed' | 'allowed' | 'userBanned',
-  moderatorComment: string | undefined,
-  moderatorUsername: string,
-): Promise<QuestionResponse | AnswerResponse | CommentResponse | { error: string }> => {
+  moderatorComment?: string,
+): Promise<{ success: boolean; message: string; bannedUsername?: string }> => {
   try {
-    let content;
-    if (contentType === 'question') {
-      content = await QuestionModel.findOne({ _id: contentId });
-    } else if (contentType === 'answer') {
-      content = await AnswerModel.findOne({ _id: contentId });
-    } else if (contentType === 'comment') {
-      content = await CommentModel.findOne({ _id: contentId });
-    } else {
-      throw new Error('Invalid content type');
+    let Model;
+    switch (contentType) {
+      case 'question':
+        Model = QuestionModel;
+        break;
+      case 'answer':
+        Model = AnswerModel;
+        break;
+      case 'comment':
+        Model = CommentModel;
+        break;
+      default:
+        throw new Error('Invalid content type');
     }
 
+    // Find the content
+    const content = await Model.findById(contentId);
     if (!content) {
       throw new Error('Content not found');
     }
 
-    // Update the flags
-    content.flags = content.flags?.map(flag => ({
-      ...flag,
-      status: 'reviewed',
-      moderatorAction,
-      moderatorComment,
-    }));
+    // Update the flags' status to 'reviewed' and set moderator action
+    const updatedFlags = content.flags?.map((flag: Flag) => {
+      if (flag.status === 'pending') {
+        return {
+          ...flag,
+          status: 'reviewed',
+          moderatorAction,
+          moderatorComment,
+        };
+      }
+      return flag;
+    });
 
-    // Perform moderator action
+    content.flags = updatedFlags;
+
+    let bannedUsername;
+    // If action is 'removed', remove the content
     if (moderatorAction === 'removed') {
-      content.isRemoved = true;
+      // Remove content from database
+      await Model.deleteOne({ _id: contentId });
     } else if (moderatorAction === 'userBanned') {
       // Ban the user who created the content
-      let usernameToBan = '';
+      let username;
       if (contentType === 'question') {
-        usernameToBan = (content as Question).askedBy;
+        username = content.askedBy;
       } else if (contentType === 'answer') {
-        usernameToBan = (content as Answer).ansBy;
-      } else if (contentType === 'comment') {
-        usernameToBan = (content as Comment).commentBy;
+        username = content.ansBy;
+      } else {
+        username = content.commentBy;
       }
-
-      await UserModel.findOneAndUpdate({ username: usernameToBan }, { isBanned: true });
+      await banUser(username, moderatorComment);
+      // Remove content from database
+      await Model.deleteOne({ _id: contentId });
+      bannedUsername = username;
     }
 
-    // Save the content
     await content.save();
 
-    return content;
+    return { success: true, message: 'Flagged content reviewed successfully', bannedUsername };
   } catch (error) {
-    return { error: `Error when reviewing flagged content: ${(error as Error).message}` };
+    return { success: false, message: (error as Error).message };
   }
+};
+
+/**
+ * Retrieves all content that has been flagged and is pending review.
+ *
+ * @returns A Promise resolving to an array of flagged content.
+ */
+export const getFlaggedContent = async (): Promise<FlaggedContent[]> => {
+  // Fetch questions with pending flags
+  const flaggedQuestions = await QuestionModel.find({ 'flags.status': 'pending' }).populate([
+    { path: 'flags.flaggedBy', model: UserModel },
+    { path: 'tags', model: TagModel },
+    { path: 'comments', model: CommentModel },
+    {
+      path: 'answers',
+      model: AnswerModel,
+      populate: { path: 'comments', model: CommentModel },
+    },
+  ]);
+
+  // Fetch answers with pending flags
+  const flaggedAnswers = await AnswerModel.find({ 'flags.status': 'pending' }).populate([
+    { path: 'flags.flaggedBy', model: UserModel },
+    { path: 'comments', model: CommentModel },
+  ]);
+
+  // Fetch comments with pending flags
+  const flaggedComments = await CommentModel.find({ 'flags.status': 'pending' }).populate([
+    { path: 'flags.flaggedBy', model: UserModel },
+  ]);
+
+  // Collect and format the data
+  const flaggedContent: FlaggedContent[] = [];
+
+  // For each question
+  flaggedQuestions.forEach(question => {
+    question.flags?.forEach(flag => {
+      if (flag.status === 'pending') {
+        flaggedContent.push({
+          contentId: question._id.toString(),
+          contentType: 'question',
+          content: question,
+          flag,
+        });
+      }
+    });
+  });
+
+  // For each answer
+  flaggedAnswers.forEach(answer => {
+    answer.flags?.forEach(flag => {
+      if (flag.status === 'pending') {
+        flaggedContent.push({
+          contentId: answer._id.toString(),
+          contentType: 'answer',
+          content: answer,
+          flag,
+        });
+      }
+    });
+  });
+
+  // For each comment
+  flaggedComments.forEach(comment => {
+    comment.flags?.forEach(flag => {
+      if (flag.status === 'pending') {
+        flaggedContent.push({
+          contentId: comment._id.toString(),
+          contentType: 'comment',
+          content: comment,
+          flag,
+        });
+      }
+    });
+  });
+
+  return flaggedContent;
 };
 
 // Save API key like this in .env file API_NINJAS_KEY=YOUR_API_KEY
