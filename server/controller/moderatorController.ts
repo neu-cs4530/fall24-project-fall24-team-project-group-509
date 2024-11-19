@@ -8,6 +8,11 @@ const moderatorController = (socket: FakeSOSocket) => {
 
   /**
    * Retrieves all flagged content pending review.
+   *
+   * @param req The FlagContentRequest object containing the contentId, flaggedBy, and reason.
+   * @param res The HTTP response object used to send back the result of the operation.
+   *
+   * @returns A Promise that resolves to void.
    */
   const getAllFlaggedContent = async (req: Request, res: Response): Promise<void> => {
     try {
