@@ -300,6 +300,7 @@ export interface User {
   activityHistory?: Array<{
     postId: string;
     postType: 'Question' | 'Answer' | 'Comment';
+    qTitle: string;
     createdAt: Date;
   }>;
   bookmarkCollections?: BookmarkCollection[];

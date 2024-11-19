@@ -359,6 +359,7 @@ export const saveQuestion = async (question: Question): Promise<QuestionResponse
           activityHistory: {
             postId: result._id.toString(),
             postType: 'Question',
+            qTitle: question.title,
             createdAt: question.askDateTime,
           },
         },
@@ -1110,6 +1111,14 @@ export const updateActivityHistoryWithQuestionID = async (
     if (!qid) {
       throw new Error('Provided question ID is undefined.');
     }
+    // find the title of the question
+    const question = await QuestionModel.findOne({ _id: qid });
+    if (!question) {
+      throw new Error('Question not found');
+    }
+
+    const questionTitle = question.title;
+
     if (type === 'comment') {
       await UserModel.findOneAndUpdate(
         { username },
@@ -1118,6 +1127,7 @@ export const updateActivityHistoryWithQuestionID = async (
             activityHistory: {
               postId: qid,
               postType: 'Comment',
+              qTitle: questionTitle,
               createdAt: date,
             },
           },
@@ -1131,6 +1141,7 @@ export const updateActivityHistoryWithQuestionID = async (
             activityHistory: {
               postId: qid,
               postType: 'Answer',
+              qTitle: questionTitle,
               createdAt: date,
             },
           },

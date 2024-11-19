@@ -27,6 +27,7 @@ export interface UserProfile {
   activityHistory?: Array<{
     postId: string;
     postType: string;
+    qTitle: string;
     createdAt: Date;
   }>;
   bookmarks: BookmarkCollection[];
@@ -173,7 +174,7 @@ export interface ServerToClientEvents {
   voteUpdate: (vote: VoteUpdatePayload) => void;
   commentUpdate: (update: CommentUpdatePayload) => void;
   activityHistoryUpdate: (
-    update: Array<{ postID: string; postType: string; createdAt: Date }>,
+    update: Array<{ postID: string; postType: string; qTitle: string; createdAt: Date }>,
   ) => void;
   bookmarkUpdate: (update: BookmarkCollection[]) => void;
   questionDeletionUpdate: (update: string) => void;

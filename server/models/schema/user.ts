@@ -38,6 +38,7 @@ const userSchema: Schema = new Schema(
             // refPath: 'activityHistory.postType',
           },
           postType: { type: String, required: true, enum: ['Question', 'Answer', 'Comment'] },
+          qTitle: { type: String, required: true },
           createdAt: { type: Date, default: Date.now },
         },
       ],
