@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaBookmark, FaRegBookmark } from 'react-icons/fa';
 import useBookmark from '../../../hooks/useBookmark';
+import './index.css';
 
 const BookmarkButton = ({ questionId }: { questionId: string }) => {
   const {

@@ -29,39 +29,52 @@ const useBookmarkPage = () => {
     const fetchSavedPosts = async () => {
       const fetchedCollection = await getBookmarkCollectionById(collectionID);
       setCollection(fetchedCollection);
-      if (fetchedCollection.savedPosts) {
-        setSavedPosts(fetchedCollection.savedPosts);
-      }
+      setSavedPosts(fetchedCollection.savedPosts || []);
     };
     fetchSavedPosts();
 
     socket.on('questionDeletionUpdate', (q_id: string) => {
-      setSavedPosts(prevSavedPosts => prevSavedPosts.filter(post => post._id !== q_id));
+      setSavedPosts(savedPosts.filter(post => post._id !== q_id));
+    });
+
+    socket.on('bookmarkUpdate', (updatedCollections: BookmarkCollection[]) => {
+      const updatedCollection = updatedCollections.find(col => col._id === collectionID);
+      if (updatedCollection) {
+        setCollection(updatedCollection);
+        setSavedPosts(updatedCollection.savedPosts);
+      }
     });
 
     return () => {
       socket.off('questionDeletionUpdate');
+      socket.off('bookmarkUpdate');
     };
-  }, [collectionID, socket]);
+  }, [collectionID, socket, savedPosts]);
 
   const handleFollowCollection = async () => {
-    await followBookmarkCollection(collectionID, user.username);
+    const updatedCollection = await followBookmarkCollection(collectionID, user.username);
+    setCollection(updatedCollection);
+    socket.emit('bookmarkUpdate', [updatedCollection]);
   };
 
   const handleUnfollowCollection = async () => {
-    await unfollowBookmarkCollection(collectionID, user.username);
+    const updatedCollection = await unfollowBookmarkCollection(collectionID, user.username);
+    setCollection(updatedCollection);
+    socket.emit('bookmarkUpdate', [updatedCollection]);
   };
 
   const handleSharingCollection = async (username: string) => {
     if (username) {
       const updatedCollection = await followBookmarkCollection(collectionID, username);
       setCollection(updatedCollection);
+      socket.emit('bookmarkUpdate', [updatedCollection]);
     }
   };
 
   const handleDeleteFromCollection = async (q_id: string) => {
     const updatedCollection = await removeQuestionFromBookmarkCollection(collectionID, q_id);
     setCollection(updatedCollection);
+    setSavedPosts(prev => prev.filter(post => post._id !== q_id));
     socket.emit('questionDeletionUpdate', q_id);
   };
 

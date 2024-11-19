@@ -78,7 +78,6 @@ const ProfileView = () => {
               <li key={post.postID} className='history-item'>
                 <p className='history-text'>
                   {username} added {getArticle(post.postType)} {post.postType.toLowerCase()} on{' '}
-                  {/* <Link to={`/question/${post.postID}`}>{post.postID}</Link> */}
                   <Link to={`/question/${post.postID}`}>{post.qTitle}</Link>
                 </p>
               </li>
