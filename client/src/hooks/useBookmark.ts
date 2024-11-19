@@ -4,11 +4,9 @@ import {
   addQuestionToBookmarkCollection,
   createBookmarkCollection,
   removeQuestionFromBookmarkCollection,
-  getBookmarkCollectionById,
 } from '../services/bookmarkService';
 import { BookmarkCollection } from '../types';
 import useUserContext from './useUserContext';
-import { getQuestionById } from '../services/questionService';
 
 /**
  * Custom hook for managing bookmarks and collections.

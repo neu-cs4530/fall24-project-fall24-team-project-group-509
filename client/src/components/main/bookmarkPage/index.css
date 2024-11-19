@@ -1,0 +1,18 @@
+/* index.css */
+
+  /* Alternatively, you can target specific elements */
+  .saved-posts {
+    margin-left: 20px; /* Adjust the value as needed */
+  }
+  
+.buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.deleteq {
+    margin-left: 10px;
+}

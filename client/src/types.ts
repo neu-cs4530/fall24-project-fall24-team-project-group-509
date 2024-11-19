@@ -176,6 +176,7 @@ export interface ServerToClientEvents {
     update: Array<{ postID: string; postType: string; createdAt: Date }>,
   ) => void;
   bookmarkUpdate: (update: BookmarkCollection[]) => void;
+  questionDeletionUpdate: (update: string) => void;
 }
 
 /**

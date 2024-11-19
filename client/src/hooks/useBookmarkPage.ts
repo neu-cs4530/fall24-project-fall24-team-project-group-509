@@ -11,7 +11,7 @@ import useQuestionPage from './useQuestionPage';
 import useUserContext from './useUserContext';
 
 const useBookmarkPage = () => {
-  const { user } = useUserContext();
+  const { user, socket } = useUserContext();
   const { collectionId } = useParams();
   const collectionID = collectionId as string;
   const [collection, setCollection] = useState<BookmarkCollection>({
@@ -34,7 +34,15 @@ const useBookmarkPage = () => {
       }
     };
     fetchSavedPosts();
-  }, [collectionID]);
+
+    socket.on('questionDeletionUpdate', (q_id: string) => {
+      setSavedPosts(prevSavedPosts => prevSavedPosts.filter(post => post._id !== q_id));
+    });
+
+    return () => {
+      socket.off('questionDeletionUpdate');
+    };
+  }, [collectionID, socket]);
 
   const handleFollowCollection = async () => {
     await followBookmarkCollection(collectionID, user.username);
@@ -54,6 +62,7 @@ const useBookmarkPage = () => {
   const handleDeleteFromCollection = async (q_id: string) => {
     const updatedCollection = await removeQuestionFromBookmarkCollection(collectionID, q_id);
     setCollection(updatedCollection);
+    socket.emit('questionDeletionUpdate', q_id);
   };
 
   return {
