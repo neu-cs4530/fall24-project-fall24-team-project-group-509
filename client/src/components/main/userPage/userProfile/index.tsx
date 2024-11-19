@@ -89,6 +89,7 @@ const ProfileView = () => {
       </div>
       <div className='collections'>
         <h3>Bookmarks</h3>
+        {bookmarks && <h2>test</h2>}
         {bookmarks && bookmarks.length > 0 ? (
           bookmarks.map(collection => (
             <li key={collection._id} className='bookmark-collection'>
