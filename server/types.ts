@@ -254,11 +254,13 @@ export interface ServerToClientEvents {
  * Interface representing a bookmark, which contains:
  * - postId - The unique identifier of the post (question or answer).
  * - savedAt - The date and time when the post was bookmarked.
+ * - qTitle - The title of the question that the post belongs to.
  */
 export interface Bookmark {
   _id?: ObjectId;
   postId: string;
-  savedAt: Date;
+  qTitle: string;
+  savedAt: Date; 
   //  continue leveraging the tags from the Question documents without modifying the Bookmark structure for 1.5
 }
 

@@ -202,9 +202,11 @@ export interface BookmarkCollection {
  * - _id - The unique identifier for the bookmark. Optional field.
  * - postID - The Question that has been bookmarked.
  * - savedAt - The date and time when the bookmark was created.
+ * qTitle - The title of the question that has been bookmarked
  */
 export interface Bookmark {
   _id?: string;
   postId: string;
+  qTitle: string;
   savedAt: Date;
 }

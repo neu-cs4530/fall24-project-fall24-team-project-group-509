@@ -47,7 +47,8 @@ const BookmarkPage = () => {
       {savedPosts && savedPosts.length > 0 ? (
         savedPosts.map(post => (
           <li key={post._id}>
-            <Link to={`/question/${post.postId}`}>{post.postId}</Link>
+            {/* <Link to={`/question/${post.postId}`}>{post.postId}</Link> */}
+            <Link to={`/question/${post.postId}`}>{post.qTitle}</Link>
             {user.username === collection.owner && (
               <button className='deleteq' onClick={() => handleDeleteFromCollection(post.postId)}>
                 Delete from this collection

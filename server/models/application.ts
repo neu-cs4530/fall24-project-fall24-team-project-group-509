@@ -834,16 +834,16 @@ export const addQuestionToBookmarkCollection = async (
 ): Promise<BookmarkCollectionResponse> => {
   try {
     // PROBABLY NEED TO ADD THIS CODE TO PASS IN TITLE FOR A BOOKMARK
-    // const ourQuestion = await QuestionModel.findOne({ _id: questionId });
-    // if (!ourQuestion) {
-    //   throw new Error('Question not found');
-    // }
-    // const qTitle = ourQuestion.title;
+    const ourQuestion = await QuestionModel.findOne({ _id: questionId });
+    if (!ourQuestion) {
+      throw new Error('Question not found');
+    }
+    const questionTitle = ourQuestion.title;
 
     const bookmark: Bookmark = {
       postId: questionId,
+      qTitle: questionTitle,
       savedAt: new Date(),
-      // questionTitle: qTitle,
     };
 
     // const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
