@@ -193,7 +193,7 @@ export interface BookmarkCollection {
   owner: string;
   isPublic: boolean;
   followers: string[];
-  savedPosts: Question[];
+  savedPosts: Bookmark[];
 }
 
 /**
@@ -204,6 +204,6 @@ export interface BookmarkCollection {
  */
 export interface Bookmark {
   _id?: string;
-  postID: Question;
+  postId: string;
   savedAt: Date;
 }

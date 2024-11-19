@@ -256,7 +256,8 @@ export interface ServerToClientEvents {
  * - savedAt - The date and time when the post was bookmarked.
  */
 export interface Bookmark {
-  postId: ObjectId | Question;
+  _id?: ObjectId;
+  postId: string;
   savedAt: Date;
   //  continue leveraging the tags from the Question documents without modifying the Bookmark structure for 1.5
 }

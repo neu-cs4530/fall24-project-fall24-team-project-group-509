@@ -834,10 +834,36 @@ export const addQuestionToBookmarkCollection = async (
 ): Promise<BookmarkCollectionResponse> => {
   try {
     const bookmark: Bookmark = {
-      postId: new ObjectId(questionId),
+      postId: questionId,
       savedAt: new Date(),
     };
 
+    // const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
+    //   { _id: new ObjectId(collectionId) },
+    //   { $push: { savedPosts: bookmark } },
+    //   { new: true },
+    // );
+
+    // if (!updatedCollection) {
+    //   throw new Error('Bookmark collection not found');
+    // }
+    // Find the collection to check if the question is already bookmarked
+    const collection = await BookmarkCollectionModel.findById(collectionId);
+
+    if (!collection) {
+      throw new Error('Bookmark collection not found');
+    }
+
+    // Check if the question is already bookmarked
+    const isAlreadyBookmarked = collection.savedPosts.some(
+      post => post.postId.toString() === questionId,
+    );
+
+    if (isAlreadyBookmarked) {
+      return collection; // Return the collection without adding the bookmark
+    }
+
+    // Add the bookmark if it does not already exist
     const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
       { _id: new ObjectId(collectionId) },
       { $push: { savedPosts: bookmark } },
@@ -909,49 +935,50 @@ export const getUserBookmarkCollections = async (
     let collections;
     if (username === requesterUsername) {
       // If the requester is the owner, retrieve all collections
-      collections = await BookmarkCollectionModel.find({ owner: username }).populate({
-        path: 'savedPosts.postId',
-        model: 'Question',
-        populate: { path: 'tags', model: TagModel },
-      });
+      collections = await BookmarkCollectionModel.find({ owner: username });
+      // .populate({
+      //   path: 'savedPosts',
+      //   model: 'Question',
+      //   populate: { path: 'tags', model: TagModel },
+      // });
     } else {
       // If the requester is not the owner, retrieve public collections or private collections they are permitted to view
       collections = await BookmarkCollectionModel.find({
         owner: username,
         $or: [{ isPublic: true }, { followers: requesterUsername }],
       }).populate({
-        path: 'savedPosts.postId',
+        path: 'savedPosts',
         model: 'Question',
         populate: { path: 'tags', model: TagModel },
       });
     }
 
     // Apply sorting if a sortOption is provided
-    if (sortOption) {
-      collections.forEach(collection => {
-        if (sortOption === 'date') {
-          collection.savedPosts.sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime());
-        } else if (sortOption === 'numberOfAnswers') {
-          collection.savedPosts.sort((a, b) => {
-            const aAnswers = (a.postId as Question).answers.length;
-            const bAnswers = (b.postId as Question).answers.length;
-            return bAnswers - aAnswers;
-          });
-        } else if (sortOption === 'views') {
-          collection.savedPosts.sort((a, b) => {
-            const aViews = (a.postId as Question).views.length;
-            const bViews = (b.postId as Question).views.length;
-            return bViews - aViews;
-          });
-        } else if (sortOption === 'title') {
-          collection.savedPosts.sort((a, b) => {
-            const aTitle = (a.postId as Question).title.toLowerCase();
-            const bTitle = (b.postId as Question).title.toLowerCase();
-            return aTitle.localeCompare(bTitle);
-          });
-        } // Add more sorting options if needed
-      });
-    }
+    // if (sortOption) {
+    //   collections.forEach(collection => {
+    //     if (sortOption === 'date') {
+    //       collection.savedPosts.sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime());
+    //     } else if (sortOption === 'numberOfAnswers') {
+    //       collection.savedPosts.sort((a, b) => {
+    //         const aAnswers = (a.postId as Question).answers.length;
+    //         const bAnswers = (b.postId as Question).answers.length;
+    //         return bAnswers - aAnswers;
+    //       });
+    //     } else if (sortOption === 'views') {
+    //       collection.savedPosts.sort((a, b) => {
+    //         const aViews = (a.postId as Question).views.length;
+    //         const bViews = (b.postId as Question).views.length;
+    //         return bViews - aViews;
+    //       });
+    //     } else if (sortOption === 'title') {
+    //       collection.savedPosts.sort((a, b) => {
+    //         const aTitle = (a.postId as Question).title.toLowerCase();
+    //         const bTitle = (b.postId as Question).title.toLowerCase();
+    //         return aTitle.localeCompare(bTitle);
+    //       });
+    //     } // Add more sorting options if needed
+    //   });
+    // }
 
     return collections;
   } catch (error) {
@@ -1047,7 +1074,7 @@ export const getFollowedBookmarkCollections = async (
     const collections = await BookmarkCollectionModel.find({
       _id: { $in: user.followedBookmarkCollections },
     }).populate({
-      path: 'savedPosts.postId',
+      path: 'savedPosts',
       model: 'Question',
       populate: { path: 'tags', model: TagModel },
     });
@@ -1139,11 +1166,12 @@ export const getBookmarkCollectionById = async (
   collectionId: string,
 ): Promise<BookmarkCollectionResponse> => {
   try {
-    const collection = await BookmarkCollectionModel.findOne({ _id: collectionId }).populate({
-      path: 'savedPosts.postId',
-      model: 'Question',
-      populate: { path: 'questions', model: QuestionModel },
-    });
+    const collection = await BookmarkCollectionModel.findOne({ _id: collectionId });
+    // .populate({
+    //   path: 'savedPosts.postId',
+    //   model: 'Question',
+    //   // populate: { path: 'questions', model: QuestionModel },
+    // });
     if (!collection) {
       throw new Error('Bookmark collection not found');
     }

@@ -41,16 +41,9 @@ const BookmarkPage = () => {
         <button onClick={handleFollowCollection}>Follow this collection</button>
       )}
       {savedPosts && savedPosts.length > 0 ? (
-        savedPosts.map(q => (
-          <li key={q._id}>
-            <Link to={`/question/${q._id}`}>
-              <p>{q.title}</p>
-            </Link>
-            {user.username === collection.owner && (
-              <button onClick={() => handleDeleteFromCollection(q._id as string)}>
-                Delete from this collection
-              </button>
-            )}
+        savedPosts.map(post => (
+          <li key={post._id}>
+            <Link to={`/question/${post.postId}`}>{post.postId}</Link>
           </li>
         ))
       ) : (

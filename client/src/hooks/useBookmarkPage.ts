@@ -6,7 +6,7 @@ import {
   unfollowBookmarkCollection,
   removeQuestionFromBookmarkCollection,
 } from '../services/bookmarkService';
-import { BookmarkCollection, Question } from '../types';
+import { Bookmark, BookmarkCollection } from '../types';
 import useQuestionPage from './useQuestionPage';
 import useUserContext from './useUserContext';
 
@@ -21,7 +21,7 @@ const useBookmarkPage = () => {
     followers: [],
     savedPosts: [],
   });
-  const [savedPosts, setSavedPosts] = useState<Question[]>([]);
+  const [savedPosts, setSavedPosts] = useState<Bookmark[]>([]);
   const [showModal, setShowModal] = useState(false);
   const { setQuestionOrder } = useQuestionPage();
 

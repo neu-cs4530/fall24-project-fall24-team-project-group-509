@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { BookmarkCollection, UserProfile } from '../types';
 import useUserContext from './useUserContext';
 import { addUserBio, addUserProfilePicture, getUserByUsername } from '../services/userService';
+import { getUserBookmarkCollections } from '../services/bookmarkService';
 
 const useProfilePage = () => {
   const { user, socket } = useUserContext();
@@ -39,7 +40,7 @@ const useProfilePage = () => {
           );
           setActivityHistory(sortedHistory);
         }
-        setBookmarks(userProfile.bookmarks);
+        setBookmarks(await getUserBookmarkCollections(username as string, requesterUsername));
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Error fetching user details:', error);
