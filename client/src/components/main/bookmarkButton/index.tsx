@@ -10,6 +10,7 @@ const BookmarkButton = ({ questionId }: { questionId: string }) => {
     toggleBookmark,
     selectCollection,
     createCollection,
+    createPrivateCollection,
     removeFromCollection,
   } = useBookmark(questionId);
   const [newCollectionName, setNewCollectionName] = useState('');
@@ -43,7 +44,10 @@ const BookmarkButton = ({ questionId }: { questionId: string }) => {
               onChange={e => setNewCollectionName(e.target.value)}
               placeholder='New collection name'
             />
-            <button onClick={() => createCollection(newCollectionName)}>Create</button>
+            <button onClick={() => createCollection(newCollectionName)}>Create Public</button>
+            <button onClick={() => createPrivateCollection(newCollectionName)}>
+              Create Private
+            </button>
           </div>
         </div>
       )}
