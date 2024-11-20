@@ -81,7 +81,7 @@ const useBookmarkPage = () => {
     if (sortOption === 'recency') {
       return new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime();
     }
-    if (sortOption === 'mostAnswers') {
+    if (a.numAnswers && b.numAnswers && sortOption === 'mostAnswers') {
       return a.numAnswers - b.numAnswers;
     }
     return 0;

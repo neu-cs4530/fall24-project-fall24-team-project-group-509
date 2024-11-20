@@ -210,5 +210,5 @@ export interface Bookmark {
   postId: string;
   qTitle: string;
   savedAt: Date;
-  numAnswers: number;
+  numAnswers?: number;
 }

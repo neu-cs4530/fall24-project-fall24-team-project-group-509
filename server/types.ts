@@ -261,7 +261,7 @@ export interface Bookmark {
   postId: string;
   qTitle: string;
   savedAt: Date;
-  numAnswers: number;
+  numAnswers?: number;
   //  continue leveraging the tags from the Question documents without modifying the Bookmark structure for 1.5
 }
 
