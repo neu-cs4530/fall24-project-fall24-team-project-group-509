@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom';
-import { OrderType, orderTypeDisplayName } from '../../../types';
 import Modal from './modal';
-import OrderButton from '../questionPage/header/orderButton';
 import useBookmarkPage from '../../../hooks/useBookmarkPage';
 import './index.css';
 
@@ -9,10 +7,11 @@ const BookmarkPage = () => {
   const {
     user,
     collection,
-    savedPosts,
     showModal,
     setShowModal,
-    setQuestionOrder,
+    sortOption,
+    sortedPosts,
+    handleSortChange,
     handleFollowCollection,
     handleUnfollowCollection,
     handleSharingCollection,
@@ -23,15 +22,6 @@ const BookmarkPage = () => {
     <div className='saved-posts'>
       <h2>{collection.title}</h2>
       <div className='buttons'>
-        <div className='btns'>
-          {Object.keys(orderTypeDisplayName).map((order, idx) => (
-            <OrderButton
-              key={idx}
-              orderType={order as OrderType}
-              setQuestionOrder={setQuestionOrder}
-            />
-          ))}
-        </div>
         {user.username === collection.owner && (
           <>
             <button onClick={() => setShowModal(true)}>Share this collection</button>
@@ -42,10 +32,14 @@ const BookmarkPage = () => {
         ) : (
           <button onClick={handleFollowCollection}>Follow this collection</button>
         )}
+        <select value={sortOption} onChange={handleSortChange} className='sort-dropdown'>
+          <option value='recency'>Sort by Recency</option>
+          <option value='mostAnswers'>Sort by Most Answers</option>
+        </select>
       </div>
       <h3>Bookmarked Posts</h3>
-      {savedPosts && savedPosts.length > 0 ? (
-        savedPosts.map(post => (
+      {sortedPosts && sortedPosts.length > 0 ? (
+        sortedPosts.map(post => (
           <li key={post._id}>
             <Link to={`/question/${post.postId}`}>{post.qTitle}</Link>
             {user.username === collection.owner && (

@@ -840,11 +840,13 @@ export const addQuestionToBookmarkCollection = async (
       throw new Error('Question not found');
     }
     const questionTitle = ourQuestion.title;
+    const numberAnswers = ourQuestion.answers.length;
 
     const bookmark: Bookmark = {
       postId: questionId,
       qTitle: questionTitle,
       savedAt: new Date(),
+      numAnswers: numberAnswers,
     };
 
     // const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(

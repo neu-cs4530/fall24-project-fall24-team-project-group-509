@@ -7,7 +7,6 @@ import {
   removeQuestionFromBookmarkCollection,
 } from '../services/bookmarkService';
 import { Bookmark, BookmarkCollection } from '../types';
-import useQuestionPage from './useQuestionPage';
 import useUserContext from './useUserContext';
 
 const useBookmarkPage = () => {
@@ -23,7 +22,7 @@ const useBookmarkPage = () => {
   });
   const [savedPosts, setSavedPosts] = useState<Bookmark[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const { setQuestionOrder } = useQuestionPage();
+  const [sortOption, setSortOption] = useState<'recency' | 'mostAnswers'>('recency');
 
   useEffect(() => {
     const fetchSavedPosts = async () => {
@@ -78,13 +77,28 @@ const useBookmarkPage = () => {
     socket.emit('questionDeletionUpdate', q_id);
   };
 
+  const sortedPosts = [...savedPosts].sort((a, b) => {
+    if (sortOption === 'recency') {
+      return new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime();
+    }
+    if (sortOption === 'mostAnswers') {
+      return a.numAnswers - b.numAnswers;
+    }
+    return 0;
+  });
+
+  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortOption(event.target.value as 'recency' | 'mostAnswers');
+  };
+
   return {
     user,
     collection,
-    savedPosts,
     showModal,
+    sortOption,
+    sortedPosts,
+    handleSortChange,
     setShowModal,
-    setQuestionOrder,
     handleFollowCollection,
     handleUnfollowCollection,
     handleSharingCollection,
