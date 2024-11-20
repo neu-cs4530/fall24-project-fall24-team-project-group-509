@@ -21,6 +21,7 @@ const AnswerPage = () => {
     handleNewAnswer,
     handleFlagQuestion,
     handleFlagAnswer,
+    handleFlagComment,
   } = useAnswerPage();
 
   if (!question) {
@@ -40,6 +41,7 @@ const AnswerPage = () => {
       <CommentSection
         comments={question.comments}
         handleAddComment={(comment: Comment) => handleNewComment(comment, 'question', questionID)}
+        handleFlagComment={handleFlagComment}
       />
       {question.answers.map((a, idx) => (
         <AnswerView
@@ -51,6 +53,7 @@ const AnswerPage = () => {
           comments={a.comments}
           handleAddComment={(comment: Comment) => handleNewComment(comment, 'answer', a._id)}
           handleFlagAnswer={handleFlagAnswer}
+          handleFlagComment={handleFlagComment}
         />
       ))}
       <button
