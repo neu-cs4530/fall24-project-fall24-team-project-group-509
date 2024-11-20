@@ -75,7 +75,11 @@ const answerController = (socket: FakeSOSocket) => {
       }
 
       await updateActivityHistoryWithQuestionID(ansInfo.ansBy, qid, 'answer', ansInfo.ansDateTime);
-      const populatedAns = await populateDocument(ansFromDb._id?.toString(), 'answer');
+      const populatedAns = await populateDocument(
+        ansFromDb._id?.toString(),
+        'answer',
+        ansInfo.ansBy,
+      );
 
       if (populatedAns && 'error' in populatedAns) {
         throw new Error(populatedAns.error as string);

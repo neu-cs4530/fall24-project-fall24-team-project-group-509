@@ -115,7 +115,7 @@ const commentController = (socket: FakeSOSocket) => {
 
       // Populates the fields of the question or answer that this comment
       // was added to, and emits the updated object
-      const populatedDoc = await populateDocument(id, type);
+      const populatedDoc = await populateDocument(id, type, comment.commentBy);
 
       if (populatedDoc && 'error' in populatedDoc) {
         throw new Error(populatedDoc.error);

@@ -36,8 +36,9 @@ const questionController = (socket: FakeSOSocket) => {
     const { order } = req.query;
     const { search } = req.query;
     const { askedBy } = req.query;
+    const { username } = req.query;
     try {
-      let qlist: Question[] = await getQuestionsByOrder(order);
+      let qlist: Question[] = await getQuestionsByOrder(order, username);
       // Filter by askedBy if provided
       if (askedBy) {
         qlist = filterQuestionsByAskedBy(qlist, askedBy);
@@ -153,7 +154,11 @@ const questionController = (socket: FakeSOSocket) => {
         throw new Error(result.error);
       }
 
-      const populatedQuestion = await populateDocument(result._id?.toString(), 'question');
+      const populatedQuestion = await populateDocument(
+        result._id?.toString(),
+        'question',
+        question.askedBy,
+      );
       if (populatedQuestion && 'error' in populatedQuestion) {
         throw new Error(populatedQuestion.error);
       }
