@@ -8,6 +8,7 @@ import {
   saveComment,
   updateActivityHistoryWithQuestionID,
 } from '../models/application';
+import { checkProfanity } from '../profanityFilter';
 
 const commentController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -74,6 +75,12 @@ const commentController = (socket: FakeSOSocket) => {
     }
 
     try {
+      const { hasProfanity, censored } = await checkProfanity(comment.text);
+
+      if (hasProfanity) {
+        res.status(400).send(`Profanity detected in comment text: ${censored}`);
+        return;
+      }
       const comFromDb = await saveComment(comment);
 
       if ('error' in comFromDb) {

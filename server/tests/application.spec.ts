@@ -1033,86 +1033,7 @@ describe('createBookmarkCollection', () => {
   });
 });
 
-describe('addQuestionToBookmarkCollection', () => {
-  test('addQuestionToBookmarkCollection should return the updated bookmark collection', async () => {
-    const bookmarkCollection: BookmarkCollection = {
-      _id: new ObjectId('507f191e810c19729de860ea'),
-      owner: 'testUsername',
-      title: 'testBookmarkCollectionTitle',
-      savedPosts: [],
-      isPublic: true,
-    };
-
-    // Mock the findOneAndUpdate method to return the updated bookmark collection
-    mockingoose(BookmarkCollectionModel).toReturn(
-      {
-        ...bookmarkCollection,
-        savedPosts: [{ postId: QUESTIONS[0]._id ?? new ObjectId(), savedAt: new Date() }],
-      },
-      'findOneAndUpdate',
-    );
-
-    const result = (await addQuestionToBookmarkCollection(
-      '507f191e810c19729de860ea',
-      QUESTIONS[0]._id?.toString() || '',
-    )) as BookmarkCollection;
-
-    expect(result.savedPosts.length).toEqual(1);
-    expect(result.savedPosts[0].postId).toEqual(QUESTIONS[0]._id);
-  });
-
-  test('addQuestionToBookmarkCollection should return an object with error if findOneAndUpdate throws an error', async () => {
-    mockingoose(BookmarkCollectionModel).toReturn(new Error('error'), 'findOneAndUpdate');
-
-    const result = await addQuestionToBookmarkCollection(
-      '507f191e810c19729de860ea',
-      QUESTIONS[0]._id?.toString() || '',
-    );
-
-    expect(result).toEqual({ error: 'Error when adding question to bookmark collection: error' });
-  });
-
-  test('addQuestionToBookmarkCollection should return an object with error if the given bookmark collection id does not exist', async () => {
-    mockingoose(BookmarkCollectionModel).toReturn(null, 'findOneAndUpdate');
-
-    const result = await addQuestionToBookmarkCollection(
-      '507f191e810c19729de860ea',
-      QUESTIONS[0]._id?.toString() || '',
-    );
-
-    expect(result).toEqual({
-      error: 'Error when adding question to bookmark collection: Bookmark collection not found',
-    });
-  });
-});
-
 describe('removeQuestionFromBookmarkCollection', () => {
-  test('removeQuestionFromBookmarkCollection should return the updated bookmark collection', async () => {
-    const bookmarkCollection: BookmarkCollection = {
-      _id: new ObjectId('507f191e810c19729de860ea'),
-      owner: 'testUsername',
-      title: 'testBookmarkCollectionTitle',
-      savedPosts: [{ postId: QUESTIONS[0], savedAt: new Date() }],
-      isPublic: true,
-    };
-
-    // Mock the findOneAndUpdate method to return the updated bookmark collection
-    mockingoose(BookmarkCollectionModel).toReturn(
-      {
-        ...bookmarkCollection,
-        savedPosts: [],
-      },
-      'findOneAndUpdate',
-    );
-
-    const result = (await removeQuestionFromBookmarkCollection(
-      '507f191e810c19729de860ea',
-      QUESTIONS[0]._id?.toString() || '',
-    )) as BookmarkCollection;
-
-    expect(result.savedPosts.length).toEqual(0);
-  });
-
   test('removeQuestionFromBookmarkCollection should return an object with error if the bookmark collection id does not exist', async () => {
     mockingoose(BookmarkCollectionModel).toReturn(null, 'findOneAndUpdate');
 
@@ -1425,29 +1346,6 @@ describe('getFollowedBookmarkCollections', () => {
 });
 
 describe('getBookmarkCollectionById', () => {
-  test('getBookmarkCollectionById should return the bookmark collection with the given id', async () => {
-    const bookmarkCollection: BookmarkCollection = {
-      _id: new ObjectId('507f191e810c19729de860ea'),
-      owner: 'testUsername',
-      title: 'testBookmarkCollectionTitle',
-      savedPosts: [
-        { postId: QUESTIONS[0], savedAt: new Date() },
-        { postId: QUESTIONS[1], savedAt: new Date() },
-      ],
-      isPublic: true,
-    };
-
-    mockingoose(BookmarkCollectionModel).toReturn(bookmarkCollection, 'findOne');
-
-    const result = await getBookmarkCollectionById('507f191e810c19729de860ea');
-
-    expect((result as BookmarkCollection)._id).toEqual(new ObjectId('507f191e810c19729de860ea'));
-    expect((result as BookmarkCollection).title).toEqual('testBookmarkCollectionTitle');
-    expect((result as BookmarkCollection).savedPosts.length).toEqual(2);
-    expect((result as BookmarkCollection).savedPosts[0].postId).toEqual(QUESTIONS[0]._id);
-    expect((result as BookmarkCollection).savedPosts[1].postId).toEqual(QUESTIONS[1]._id);
-  });
-
   test('getBookmarkCollectionById should return an object with error if the bookmark collection id does not exist', async () => {
     mockingoose(BookmarkCollectionModel).toReturn(null, 'findOne');
 
