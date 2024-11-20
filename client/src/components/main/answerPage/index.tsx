@@ -14,7 +14,14 @@ import useAnswerPage from '../../../hooks/useAnswerPage';
  * It also includes the functionality to vote, ask a new question, and post a new answer.
  */
 const AnswerPage = () => {
-  const { questionID, question, handleNewComment, handleNewAnswer } = useAnswerPage();
+  const {
+    questionID,
+    question,
+    handleNewComment,
+    handleNewAnswer,
+    handleFlagQuestion,
+    handleFlagAnswer,
+  } = useAnswerPage();
 
   if (!question) {
     return null;
@@ -37,11 +44,13 @@ const AnswerPage = () => {
       {question.answers.map((a, idx) => (
         <AnswerView
           key={idx}
+          _id={a._id as string}
           text={a.text}
           ansBy={a.ansBy}
           meta={getMetaData(new Date(a.ansDateTime))}
           comments={a.comments}
           handleAddComment={(comment: Comment) => handleNewComment(comment, 'answer', a._id)}
+          handleFlagAnswer={handleFlagAnswer}
         />
       ))}
       <button
@@ -50,6 +59,13 @@ const AnswerPage = () => {
           handleNewAnswer();
         }}>
         Answer Question
+      </button>
+      <button
+        className='bluebtn FlagQuestionButton'
+        onClick={() => {
+          handleFlagQuestion(question.title, question.text, question.askedBy);
+        }}>
+        Flag Question
       </button>
     </>
   );

@@ -15,11 +15,13 @@ import { Comment } from '../../../../types';
  * - handleAddComment Callback function to handle adding a new comment.
  */
 interface AnswerProps {
+  _id: string;
   text: string;
   ansBy: string;
   meta: string;
   comments: Comment[];
   handleAddComment: (comment: Comment) => void;
+  handleFlagAnswer: (aid: string, aText: string, answeredBy: string) => void;
 }
 
 /**
@@ -32,7 +34,15 @@ interface AnswerProps {
  * @param comments An array of comments associated with the answer.
  * @param handleAddComment Function to handle adding a new comment.
  */
-const AnswerView = ({ text, ansBy, meta, comments, handleAddComment }: AnswerProps) => (
+const AnswerView = ({
+  _id,
+  text,
+  ansBy,
+  meta,
+  comments,
+  handleAddComment,
+  handleFlagAnswer,
+}: AnswerProps) => (
   <div className='answer right_padding'>
     <div id='answerText' className='answerText'>
       {handleHyperlink(text)}
@@ -43,6 +53,14 @@ const AnswerView = ({ text, ansBy, meta, comments, handleAddComment }: AnswerPro
       </div>
       <div className='answer_question_meta'>{meta}</div>
     </div>
+    <button
+      className='bluebtn FlagQuestionButton'
+      onClick={() => {
+        // handleFlagQuestion(question.title, question.text);
+        handleFlagAnswer(_id, text, ansBy);
+      }}>
+      Flag Answer, {_id}
+    </button>
     <CommentSection comments={comments} handleAddComment={handleAddComment} />
   </div>
 );
