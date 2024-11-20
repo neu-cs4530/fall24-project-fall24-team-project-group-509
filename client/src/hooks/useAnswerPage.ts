@@ -32,12 +32,17 @@ const useAnswerPage = () => {
    * Function to handle navigation to the "Flag Question" page.
    * qTitle and qText are the title and text of the question to be flagged.
    */
-  const handleFlagQuestion = (qTitle: string, qText: string) => {
+  const handleFlagQuestion = (qTitle: string, qText: string, askedBy: string) => {
     // const allQuestionText = `${question?.title ?? ''}\n${question?.text ?? ''}`;
     // navigate(`/flag/question/${questionID}`, { state: allQuestionText }); // need to define a route for this in fakestackoverflow.tsx
     console.log('Flagging question:', qTitle, qText);
     const allQuestionText = `${qTitle}\n${qText}`;
-    navigate(`/flag/question/${questionID}`, { state: { qTitle, qText, allQuestionText } });
+    navigate(`/flag/question/${questionID}`, { state: { allQuestionText, askedBy } });
+  };
+
+  const handleFlagAnswer = (answerId: string, aText: string) => {
+    console.log('Flagging answer:', aText);
+    navigate(`/flag/answer/${answerId}`, { state: { allAnswerText: aText } });
   };
 
   useEffect(() => {

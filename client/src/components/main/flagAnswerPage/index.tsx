@@ -3,13 +3,13 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useUserContext from '../../../hooks/useUserContext';
 
 /**
- * FlagQuestionPage component allows a user to flag a question for moderator review.
+ * FlagAnswerPage component allows a user to flag a question for moderator review.
  * It allows a user to select a reason for flagging the question.
  * @returns
  */
-const FlagQuestionPage = () => {
+const FlagAnswerPage = () => {
   const { qid } = useParams();
-  //   const { user } = useUserContext();
+  const { user } = useUserContext();
   const navigate = useNavigate();
   const [text, setText] = useState<string>('');
   const [textErr, setTextErr] = useState<string>('');
@@ -17,7 +17,7 @@ const FlagQuestionPage = () => {
   const [questionID, setQuestionID] = useState<string>('');
 
   const location = useLocation();
-  const { allQuestionText, askedBy } = location.state || {};
+  const { qTitle, qText, allQuestionText } = location.state || {};
 
   useEffect(() => {
     if (!qid) {
@@ -37,7 +37,7 @@ const FlagQuestionPage = () => {
     console.log('Flag reason:', reason);
     console.log('Content type: Question');
     console.log('Question ID:', questionID);
-    console.log('Username:', askedBy);
+    console.log('Username:', user.username);
     console.log('Question:', allQuestionText);
     // const res = await flagContent(questionID, 'question', selectedReason, user.username);
     // if (res && res._id) {
@@ -74,4 +74,4 @@ const FlagQuestionPage = () => {
   );
 };
 
-export default FlagQuestionPage;
+export default FlagAnswerPage;

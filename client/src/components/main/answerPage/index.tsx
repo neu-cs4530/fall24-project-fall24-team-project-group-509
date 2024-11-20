@@ -38,6 +38,7 @@ const AnswerPage = () => {
       {question.answers.map((a, idx) => (
         <AnswerView
           key={idx}
+          _id={a._id as string}
           text={a.text}
           ansBy={a.ansBy}
           meta={getMetaData(new Date(a.ansDateTime))}
@@ -55,7 +56,7 @@ const AnswerPage = () => {
       <button
         className='bluebtn FlagQuestionButton'
         onClick={() => {
-          handleFlagQuestion(question.title, question.text);
+          handleFlagQuestion(question.title, question.text, question.askedBy);
         }}>
         Flag Question
       </button>
