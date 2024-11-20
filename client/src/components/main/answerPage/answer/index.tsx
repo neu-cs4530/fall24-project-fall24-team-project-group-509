@@ -43,6 +43,7 @@ const AnswerView = ({ text, ansBy, meta, comments, handleAddComment }: AnswerPro
       </div>
       <div className='answer_question_meta'>{meta}</div>
     </div>
+    <button> Flag Answer</button>
     <CommentSection comments={comments} handleAddComment={handleAddComment} />
   </div>
 );
