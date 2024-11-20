@@ -8,37 +8,37 @@ import useUserContext from '../../../hooks/useUserContext';
  * @returns
  */
 const FlagAnswerPage = () => {
-  const { qid } = useParams();
-  const { user } = useUserContext();
+  const { aid } = useParams();
+  //   const { user } = useUserContext();
   const navigate = useNavigate();
   const [text, setText] = useState<string>('');
   const [textErr, setTextErr] = useState<string>('');
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
-  const [questionID, setQuestionID] = useState<string>('');
+  const [answerID, setAnswerID] = useState<string>('');
 
   const location = useLocation();
-  const { qTitle, qText, allQuestionText } = location.state || {};
+  const { answerText, answeredBy } = location.state || {};
 
   useEffect(() => {
-    if (!qid) {
-      setTextErr('Question ID is missing.');
+    if (!aid) {
+      setTextErr('Answer ID is missing.');
       navigate('/home');
       return;
     }
 
-    setQuestionID(qid);
-  }, [qid, navigate]);
+    setAnswerID(aid);
+  }, [aid, navigate]);
 
   const handleReasonChange = (reason: string) => {
     setSelectedReason(reason);
   };
 
-  const submitFlaggedQuestion = (reason: string) => {
+  const submitFlaggedAnswer = (reason: string) => {
     console.log('Flag reason:', reason);
-    console.log('Content type: Question');
-    console.log('Question ID:', questionID);
-    console.log('Username:', user.username);
-    console.log('Question:', allQuestionText);
+    console.log('Content type: Answer');
+    console.log('Answer ID:', aid);
+    console.log('Username:', answeredBy);
+    console.log('Answer:', answerText);
     // const res = await flagContent(questionID, 'question', selectedReason, user.username);
     // if (res && res._id) {
     // navigate('/home');
@@ -48,7 +48,7 @@ const FlagAnswerPage = () => {
 
   //   const handleSubmit = (event: React.FormEvent) => {
   //     event.preventDefault();
-  //     submitFlaggedQuestion();
+  //     submitFlaggedAnswer();
   //   };
 
   return (
@@ -56,16 +56,16 @@ const FlagAnswerPage = () => {
       <h1>Flag Question</h1>
       <form>
         <div>
-          <button type='button' onClick={() => submitFlaggedQuestion('spam')}>
+          <button type='button' onClick={() => submitFlaggedAnswer('spam')}>
             Spam
           </button>
-          <button type='button' onClick={() => submitFlaggedQuestion('offensive language')}>
+          <button type='button' onClick={() => submitFlaggedAnswer('offensive language')}>
             Offensive Language
           </button>
-          <button type='button' onClick={() => submitFlaggedQuestion('irrelevant content')}>
+          <button type='button' onClick={() => submitFlaggedAnswer('irrelevant content')}>
             Irrelevant Content
           </button>
-          <button type='button' onClick={() => submitFlaggedQuestion('other')}>
+          <button type='button' onClick={() => submitFlaggedAnswer('other')}>
             Other
           </button>
         </div>

@@ -21,6 +21,7 @@ interface AnswerProps {
   meta: string;
   comments: Comment[];
   handleAddComment: (comment: Comment) => void;
+  handleFlagAnswer: (aid: string, aText: string, answeredBy: string) => void;
 }
 
 /**
@@ -33,7 +34,15 @@ interface AnswerProps {
  * @param comments An array of comments associated with the answer.
  * @param handleAddComment Function to handle adding a new comment.
  */
-const AnswerView = ({ _id, text, ansBy, meta, comments, handleAddComment }: AnswerProps) => (
+const AnswerView = ({
+  _id,
+  text,
+  ansBy,
+  meta,
+  comments,
+  handleAddComment,
+  handleFlagAnswer,
+}: AnswerProps) => (
   <div className='answer right_padding'>
     <div id='answerText' className='answerText'>
       {handleHyperlink(text)}
@@ -48,6 +57,7 @@ const AnswerView = ({ _id, text, ansBy, meta, comments, handleAddComment }: Answ
       className='bluebtn FlagQuestionButton'
       onClick={() => {
         // handleFlagQuestion(question.title, question.text);
+        handleFlagAnswer(_id, text, ansBy);
       }}>
       Flag Answer, {_id}
     </button>

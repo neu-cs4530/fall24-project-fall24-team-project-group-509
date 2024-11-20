@@ -40,9 +40,14 @@ const useAnswerPage = () => {
     navigate(`/flag/question/${questionID}`, { state: { allQuestionText, askedBy } });
   };
 
-  const handleFlagAnswer = (answerId: string, aText: string) => {
+  /**
+   * Function to handle navigation to the Flag Answer page.
+   * @param aid the answer id
+   * @param aText the text of the answer
+   */
+  const handleFlagAnswer = (aid: string, aText: string, answeredBy: string) => {
     console.log('Flagging answer:', aText);
-    navigate(`/flag/answer/${answerId}`, { state: { allAnswerText: aText } });
+    navigate(`/flag/answer/${aid}`, { state: { answerText: aText, answeredBy } });
   };
 
   useEffect(() => {
@@ -196,6 +201,7 @@ const useAnswerPage = () => {
     handleNewComment,
     handleNewAnswer,
     handleFlagQuestion,
+    handleFlagAnswer,
   };
 };
 

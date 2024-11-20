@@ -14,8 +14,14 @@ import useAnswerPage from '../../../hooks/useAnswerPage';
  * It also includes the functionality to vote, ask a new question, and post a new answer.
  */
 const AnswerPage = () => {
-  const { questionID, question, handleNewComment, handleNewAnswer, handleFlagQuestion } =
-    useAnswerPage();
+  const {
+    questionID,
+    question,
+    handleNewComment,
+    handleNewAnswer,
+    handleFlagQuestion,
+    handleFlagAnswer,
+  } = useAnswerPage();
 
   if (!question) {
     return null;
@@ -44,6 +50,7 @@ const AnswerPage = () => {
           meta={getMetaData(new Date(a.ansDateTime))}
           comments={a.comments}
           handleAddComment={(comment: Comment) => handleNewComment(comment, 'answer', a._id)}
+          handleFlagAnswer={handleFlagAnswer}
         />
       ))}
       <button
