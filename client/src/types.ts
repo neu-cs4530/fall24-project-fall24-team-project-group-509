@@ -55,11 +55,13 @@ export type OrderType = keyof typeof orderTypeDisplayName;
 /**
  * Interface represents a comment.
  *
+ * _id - The unique identifier for the comment. Optional field.
  * text - The text of the comment.
  * commentBy - Username of the author of the comment.
  * commentDateTime - Time at which the comment was created.
  */
 export interface Comment {
+  _id?: string;
   text: string;
   commentBy: string;
   commentDateTime: Date;
