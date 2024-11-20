@@ -35,8 +35,9 @@ const questionController = (socket: FakeSOSocket) => {
     const { order } = req.query;
     const { search } = req.query;
     const { askedBy } = req.query;
+    const { username } = req.query;
     try {
-      let qlist: Question[] = await getQuestionsByOrder(order); // Figure out the second field
+      let qlist: Question[] = await getQuestionsByOrder(order, username); // Figure out the second field
       // Filter by askedBy if provided
       if (askedBy) {
         qlist = filterQuestionsByAskedBy(qlist, askedBy);

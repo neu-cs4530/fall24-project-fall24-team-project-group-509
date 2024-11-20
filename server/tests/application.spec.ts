@@ -240,7 +240,7 @@ describe('application module', () => {
         QuestionModel.schema.path('answers', Object);
         QuestionModel.schema.path('tags', Object);
 
-        const result = await getQuestionsByOrder('active');
+        const result = await getQuestionsByOrder('active', user1.username);
 
         expect(result.length).toEqual(3);
         expect(result[0]._id?.toString()).toEqual('65e9b5a995b6c7045a30d823');
@@ -280,7 +280,7 @@ describe('application module', () => {
         QuestionModel.schema.path('answers', Object);
         QuestionModel.schema.path('tags', Object);
 
-        const result = await getQuestionsByOrder('active');
+        const result = await getQuestionsByOrder('active', user1.username);
 
         expect(result.length).toEqual(5);
         expect(result[0]._id?.toString()).toEqual('65e9b716ff0e892116b2de02');
@@ -293,7 +293,7 @@ describe('application module', () => {
       test('get newest unanswered questions', async () => {
         mockingoose(QuestionModel).toReturn(QUESTIONS, 'find');
 
-        const result = await getQuestionsByOrder('unanswered');
+        const result = await getQuestionsByOrder('unanswered', user1.username);
 
         expect(result.length).toEqual(2);
         expect(result[0]._id?.toString()).toEqual('65e9b716ff0e892116b2de09');
@@ -317,7 +317,7 @@ describe('application module', () => {
         ];
         mockingoose(QuestionModel).toReturn(questions, 'find');
 
-        const result = await getQuestionsByOrder('newest');
+        const result = await getQuestionsByOrder('newest', user1.username);
 
         expect(result.length).toEqual(3);
         expect(result[0]._id?.toString()).toEqual('65e9b716ff0e892116b2de04');
@@ -328,7 +328,7 @@ describe('application module', () => {
       test('get newest most viewed questions', async () => {
         mockingoose(QuestionModel).toReturn(QUESTIONS, 'find');
 
-        const result = await getQuestionsByOrder('mostViewed');
+        const result = await getQuestionsByOrder('mostViewed', user1.username);
 
         expect(result.length).toEqual(4);
         expect(result[0]._id?.toString()).toEqual('65e9b9b44c052f0a08ecade0');
@@ -340,7 +340,7 @@ describe('application module', () => {
       test('getQuestionsByOrder should return empty list if find throws an error', async () => {
         mockingoose(QuestionModel).toReturn(new Error('error'), 'find');
 
-        const result = await getQuestionsByOrder('newest');
+        const result = await getQuestionsByOrder('newest', user3.username);
 
         expect(result.length).toEqual(0);
       });
@@ -348,7 +348,7 @@ describe('application module', () => {
       test('getQuestionsByOrder should return empty list if find returns null', async () => {
         mockingoose(QuestionModel).toReturn(null, 'find');
 
-        const result = await getQuestionsByOrder('newest');
+        const result = await getQuestionsByOrder('newest', user4.username);
 
         expect(result.length).toEqual(0);
       });

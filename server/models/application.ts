@@ -1230,7 +1230,7 @@ export const getBookmarkCollectionById = async (
 ): Promise<BookmarkCollection | { error: string }> => {
   try {
     const collection = await BookmarkCollectionModel.findOne({ _id: collectionId }).populate({
-      path: 'savedPosts.postId',
+      path: 'savedPosts,postId',
       model: 'Question',
       populate: { path: 'questions', model: QuestionModel },
     });
@@ -1261,21 +1261,24 @@ export const flagContent = async (
 ): Promise<FlagResponse> => {
   try {
     let Model;
+    let content;
     switch (contentType) {
       case 'question':
         Model = QuestionModel;
+        content = await Model.findById(contentId);
         break;
       case 'answer':
         Model = AnswerModel;
+        content = await Model.findById(contentId);
         break;
       case 'comment':
         Model = CommentModel;
+        content = await Model.findById(contentId);
         break;
       default:
         throw new Error('Invalid content type');
     }
 
-    const content = await Model.findById(contentId);
     if (!content) {
       throw new Error('Content not found');
     }
@@ -1347,64 +1350,62 @@ export const reviewFlaggedContent = async (
   moderatorComment?: string,
 ): Promise<{ success: boolean; message: string; bannedUsername?: string }> => {
   try {
-    let Model;
-    switch (contentType) {
-      case 'question':
-        Model = QuestionModel;
-        break;
-      case 'answer':
-        Model = AnswerModel;
-        break;
-      case 'comment':
-        Model = CommentModel;
-        break;
-      default:
-        throw new Error('Invalid content type');
+    let content;
+
+    // Fetch content based on type
+    if (contentType === 'question') {
+      content = (await QuestionModel.findById(contentId)) as Question;
+    } else if (contentType === 'answer') {
+      content = (await AnswerModel.findById(contentId)) as Answer;
+    } else if (contentType === 'comment') {
+      content = (await CommentModel.findById(contentId)) as Comment;
+    } else {
+      throw new Error('Invalid content type');
     }
 
-    // Find the content
-    const content = await Model.findById(contentId);
     if (!content) {
       throw new Error('Content not found');
     }
 
     // Update the flags' status to 'reviewed' and set moderator action
-    const updatedFlags = content.flags?.map((flag: Flag) => {
-      if (flag.status === 'pending') {
-        return {
-          ...flag,
-          status: 'reviewed',
-          moderatorAction,
-          moderatorComment,
-        };
-      }
-      return flag;
-    });
+    const updatedFlags =
+      content.flags?.map((flag: Flag): Flag => {
+        if (flag.status === 'pending') {
+          return {
+            ...flag,
+            status: 'reviewed',
+            moderatorAction,
+            moderatorComment,
+          };
+        }
+        return flag;
+      }) || [];
 
     content.flags = updatedFlags;
 
     let bannedUsername;
-    // If action is 'removed', remove the content
-    if (moderatorAction === 'removed') {
+
+    if (moderatorAction === 'removed' || moderatorAction === 'userBanned') {
       // Remove content from database
-      await Model.deleteOne({ _id: contentId });
-    } else if (moderatorAction === 'userBanned') {
-      // Ban the user who created the content
-      let username;
-      if (contentType === 'question') {
-        username = content.askedBy;
-      } else if (contentType === 'answer') {
-        username = content.ansBy;
-      } else {
-        username = content.commentBy;
-      }
-      await banUser(username, moderatorComment);
-      // Remove content from database
-      await Model.deleteOne({ _id: contentId });
-      bannedUsername = username;
+      // await content.deleteOne();
     }
 
-    await content.save();
+    if (moderatorAction === 'userBanned') {
+      // Ban the user who created the content
+      let username: string;
+      if (contentType === 'question') {
+        username = (content as Question).askedBy;
+      } else if (contentType === 'answer') {
+        username = (content as Answer).ansBy;
+      } else {
+        username = (content as Comment).commentBy;
+      }
+      await banUser(username, moderatorComment);
+      bannedUsername = username;
+    } else {
+      // Save the updated flags
+      //  await content.save();
+    }
 
     return { success: true, message: 'Flagged content reviewed successfully', bannedUsername };
   } catch (error) {

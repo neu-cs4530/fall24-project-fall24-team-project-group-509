@@ -148,6 +148,7 @@ export interface FindQuestionRequest extends Request {
     order: OrderType;
     search: string;
     askedBy: string;
+    username: string;
   };
 }
 
