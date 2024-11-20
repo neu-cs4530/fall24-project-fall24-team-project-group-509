@@ -48,6 +48,21 @@ const CommentSection = ({ comments, handleAddComment }: CommentSectionProps) => 
     setTextErr('');
   };
 
+  /**
+   * Determine if a comment is flagged and prepare its warning message.
+   * @param comment - The comment to check
+   * @returns An object with `hasPendingFlags` and `warningMessage`.
+   */
+  const getFlagStatus = (comment: Comment) => {
+    // const hasPendingFlags = comment.flags?.some((flag) => flag.status === 'pending');
+    // const warningMessage = hasPendingFlags
+    //   ? 'Warning: This comment has been flagged for review.'
+    //   : '';
+    const hasPendingFlags = true;
+    const warningMessage = 'Warning: This question has been flagged for review.';
+    return { hasPendingFlags, warningMessage };
+  };
+
   return (
     <div className='comment-section'>
       <button className='toggle-button' onClick={() => setShowComments(!showComments)}>
@@ -58,15 +73,27 @@ const CommentSection = ({ comments, handleAddComment }: CommentSectionProps) => 
         <div className='comments-container'>
           <ul className='comments-list'>
             {comments.length > 0 ? (
-              comments.map((comment, index) => (
-                <li key={index} className='comment-item'>
-                  <p className='comment-text'>{comment.text}</p>
-                  <small className='comment-meta'>
-                    <Link to={`/user/${comment.commentBy}`}>{comment.commentBy}</Link>,{' '}
-                    {getMetaData(new Date(comment.commentDateTime))}
-                  </small>
-                </li>
-              ))
+              comments.map((comment, index) => {
+                const { hasPendingFlags, warningMessage } = getFlagStatus(comment);
+
+                return (
+                  <li
+                    key={index}
+                    className={`comment-item ${hasPendingFlags ? 'flagged-comment' : ''}`}>
+                    {hasPendingFlags && (
+                      <div className='warning-banner'>
+                        <span className='warning-icon'>⚠️</span>
+                        <span className='warning-text'>{warningMessage}</span>
+                      </div>
+                    )}
+                    <p className='comment-text'>{comment.text}</p>
+                    <small className='comment-meta'>
+                      <Link to={`/user/${comment.commentBy}`}>{comment.commentBy}</Link>,{' '}
+                      {getMetaData(new Date(comment.commentDateTime))}
+                    </small>
+                  </li>
+                );
+              })
             ) : (
               <p className='no-comments'>No comments yet.</p>
             )}

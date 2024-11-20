@@ -16,3 +16,19 @@
 .answer_author {
   color: green;
 }
+
+/* Warning banner */
+.answer-container.flagged-answer {
+  background-color: #fdecea; /* Light red background */
+  border: 1px solid #f5c2c7;
+}
+
+.warning-icon {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+.warning-text {
+  font-weight: bold;
+  font-size: 14px;
+}

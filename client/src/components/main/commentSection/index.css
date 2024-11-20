@@ -114,3 +114,33 @@
   display: block;
   margin-top: -0.5em;
 }
+
+/* Flagged comment */
+.flagged-comment {
+  background-color: #fdecea; /* Light red for flagged comments */
+  border: 1px solid #f5c2c7; /* Light red border */
+  border-radius: 5px;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+/* Warning banner */
+.warning-banner {
+  display: flex;
+  align-items: center;
+  background-color: #f8d7da;
+  color: #842029;
+  padding: 5px 10px;
+  border-radius: 5px 5px 0 0;
+  margin-bottom: 0px;
+}
+
+.warning-icon {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.warning-text {
+  font-size: 14px;
+  font-weight: bold;
+}
