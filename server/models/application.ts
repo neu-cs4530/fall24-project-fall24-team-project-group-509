@@ -1306,6 +1306,9 @@ export const flagPost = async (
       flaggedBy,
       reason,
       dateFlagged: new Date(),
+      status: 'pending',
+      postId: id,
+      postType: type,
     });
     const savedFlag = await newFlag.save();
 
@@ -1341,5 +1344,93 @@ export const flagPost = async (
     return updatedPost;
   } catch (error) {
     return { error: `Error when flagging post: ${(error as Error).message}` };
+  }
+};
+
+export const MODERATORUSERNAME = ['mod1', 'mod2', 'mod3', 'mod4'];
+
+export const getFlaggedPosts = async (): Promise<{
+  questions: Question[];
+  answers: Answer[];
+  comments: Comment[];
+}> => {
+  try {
+    const flaggedQuestions = await QuestionModel.find({ 'flags.status': 'pending' }).populate([
+      { path: 'flags', model: FlagModel },
+    ]);
+    const flaggedAnswers = await AnswerModel.find({ 'flags.status': 'pending' }).populate([
+      { path: 'flags', model: FlagModel },
+    ]);
+    const flaggedComments = await CommentModel.find({ 'flags.status': 'pending' }).populate([
+      { path: 'flags', model: FlagModel },
+    ]);
+    return { questions: flaggedQuestions, answers: flaggedAnswers, comments: flaggedComments };
+  } catch (error) {
+    return { questions: [], answers: [], comments: [] };
+  }
+};
+
+export const markFlagAsReviewed = async (
+  flagId: string,
+  moderatorUsername: string,
+): Promise<{ success: boolean; message?: string }> => {
+  try {
+    if (!MODERATORUSERNAME.includes(moderatorUsername)) {
+      return { success: false, message: 'User is not authorized to perform this action' };
+    }
+
+    const updatedFlag = await FlagModel.findOneAndUpdate(
+      { _id: flagId },
+      { status: 'reviewed', reviewedBy: moderatorUsername, reviewedAt: new Date() },
+      { new: true },
+    );
+
+    if (!updatedFlag) {
+      return { success: false, message: 'Flag not found' };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, message: (error as Error).message };
+  }
+};
+
+export const deletePost = async (
+  id: string,
+  type: 'question' | 'answer' | 'comment',
+  moderatorUsername: string,
+): Promise<{ success: boolean; message?: string }> => {
+  try {
+    if (!MODERATORUSERNAME.includes(moderatorUsername)) {
+      return { success: false, message: 'User is not authorized to perform this action' };
+    }
+
+    if (type === 'question') {
+      const question = await QuestionModel.findById(id);
+      if (!question) {
+        return { success: false, message: 'Question not found' };
+      }
+      await AnswerModel.deleteMany({ _id: { $in: question.answers } });
+      await CommentModel.deleteMany({ _id: { $in: question.comments } });
+      await QuestionModel.deleteOne({ _id: id });
+    } else if (type === 'answer') {
+      const answer = await AnswerModel.findById(id);
+      if (!answer) {
+        return { success: false, message: 'Answer not found' };
+      }
+      await CommentModel.deleteMany({ _id: { $in: answer.comments } });
+      await AnswerModel.deleteOne({ _id: id });
+      await QuestionModel.updateMany({}, { $pull: { answers: id } });
+    } else if (type === 'comment') {
+      await CommentModel.deleteOne({ _id: id });
+      await QuestionModel.updateMany({}, { $pull: { comments: id } });
+      await AnswerModel.updateMany({}, { $pull: { comments: id } });
+    }
+
+    await FlagModel.deleteMany({ postId: id });
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, message: (error as Error).message };
   }
 };
