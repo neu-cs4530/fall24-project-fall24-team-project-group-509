@@ -16,9 +16,9 @@ export const checkProfanity = async (text: string): Promise<{ hasProfanity: bool
       headers: { 'X-Api-Key': API_KEY },
     });
 
-    if (response.data && response.data.has_profanity !== undefined) {
-      return { hasProfanity: response.data.has_profanity, censored: response.data.censored };
-    }
+    // if (response.data && response.data.has_profanity !== undefined) {
+    //   return { hasProfanity: response.data.has_profanity, censored: response.data.censored };
+    // }
 
     throw new Error('Unexpected response from profanity filter API.');
   } catch (error) {
