@@ -9,7 +9,7 @@ import useUserContext from '../../../hooks/useUserContext';
  */
 const FlagAnswerPage = () => {
   const { aid } = useParams();
-  //   const { user } = useUserContext();
+  const { user } = useUserContext();
   const navigate = useNavigate();
   const [text, setText] = useState<string>('');
   const [textErr, setTextErr] = useState<string>('');
@@ -38,6 +38,7 @@ const FlagAnswerPage = () => {
     console.log('Content type: Answer');
     console.log('Answer ID:', aid);
     console.log('Username:', answeredBy);
+    console.log('FlagBy:', user.username);
     console.log('Answer:', answerText);
     // const res = await flagContent(questionID, 'question', selectedReason, user.username);
     // if (res && res._id) {
