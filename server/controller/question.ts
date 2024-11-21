@@ -18,6 +18,7 @@ import {
   populateDocument,
   saveQuestion,
 } from '../models/application';
+import { checkProfanity } from '../profanityFilter';
 
 const questionController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -35,8 +36,9 @@ const questionController = (socket: FakeSOSocket) => {
     const { order } = req.query;
     const { search } = req.query;
     const { askedBy } = req.query;
+    const { username } = req.query;
     try {
-      let qlist: Question[] = await getQuestionsByOrder(order);
+      let qlist: Question[] = await getQuestionsByOrder(order, username);
       // Filter by askedBy if provided
       if (askedBy) {
         qlist = filterQuestionsByAskedBy(qlist, askedBy);
@@ -124,27 +126,47 @@ const questionController = (socket: FakeSOSocket) => {
    * @returns A Promise that resolves to void.
    */
   const addQuestion = async (req: AddQuestionRequest, res: Response): Promise<void> => {
-    if (!isQuestionBodyValid(req.body)) {
-      res.status(400).send('Invalid question body');
+    if (!isQuestionBodyValid(req.body.question || !req.body.username)) {
+      res.status(400).send('Invalid question body or missing username');
       return;
     }
-    const question: Question = req.body;
+    const { question } = req.body;
+    const { username } = req.body;
+
+    // Handle empty tags separately
+    if (!question.tags || question.tags.length === 0) {
+      res.status(400).send('Invalid tags');
+      return;
+    }
     try {
+      const { hasProfanity, censored } = await checkProfanity(question.text);
+
+      if (hasProfanity) {
+        res.status(400).send(`Profanity detected in question text: ${censored}`);
+        return;
+      }
+
       const questionswithtags: Question = {
         ...question,
         tags: await processTags(question.tags),
       };
+
+      // If processTags returns an empty array
       if (questionswithtags.tags.length === 0) {
-        throw new Error('Invalid tags');
+        res.status(400).send('Invalid tags');
+        return;
       }
+
       const result = await saveQuestion(questionswithtags);
       if ('error' in result) {
         throw new Error(result.error);
       }
 
-      // Populates the fields of the question that was added, and emits the new object
-      const populatedQuestion = await populateDocument(result._id?.toString(), 'question');
-
+      const populatedQuestion = await populateDocument(
+        result._id?.toString(),
+        'question',
+        username,
+      );
       if (populatedQuestion && 'error' in populatedQuestion) {
         throw new Error(populatedQuestion.error);
       }
@@ -152,11 +174,7 @@ const questionController = (socket: FakeSOSocket) => {
       socket.emit('questionUpdate', populatedQuestion as Question);
       res.json(result);
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        res.status(500).send(`Error when saving question: ${err.message}`);
-      } else {
-        res.status(500).send(`Error when saving question`);
-      }
+      res.status(500).send(`Error when saving question: ${(err as Error).message}`);
     }
   };
 
