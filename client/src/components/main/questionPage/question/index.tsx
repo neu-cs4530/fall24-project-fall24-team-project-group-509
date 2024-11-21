@@ -12,6 +12,7 @@ import BookmarkButton from '../../bookmarkButton';
  */
 interface QuestionProps {
   q: Question;
+  error?: string;
 }
 
 /**
@@ -21,7 +22,7 @@ interface QuestionProps {
  *
  * @param q - The question object containing question details.
  */
-const QuestionView = ({ q }: QuestionProps) => {
+const QuestionView = ({ q, error }: QuestionProps) => {
   const navigate = useNavigate();
 
   /**
@@ -45,16 +46,11 @@ const QuestionView = ({ q }: QuestionProps) => {
     navigate(`/question/${questionID}`);
   };
 
-  // Check if the question has pending flags
-  // const hasPendingFlags = q.flags?.some((flag) => flag.status === 'pending');
-  // const warningMessage = hasPendingFlags ? 'Warning: This question has been flagged for review.' : '';
-  // THIS IS FOR TEST PURPOSES ONLY
-  const hasPendingFlags = true;
-  const warningMessage = 'Warning: This question has been flagged for review.';
+  const warningMessage = error || '';
 
   return (
-    <div className={`question-container ${hasPendingFlags ? 'flagged-question' : ''}`}>
-      {hasPendingFlags && (
+    <div className={`question-container ${warningMessage ? 'flagged-question' : ''}`}>
+      {warningMessage && (
         <div className='warning-banner'>
           <span className='warning-icon'>⚠️</span>
           <span className='warning-text'>{warningMessage}</span>
