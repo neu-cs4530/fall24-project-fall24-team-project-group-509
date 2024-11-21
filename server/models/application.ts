@@ -17,6 +17,8 @@ import {
   Tag,
   User,
   UserResponse,
+  Flag,
+  FlagReason,
 } from '../types';
 import AnswerModel from './answers';
 import QuestionModel from './questions';
@@ -24,6 +26,7 @@ import TagModel from './tags';
 import CommentModel from './comments';
 import UserModel from './user';
 import BookmarkCollectionModel from './bookmarkCollections';
+import FlagModel from './flag';
 
 /**
  * Parses tags from a search string.
@@ -185,23 +188,48 @@ export const addTag = async (tag: Tag): Promise<Tag | null> => {
 };
 
 /**
- * Retrieves questions from the database, ordered by the specified criteria.
+ * Excludes questions that have been flagged by the specified user.
  *
- * @param {OrderType} order - The order type to filter the questions
+ * @param qlist The array of Question objects to filter.
+ * @param username The username of the user who flagged the questions.
  *
- * @returns {Promise<Question[]>} - Promise that resolves to a list of ordered questions
+ * @returns Filtered array of Question objects.
  */
-export const getQuestionsByOrder = async (order: OrderType): Promise<Question[]> => {
+const excludeFlaggedQuestions = (qlist: Question[], username: string): Question[] =>
+  qlist.filter(q => {
+    // q.flags is an array of Flag objects
+    const flaggedByUser = q.flags?.some(flag => flag.flaggedBy === username);
+    return !flaggedByUser;
+  });
+
+/**
+ * Gets questions from the database, ordered by the specified criteria and excludes questions flagged by the user.
+ *
+ * @param order The order type to filter the questions.
+ * @param username The username of the user making the request.
+ *
+ * @returns A Promise that resolves to a list of ordered questions.
+ */
+export const getQuestionsByOrder = async (
+  order: OrderType,
+  username: string,
+): Promise<Question[]> => {
   try {
     let qlist = [];
     if (order === 'active') {
       qlist = await QuestionModel.find().populate([
         { path: 'tags', model: TagModel },
         { path: 'answers', model: AnswerModel },
+        { path: 'flags', model: FlagModel },
       ]);
+      qlist = excludeFlaggedQuestions(qlist, username);
       return sortQuestionsByActive(qlist);
     }
-    qlist = await QuestionModel.find().populate([{ path: 'tags', model: TagModel }]);
+    qlist = await QuestionModel.find().populate([
+      { path: 'tags', model: TagModel },
+      { path: 'flags', model: FlagModel },
+    ]);
+    qlist = excludeFlaggedQuestions(qlist, username);
     if (order === 'unanswered') {
       return sortQuestionsByUnanswered(qlist);
     }
@@ -258,17 +286,18 @@ export const filterQuestionsBySearch = (qlist: Question[], search: string): Ques
 };
 
 /**
- * Fetches and populates a question or answer document based on the provided ID and type.
+ * Populates a document (question or answer), excluding content flagged by the user.
  *
- * @param {string | undefined} id - The ID of the question or answer to fetch.
- * @param {'question' | 'answer'} type - Specifies whether to fetch a question or an answer.
+ * @param id The ID of the document to populate.
+ * @param type The type of the document, either 'question' or 'answer'.
+ * @param username The username of the user making the request.
  *
- * @returns {Promise<QuestionResponse | AnswerResponse>} - Promise that resolves to the
- *          populated question or answer, or an error message if the operation fails
+ * @returns A Promise that resolves to the populated document or an error message.
  */
 export const populateDocument = async (
   id: string | undefined,
   type: 'question' | 'answer',
+  username: string,
 ): Promise<QuestionResponse | AnswerResponse> => {
   try {
     if (!id) {
@@ -289,28 +318,57 @@ export const populateDocument = async (
           populate: { path: 'comments', model: CommentModel },
         },
         { path: 'comments', model: CommentModel },
+        { path: 'flags', model: FlagModel },
       ]);
+      if (result) {
+        // Exclude answers flagged by the user
+        const question = result as Question;
+        question.answers = (question.answers as Answer[]).filter(answer => {
+          if (!answer.flags) return true;
+          const answerFlaggedByUser = answer.flags.some(flag => flag.flaggedBy === username);
+          return !answerFlaggedByUser;
+        });
+        // Exclude comments flagged by the user
+        question.comments = (question.comments as Comment[]).filter(comment => {
+          if (!comment.flags) return true;
+          const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
+          return !commentFlaggedByUser;
+        });
+      }
     } else if (type === 'answer') {
       result = await AnswerModel.findOne({ _id: id }).populate([
         { path: 'comments', model: CommentModel },
+        { path: 'flags', model: FlagModel },
       ]);
+      if (result) {
+        // Exclude comments flagged by the user
+        const answer = result as Answer;
+        answer.comments = (answer.comments as Comment[]).filter(comment => {
+          if (!comment.flags) return true;
+          const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
+          return !commentFlaggedByUser;
+        });
+      }
     }
     if (!result) {
       throw new Error(`Failed to fetch and populate a ${type}`);
+    }
+    // Exclude the post itself if it is flagged by the user
+    if (result.flags && result.flags.some((flag: Flag) => flag.flaggedBy === username)) {
+      return { error: 'Post has been flagged by the user' };
     }
     return result;
   } catch (error) {
     return { error: `Error when fetching and populating a document: ${(error as Error).message}` };
   }
 };
-
 /**
- * Fetches a question by its ID and increments its view count.
+ * Fetches a question by its ID and increments its view count, excluding content flagged by the user.
  *
- * @param {string} qid - The ID of the question to fetch.
- * @param {string} username - The username of the user requesting the question.
+ * @param qid The ID of the question to fetch.
+ * @param username The username of the user requesting the question.
  *
- * @returns {Promise<QuestionResponse | null>} - Promise that resolves to the fetched question
+ * @returns A Promise that resolves to the fetched question
  *          with incremented views, null if the question is not found, or an error message.
  */
 export const fetchAndIncrementQuestionViewsById = async (
@@ -333,7 +391,31 @@ export const fetchAndIncrementQuestionViewsById = async (
         populate: { path: 'comments', model: CommentModel },
       },
       { path: 'comments', model: CommentModel },
+      { path: 'flags', model: FlagModel },
     ]);
+
+    if (q && q.flags && q.flags.some(flag => flag.flaggedBy === username)) {
+      return { error: 'Question has been flagged by the user' };
+    }
+
+    // Exclude answers flagged by the user
+    if (q && q.answers) {
+      q.answers = (q.answers as Answer[]).filter(answer => {
+        if (!answer.flags) return true;
+        const answerFlaggedByUser = answer.flags.some(flag => flag.flaggedBy === username);
+        return !answerFlaggedByUser;
+      });
+    }
+
+    // Exclude comments flagged by the user
+    if (q && q.comments) {
+      q.comments = (q.comments as Comment[]).filter(comment => {
+        if (!comment.flags) return true;
+        const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
+        return !commentFlaggedByUser;
+      });
+    }
+
     return q;
   } catch (error) {
     return { error: 'Error when fetching and updating a question' };
@@ -359,6 +441,7 @@ export const saveQuestion = async (question: Question): Promise<QuestionResponse
           activityHistory: {
             postId: result._id.toString(),
             postType: 'Question',
+            qTitle: question.title,
             createdAt: question.askDateTime,
           },
         },
@@ -836,11 +919,47 @@ export const addQuestionToBookmarkCollection = async (
   questionId: string,
 ): Promise<BookmarkCollectionResponse> => {
   try {
+    // PROBABLY NEED TO ADD THIS CODE TO PASS IN TITLE FOR A BOOKMARK
+    const ourQuestion = await QuestionModel.findOne({ _id: questionId });
+    if (!ourQuestion) {
+      throw new Error('Question not found');
+    }
+    const questionTitle = ourQuestion.title;
+    const numberAnswers = ourQuestion.answers.length;
+
     const bookmark: Bookmark = {
-      postId: new ObjectId(questionId),
+      postId: questionId,
+      qTitle: questionTitle,
       savedAt: new Date(),
+      numAnswers: numberAnswers,
     };
 
+    // const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
+    //   { _id: new ObjectId(collectionId) },
+    //   { $push: { savedPosts: bookmark } },
+    //   { new: true },
+    // );
+
+    // if (!updatedCollection) {
+    //   throw new Error('Bookmark collection not found');
+    // }
+    // Find the collection to check if the question is already bookmarked
+    const collection = await BookmarkCollectionModel.findById(collectionId);
+
+    if (!collection) {
+      throw new Error('Bookmark collection not found');
+    }
+
+    // Check if the question is already bookmarked
+    const isAlreadyBookmarked = collection.savedPosts.some(
+      post => post.postId.toString() === questionId,
+    );
+
+    if (isAlreadyBookmarked) {
+      return collection; // Return the collection without adding the bookmark
+    }
+
+    // Add the bookmark if it does not already exist
     const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
       { _id: new ObjectId(collectionId) },
       { $push: { savedPosts: bookmark } },
@@ -912,49 +1031,50 @@ export const getUserBookmarkCollections = async (
     let collections;
     if (username === requesterUsername) {
       // If the requester is the owner, retrieve all collections
-      collections = await BookmarkCollectionModel.find({ owner: username }).populate({
-        path: 'savedPosts.postId',
-        model: 'Question',
-        populate: { path: 'tags', model: TagModel },
-      });
+      collections = await BookmarkCollectionModel.find({ owner: username });
+      // .populate({
+      //   path: 'savedPosts',
+      //   model: 'Question',
+      //   populate: { path: 'tags', model: TagModel },
+      // });
     } else {
       // If the requester is not the owner, retrieve public collections or private collections they are permitted to view
       collections = await BookmarkCollectionModel.find({
         owner: username,
         $or: [{ isPublic: true }, { followers: requesterUsername }],
       }).populate({
-        path: 'savedPosts.postId',
+        path: 'savedPosts',
         model: 'Question',
         populate: { path: 'tags', model: TagModel },
       });
     }
 
     // Apply sorting if a sortOption is provided
-    if (sortOption) {
-      collections.forEach(collection => {
-        if (sortOption === 'date') {
-          collection.savedPosts.sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime());
-        } else if (sortOption === 'numberOfAnswers') {
-          collection.savedPosts.sort((a, b) => {
-            const aAnswers = (a.postId as Question).answers.length;
-            const bAnswers = (b.postId as Question).answers.length;
-            return bAnswers - aAnswers;
-          });
-        } else if (sortOption === 'views') {
-          collection.savedPosts.sort((a, b) => {
-            const aViews = (a.postId as Question).views.length;
-            const bViews = (b.postId as Question).views.length;
-            return bViews - aViews;
-          });
-        } else if (sortOption === 'title') {
-          collection.savedPosts.sort((a, b) => {
-            const aTitle = (a.postId as Question).title.toLowerCase();
-            const bTitle = (b.postId as Question).title.toLowerCase();
-            return aTitle.localeCompare(bTitle);
-          });
-        } // Add more sorting options if needed
-      });
-    }
+    // if (sortOption) {
+    //   collections.forEach(collection => {
+    //     if (sortOption === 'date') {
+    //       collection.savedPosts.sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime());
+    //     } else if (sortOption === 'numberOfAnswers') {
+    //       collection.savedPosts.sort((a, b) => {
+    //         const aAnswers = (a.postId as Question).answers.length;
+    //         const bAnswers = (b.postId as Question).answers.length;
+    //         return bAnswers - aAnswers;
+    //       });
+    //     } else if (sortOption === 'views') {
+    //       collection.savedPosts.sort((a, b) => {
+    //         const aViews = (a.postId as Question).views.length;
+    //         const bViews = (b.postId as Question).views.length;
+    //         return bViews - aViews;
+    //       });
+    //     } else if (sortOption === 'title') {
+    //       collection.savedPosts.sort((a, b) => {
+    //         const aTitle = (a.postId as Question).title.toLowerCase();
+    //         const bTitle = (b.postId as Question).title.toLowerCase();
+    //         return aTitle.localeCompare(bTitle);
+    //       });
+    //     } // Add more sorting options if needed
+    //   });
+    // }
 
     return collections;
   } catch (error) {
@@ -1050,7 +1170,7 @@ export const getFollowedBookmarkCollections = async (
     const collections = await BookmarkCollectionModel.find({
       _id: { $in: user.followedBookmarkCollections },
     }).populate({
-      path: 'savedPosts.postId',
+      path: 'savedPosts',
       model: 'Question',
       populate: { path: 'tags', model: TagModel },
     });
@@ -1078,6 +1198,14 @@ export const updateActivityHistoryWithQuestionID = async (
     if (!qid) {
       throw new Error('Provided question ID is undefined.');
     }
+    // find the title of the question
+    const question = await QuestionModel.findOne({ _id: qid });
+    if (!question) {
+      throw new Error('Question not found');
+    }
+
+    const questionTitle = question.title;
+
     if (type === 'comment') {
       await UserModel.findOneAndUpdate(
         { username },
@@ -1086,6 +1214,7 @@ export const updateActivityHistoryWithQuestionID = async (
             activityHistory: {
               postId: qid,
               postType: 'Comment',
+              qTitle: questionTitle,
               createdAt: date,
             },
           },
@@ -1099,6 +1228,7 @@ export const updateActivityHistoryWithQuestionID = async (
             activityHistory: {
               postId: qid,
               postType: 'Answer',
+              qTitle: questionTitle,
               createdAt: date,
             },
           },
@@ -1142,16 +1272,77 @@ export const getBookmarkCollectionById = async (
   collectionId: string,
 ): Promise<BookmarkCollectionResponse> => {
   try {
-    const collection = await BookmarkCollectionModel.findOne({ _id: collectionId }).populate({
-      path: 'savedPosts.postId',
-      model: 'Question',
-      populate: { path: 'questions', model: QuestionModel },
-    });
+    const collection = await BookmarkCollectionModel.findOne({ _id: collectionId });
+    // .populate({
+    //   path: 'savedPosts.postId',
+    //   model: 'Question',
+    //   // populate: { path: 'questions', model: QuestionModel },
+    // });
     if (!collection) {
       throw new Error('Bookmark collection not found');
     }
     return collection;
   } catch (error) {
     return { error: `Error when retrieving bookmark collection: ${(error as Error).message}` };
+  }
+};
+
+/**
+ * Flags a post (Question, Answer, or Comment) as inappropriate.
+ *
+ * @param id - The unique identifier of the post being flagged.
+ * @param type - The type of the post, either 'question', 'answer', or 'comment'.
+ * @param reason - The reason for flagging the post.
+ * @param flaggedBy - The username of the user flagging the post.
+ *
+ * @returns A Promise that resolves to the updated post, or an error message if the operation fails.
+ */
+export const flagPost = async (
+  id: string,
+  type: 'question' | 'answer' | 'comment',
+  reason: FlagReason,
+  flaggedBy: string,
+): Promise<QuestionResponse | AnswerResponse | CommentResponse> => {
+  try {
+    // Create new flag document
+    const newFlag = new FlagModel({
+      flaggedBy,
+      reason,
+      dateFlagged: new Date(),
+    });
+    const savedFlag = await newFlag.save();
+
+    // Add the flag to the post's flags array
+    let updatedPost;
+
+    if (type === 'question') {
+      updatedPost = await QuestionModel.findOneAndUpdate(
+        { _id: id },
+        { $push: { flags: savedFlag._id } },
+        { new: true },
+      );
+    } else if (type === 'answer') {
+      updatedPost = await AnswerModel.findOneAndUpdate(
+        { _id: id },
+        { $push: { flags: savedFlag._id } },
+        { new: true },
+      );
+    } else if (type === 'comment') {
+      updatedPost = await CommentModel.findOneAndUpdate(
+        { _id: id },
+        { $push: { flags: savedFlag._id } },
+        { new: true },
+      );
+    } else {
+      throw new Error('Invalid type specified');
+    }
+
+    if (!updatedPost) {
+      throw new Error('Post not found');
+    }
+
+    return updatedPost;
+  } catch (error) {
+    return { error: `Error when flagging post: ${(error as Error).message}` };
   }
 };

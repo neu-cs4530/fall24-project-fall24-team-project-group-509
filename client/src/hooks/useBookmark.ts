@@ -99,6 +99,12 @@ const useBookmark = (questionId: string) => {
     if (!user || !collectionId) return;
     try {
       await addQuestionToBookmarkCollection(collectionId, questionId);
+      // const collection = await getBookmarkCollectionById(collectionId);
+      // const question = await getQuestionById(questionId, user.username);
+      // if (collection.savedPosts.includes(question)) {
+      //   setError('This question is already in the selected collection.');
+      //   return;
+      // }
       setIsDropdownOpen(false);
     } catch (err) {
       setError('Error adding question to collection:');

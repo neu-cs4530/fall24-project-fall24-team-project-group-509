@@ -27,7 +27,7 @@ const userSchema: Schema = new Schema(
     profilePictureURL: {
       type: String,
       required: false,
-      default: '',
+      default: 'https://storage.googleapis.com/cs4530-509-userprofile-pictures/Dog-cloud.jpg',
     },
     activityHistory: {
       type: [
@@ -38,6 +38,7 @@ const userSchema: Schema = new Schema(
             // refPath: 'activityHistory.postType',
           },
           postType: { type: String, required: true, enum: ['Question', 'Answer', 'Comment'] },
+          qTitle: { type: String, required: true },
           createdAt: { type: Date, default: Date.now },
         },
       ],

@@ -27,6 +27,7 @@ export interface UserProfile {
   activityHistory?: Array<{
     postId: string;
     postType: string;
+    qTitle: string;
     createdAt: Date;
   }>;
   bookmarks: BookmarkCollection[];
@@ -173,9 +174,10 @@ export interface ServerToClientEvents {
   voteUpdate: (vote: VoteUpdatePayload) => void;
   commentUpdate: (update: CommentUpdatePayload) => void;
   activityHistoryUpdate: (
-    update: Array<{ postID: string; postType: string; createdAt: Date }>,
+    update: Array<{ postID: string; postType: string; qTitle: string; createdAt: Date }>,
   ) => void;
   bookmarkUpdate: (update: BookmarkCollection[]) => void;
+  questionDeletionUpdate: (update: string) => void;
 }
 
 /**
@@ -193,7 +195,7 @@ export interface BookmarkCollection {
   owner: string;
   isPublic: boolean;
   followers: string[];
-  savedPosts: Question[];
+  savedPosts: Bookmark[];
 }
 
 /**
@@ -201,9 +203,12 @@ export interface BookmarkCollection {
  * - _id - The unique identifier for the bookmark. Optional field.
  * - postID - The Question that has been bookmarked.
  * - savedAt - The date and time when the bookmark was created.
+ * - qTitle - The title of the question that has been bookmarked
  */
 export interface Bookmark {
   _id?: string;
-  postID: Question;
+  postId: string;
+  qTitle: string;
   savedAt: Date;
+  numAnswers?: number;
 }

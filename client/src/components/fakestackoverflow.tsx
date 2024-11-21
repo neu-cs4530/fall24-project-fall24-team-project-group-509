@@ -12,6 +12,7 @@ import NewAnswerPage from './main/newAnswer';
 import AnswerPage from './main/answerPage';
 import ProfileView from './main/userPage/userProfile';
 import SearchResultsPage from './main/searchResultsPage';
+import BookmarkPage from './main/bookmarkPage';
 
 const ProtectedRoute = ({
   user,
@@ -58,6 +59,7 @@ const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
             <Route path='/search-results' element={<SearchResultsPage />} />
             <Route path='/profile/:username' element={<ProfileView />} />
             <Route path='/user/:username' element={<ProfileView />} />
+            <Route path='/user/bookmarks/:collectionId' element={<BookmarkPage />} />
           </Route>
         }
       </Routes>

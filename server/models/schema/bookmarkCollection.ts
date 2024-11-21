@@ -29,6 +29,7 @@ const bookmarkCollectionSchema: Schema = new Schema(
     savedPosts: [
       {
         postId: { type: Schema.Types.ObjectId, required: true, refPath: 'Question' },
+        qTitle: { type: String, required: true },
         savedAt: { type: Date, default: Date.now },
       },
     ],

@@ -20,6 +20,10 @@ const commentSchema: Schema = new Schema(
     commentDateTime: {
       type: Date,
     },
+    flags: {
+      type: [{ type: Schema.Types.ObjectId, ref: 'Flag' }],
+      default: [],
+    },
   },
   { collection: 'Comment' },
 );

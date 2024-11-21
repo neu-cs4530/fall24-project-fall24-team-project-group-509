@@ -3,15 +3,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { BookmarkCollection, UserProfile } from '../types';
 import useUserContext from './useUserContext';
 import { addUserBio, addUserProfilePicture, getUserByUsername } from '../services/userService';
+import { getUserBookmarkCollections } from '../services/bookmarkService';
 
 const useProfilePage = () => {
   const { user, socket } = useUserContext();
   const { username } = useParams();
   const requesterUsername = user.username;
   const [bio, setBio] = useState('');
-  const initialActivityHistory = [{ postID: '', postType: '', createdAt: new Date() }];
+  const initialActivityHistory = [{ postID: '', postType: '', qTitle: '', createdAt: new Date() }];
   const [activityHistory, setActivityHistory] =
-    useState<Array<{ postID: string; postType: string; createdAt: Date }>>(initialActivityHistory);
+    useState<Array<{ postID: string; postType: string; qTitle: string; createdAt: Date }>>(
+      initialActivityHistory,
+    );
   const [bookmarks, setBookmarks] = useState<BookmarkCollection[]>([]);
   const [pfp, setPfp] = useState<string>('');
   const [isEditingBio, setIsEditingBio] = useState(false);
@@ -20,7 +23,7 @@ const useProfilePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const sortActivityHistory = (
-    history: Array<{ postID: string; postType: string; createdAt: Date }>,
+    history: Array<{ postID: string; postType: string; qTitle: string; createdAt: Date }>,
   ) => history.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   useEffect(() => {
@@ -37,12 +40,13 @@ const useProfilePage = () => {
             userProfile.activityHistory.map(a => ({
               postID: a.postId,
               postType: a.postType,
+              qTitle: a.qTitle,
               createdAt: new Date(a.createdAt),
             })),
           );
           setActivityHistory(sortedHistory);
         }
-        setBookmarks(userProfile.bookmarks);
+        setBookmarks(await getUserBookmarkCollections(username as string, requesterUsername));
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Error fetching user details:', error);
@@ -53,7 +57,14 @@ const useProfilePage = () => {
 
     socket.on(
       'activityHistoryUpdate',
-      (newActivityHistory: Array<{ postID: string; postType: string; createdAt: Date }>) => {
+      (
+        newActivityHistory: Array<{
+          postID: string;
+          postType: string;
+          qTitle: string;
+          createdAt: Date;
+        }>,
+      ) => {
         setActivityHistory(sortActivityHistory(newActivityHistory));
       },
     );

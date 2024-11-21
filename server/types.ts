@@ -23,6 +23,7 @@ export interface Answer {
   ansBy: string;
   ansDateTime: Date;
   comments: Comment[] | ObjectId[];
+  flags?: Flag[];
 }
 
 /**
@@ -34,6 +35,7 @@ export interface AnswerRequest extends Request {
   body: {
     qid: string;
     ans: Answer;
+    username: string;
   };
 }
 
@@ -79,6 +81,7 @@ export interface Question {
   upVotes: string[];
   downVotes: string[];
   comments: Comment[] | ObjectId[];
+  flags?: Flag[];
 }
 
 /**
@@ -97,6 +100,7 @@ export interface FindQuestionRequest extends Request {
     order: OrderType;
     search: string;
     askedBy: string;
+    username: string;
   };
 }
 
@@ -118,7 +122,10 @@ export interface FindQuestionByIdRequest extends Request {
  * - body - The question being added.
  */
 export interface AddQuestionRequest extends Request {
-  body: Question;
+  body: {
+    question: Question;
+    username: string; // The username of the user making the request
+  };
 }
 
 /**
@@ -147,6 +154,7 @@ export interface Comment {
   text: string;
   commentBy: string;
   commentDateTime: Date;
+  flags?: Flag[];
 }
 
 /**
@@ -160,6 +168,7 @@ export interface AddCommentRequest extends Request {
     id: string;
     type: 'question' | 'answer';
     comment: Comment;
+    username: string;
   };
 }
 
@@ -248,16 +257,21 @@ export interface ServerToClientEvents {
   commentUpdate: (comment: CommentUpdatePayload) => void;
   profileUpdate: (update: ProfileUpdatePayload) => void;
   collectionUpdate: (update: BookmarkCollectionUpdatePayload) => void;
+  postFlagged: (payload: { id: string; type: 'question' | 'answer' | 'comment' }) => void;
 }
 
 /**
  * Interface representing a bookmark, which contains:
  * - postId - The unique identifier of the post (question or answer).
  * - savedAt - The date and time when the post was bookmarked.
+ * - qTitle - The title of the question that the post belongs to.
  */
 export interface Bookmark {
-  postId: ObjectId | Question;
+  _id?: ObjectId;
+  postId: string;
+  qTitle: string;
   savedAt: Date;
+  numAnswers?: number;
   //  continue leveraging the tags from the Question documents without modifying the Bookmark structure for 1.5
 }
 
@@ -297,6 +311,7 @@ export interface User {
   activityHistory?: Array<{
     postId: string;
     postType: 'Question' | 'Answer' | 'Comment';
+    qTitle: string;
     createdAt: Date;
   }>;
   bookmarkCollections?: BookmarkCollection[];
@@ -473,3 +488,36 @@ export interface SearchUserByUsernameRequest extends Request {
  * Type representing the possible responses for a user search operation.
  */
 export type UserSearchResponse = User[] | { error: string };
+
+/**
+ * Enum representing the possible reasons for flagging a post.
+ */
+export type FlagReason = 'spam' | 'offensive language' | 'irrelevant content' | 'other';
+
+/**
+ * Interface representing a flag on a post.
+ * - flaggedBy: The username of the user who flagged the post.
+ * - reason: The reason for flagging.
+ * - dateFlagged: The date and time when the post was flagged.
+ */
+export interface Flag {
+  flaggedBy: string;
+  reason: FlagReason;
+  dateFlagged: Date;
+}
+
+/**
+ * Interface for the request body when flagging a post.
+ * - id: The unique identifier of the post being flagged.
+ * - type: The type of the post, either 'question', 'answer', or 'comment'.
+ * - reason: The reason for flagging the post.
+ * - flaggedBy: The username of the user flagging the post.
+ */
+export interface FlagPostRequest extends Request {
+  body: {
+    id: string;
+    type: 'question' | 'answer' | 'comment';
+    reason: FlagReason;
+    flaggedBy: string;
+  };
+}
