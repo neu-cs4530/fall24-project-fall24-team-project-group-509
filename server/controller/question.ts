@@ -126,11 +126,12 @@ const questionController = (socket: FakeSOSocket) => {
    * @returns A Promise that resolves to void.
    */
   const addQuestion = async (req: AddQuestionRequest, res: Response): Promise<void> => {
-    if (!isQuestionBodyValid(req.body)) {
+    if (!isQuestionBodyValid(req.body.question)) {
       res.status(400).send('Invalid question body');
       return;
     }
-    const question: Question = req.body;
+    const { question } = req.body;
+    const { username } = req.body;
 
     try {
       const { hasProfanity, censored } = await checkProfanity(question.text);
@@ -157,7 +158,7 @@ const questionController = (socket: FakeSOSocket) => {
       const populatedQuestion = await populateDocument(
         result._id?.toString(),
         'question',
-        question.askedBy,
+        username,
       );
       if (populatedQuestion && 'error' in populatedQuestion) {
         throw new Error(populatedQuestion.error);

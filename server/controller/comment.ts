@@ -67,7 +67,7 @@ const commentController = (socket: FakeSOSocket) => {
       return;
     }
 
-    const { comment, type } = req.body;
+    const { comment, type, username } = req.body;
 
     if (!isCommentValid(comment)) {
       res.status(400).send('Invalid comment body');
@@ -115,7 +115,7 @@ const commentController = (socket: FakeSOSocket) => {
 
       // Populates the fields of the question or answer that this comment
       // was added to, and emits the updated object
-      const populatedDoc = await populateDocument(id, type, comment.commentBy);
+      const populatedDoc = await populateDocument(id, type, username);
 
       if (populatedDoc && 'error' in populatedDoc) {
         throw new Error(populatedDoc.error);
