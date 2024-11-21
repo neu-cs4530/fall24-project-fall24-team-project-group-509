@@ -675,12 +675,51 @@ export const getTagCountMap = async (): Promise<Map<string, number> | null | { e
 };
 
 /**
+ * Fetches and populates a user document based on the provided username.
+ * @param username - the username of the user to fetch
+ * @param requesterUsername - the username of the user making the request
+ *
+ * @returns the user document
+ */
+export const getUserByUsername = async (
+  username: string,
+  requesterUsername: string,
+): Promise<UserResponse | null> => {
+  try {
+    if (!username || username === '') {
+      throw new Error('Invalid username');
+    }
+    const result = await UserModel.findOne({ username });
+    // .populate({
+    //   path: 'activityHistory.postId',
+    // });
+    return result;
+  } catch (error) {
+    return { error: 'Error when fetching user by username' };
+  }
+};
+
+/**
  * Saves a new user to the database.
  * @param user - the user to save
  * @returns user - the user saved to the database
  */
 export const saveUser = async (user: User): Promise<UserResponse> => {
   try {
+    const existingUser = await getUserByUsername(user.username, user.username);
+    if (existingUser) {
+      const eUser = existingUser as User;
+      if (eUser.password !== user.password) {
+        return { error: 'Password does not match' };
+      }
+      if (eUser.password === user.password) {
+        const { username } = user;
+        const result = await UserModel.findOne({ username });
+        if (result) {
+          return result as User;
+        }
+      }
+    }
     const result = await UserModel.create(user);
     return result;
   } catch (error) {
@@ -745,31 +784,6 @@ export const addUserProfilePicture = async (
     return result;
   } catch (error) {
     return { error: 'Error when adding profile picture to user' };
-  }
-};
-
-/**
- * Fetches and populates a user document based on the provided username.
- * @param username - the username of the user to fetch
- * @param requesterUsername - the username of the user making the request
- *
- * @returns the user document
- */
-export const getUserByUsername = async (
-  username: string,
-  requesterUsername: string,
-): Promise<UserResponse | null> => {
-  try {
-    if (!username || username === '') {
-      throw new Error('Invalid username');
-    }
-    const result = await UserModel.findOne({ username });
-    // .populate({
-    //   path: 'activityHistory.postId',
-    // });
-    return result;
-  } catch (error) {
-    return { error: 'Error when fetching user by username' };
   }
 };
 

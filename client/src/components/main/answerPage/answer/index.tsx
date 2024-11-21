@@ -22,6 +22,7 @@ interface AnswerProps {
   comments: Comment[];
   handleAddComment: (comment: Comment) => void;
   handleFlagAnswer: (aid: string, aText: string, answeredBy: string) => void;
+  handleFlagComment: (cid: string, cText: string, commentedBy: string) => void;
 }
 
 /**
@@ -42,6 +43,7 @@ const AnswerView = ({
   comments,
   handleAddComment,
   handleFlagAnswer,
+  handleFlagComment,
 }: AnswerProps) => (
   <div className='answer right_padding'>
     <div id='answerText' className='answerText'>
@@ -61,7 +63,11 @@ const AnswerView = ({
       }}>
       Flag Answer, {_id}
     </button>
-    <CommentSection comments={comments} handleAddComment={handleAddComment} />
+    <CommentSection
+      comments={comments}
+      handleAddComment={handleAddComment}
+      handleFlagComment={handleFlagComment}
+    />
   </div>
 );
 

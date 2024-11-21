@@ -19,6 +19,11 @@ const userSchema: Schema = new Schema(
       required: true,
       unique: true,
     },
+    password: {
+      type: String,
+      required: true,
+      default: '',
+    },
     bio: {
       type: String,
       required: false,
