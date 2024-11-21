@@ -19,6 +19,7 @@ import {
   followBookmarkCollection,
   unfollowBookmarkCollection,
   getBookmarkCollectionById,
+  notifyFollowersOfCollectionUpdate,
 } from '../models/application';
 
 const bookmarkController = (socket: FakeSOSocket) => {
@@ -79,6 +80,7 @@ const bookmarkController = (socket: FakeSOSocket) => {
         collectionId,
         updatedCollection,
       } as BookmarkCollectionUpdatePayload);
+      // await notifyFollowersOfCollectionUpdate(collectionId, updatedCollection, socket);
 
       res.json(updatedCollection);
     } catch (err: unknown) {
@@ -263,9 +265,6 @@ const bookmarkController = (socket: FakeSOSocket) => {
   router.post('/followCollection', followBookmarkCollectionRoute);
   router.post('/unfollowCollection', unfollowBookmarkCollectionRoute);
   router.get('/getBookmarkCollectionById/:collectionId', getBookmarkCollectionByIdRoute);
-  router.get('/test', (req, res) => {
-    res.send('test route');
-  });
 
   return router;
 };
