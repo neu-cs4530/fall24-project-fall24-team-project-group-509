@@ -6,6 +6,7 @@ import {
   saveAnswer,
   updateActivityHistoryWithQuestionID,
 } from '../models/application';
+import { checkProfanity } from '../profanityFilter';
 
 const answerController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -56,32 +57,35 @@ const answerController = (socket: FakeSOSocket) => {
     const ansInfo: Answer = req.body.ans;
 
     try {
-      const ansFromDb = await saveAnswer(ansInfo);
+      const { hasProfanity, censored } = await checkProfanity(ansInfo.text);
 
+      if (hasProfanity) {
+        res.status(400).send(`Profanity detected in answer text: ${censored}`);
+        return;
+      }
+
+      const ansFromDb = await saveAnswer(ansInfo);
       if ('error' in ansFromDb) {
         throw new Error(ansFromDb.error as string);
       }
 
       const status = await addAnswerToQuestion(qid, ansFromDb);
-
       if (status && 'error' in status) {
         throw new Error(status.error as string);
       }
 
-      // update user activity history with the question ID
       await updateActivityHistoryWithQuestionID(ansInfo.ansBy, qid, 'answer', ansInfo.ansDateTime);
-
-      const populatedAns = await populateDocument(ansFromDb._id?.toString(), 'answer');
+      const populatedAns = await populateDocument(
+        ansFromDb._id?.toString(),
+        'answer',
+        ansInfo.ansBy,
+      );
 
       if (populatedAns && 'error' in populatedAns) {
         throw new Error(populatedAns.error as string);
       }
 
-      // Populates the fields of the answer that was added and emits the new object
-      socket.emit('answerUpdate', {
-        qid,
-        answer: populatedAns as AnswerResponse,
-      });
+      socket.emit('answerUpdate', { qid, answer: populatedAns as AnswerResponse });
       res.json(ansFromDb);
     } catch (err) {
       res.status(500).send(`Error when adding answer: ${(err as Error).message}`);
