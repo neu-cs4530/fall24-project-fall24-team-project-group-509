@@ -388,9 +388,16 @@ export const fetchAndIncrementQuestionViewsById = async (
       {
         path: 'answers',
         model: AnswerModel,
-        populate: { path: 'comments', model: CommentModel },
+        populate: [
+          { path: 'comments', model: CommentModel, populate: { path: 'flags', model: FlagModel } },
+          { path: 'flags', model: FlagModel },
+        ],
       },
-      { path: 'comments', model: CommentModel },
+      {
+        path: 'comments',
+        model: CommentModel,
+        populate: { path: 'flags', model: FlagModel },
+      },
       { path: 'flags', model: FlagModel },
     ]);
 
@@ -404,6 +411,20 @@ export const fetchAndIncrementQuestionViewsById = async (
         if (!answer.flags) return true;
         const answerFlaggedByUser = answer.flags.some(flag => flag.flaggedBy === username);
         return !answerFlaggedByUser;
+      });
+    }
+
+    // Exclude comments on answers flagged by the user
+    if (q && q.answers) {
+      q.answers = (q.answers as Answer[]).map(answer => {
+        if (answer.comments) {
+          answer.comments = (answer.comments as Comment[]).filter(comment => {
+            if (!comment.flags) return true;
+            const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
+            return !commentFlaggedByUser;
+          });
+        }
+        return answer;
       });
     }
 

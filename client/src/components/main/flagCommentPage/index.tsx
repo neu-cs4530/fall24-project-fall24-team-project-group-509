@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useUserContext from '../../../hooks/useUserContext';
+import flagPost from '../../../services/flagService';
 
 /**
  * FlagCommentPage component allows a user to flag a comment for moderator review.
@@ -33,13 +34,20 @@ const FlagCommentPage = () => {
     setSelectedReason(reason);
   };
 
-  const submitFlaggedComment = (reason: string) => {
+  const submitFlaggedComment = async (reason: string) => {
     console.log('Flag reason:', reason);
     console.log('Content type: comment');
     console.log('Comment ID:', cid);
     console.log('CulpritUsername:', commentBy);
     console.log('FlagBy:', user.username);
     console.log('Comment:', commentText);
+    const res = await flagPost(commentID, 'comment', reason, user.username);
+
+    if (res) {
+      navigate('/home');
+      console.log('done');
+    }
+
     // const res = await flagContent(questionID, 'question', selectedReason, user.username);
     // if (res && res._id) {
     // navigate('/home');
