@@ -14,6 +14,7 @@ import useUserContext from '../../../hooks/useUserContext';
 interface CommentSectionProps {
   comments: Comment[];
   handleAddComment: (comment: Comment) => void;
+  handleFlagComment: (cid: string, cText: string, commentBy: string) => void;
 }
 
 /**
@@ -22,7 +23,7 @@ interface CommentSectionProps {
  * @param comments: an array of Comment objects
  * @param handleAddComment: function to handle the addition of a new comment
  */
-const CommentSection = ({ comments, handleAddComment }: CommentSectionProps) => {
+const CommentSection = ({ comments, handleAddComment, handleFlagComment }: CommentSectionProps) => {
   const { user } = useUserContext();
   const [text, setText] = useState<string>('');
   const [textErr, setTextErr] = useState<string>('');
@@ -61,10 +62,17 @@ const CommentSection = ({ comments, handleAddComment }: CommentSectionProps) => 
               comments.map((comment, index) => (
                 <li key={index} className='comment-item'>
                   <p className='comment-text'>{comment.text}</p>
+                  <p className='comment-text'>{comment._id}</p>
                   <small className='comment-meta'>
                     <Link to={`/user/${comment.commentBy}`}>{comment.commentBy}</Link>,{' '}
                     {getMetaData(new Date(comment.commentDateTime))}
                   </small>
+                  <button
+                    onClick={() =>
+                      handleFlagComment(comment._id as string, comment.text, comment.commentBy)
+                    }>
+                    Flag Comment
+                  </button>
                 </li>
               ))
             ) : (

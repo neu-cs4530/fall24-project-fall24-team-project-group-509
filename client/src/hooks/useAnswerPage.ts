@@ -50,6 +50,11 @@ const useAnswerPage = () => {
     navigate(`/flag/answer/${aid}`, { state: { answerText: aText, answeredBy } });
   };
 
+  const handleFlagComment = (cid: string, cText: string, commentBy: string) => {
+    console.log('Flagging comment:', cText);
+    navigate(`/flag/comment/${cid}`, { state: { commentText: cText, commentBy } });
+  };
+
   useEffect(() => {
     if (!qid) {
       navigate('/home');
@@ -202,6 +207,7 @@ const useAnswerPage = () => {
     handleNewAnswer,
     handleFlagQuestion,
     handleFlagAnswer,
+    handleFlagComment,
   };
 };
 
