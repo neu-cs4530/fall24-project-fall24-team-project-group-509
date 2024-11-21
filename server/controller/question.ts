@@ -18,6 +18,7 @@ import {
   populateDocument,
   saveQuestion,
 } from '../models/application';
+import { checkProfanity } from '../profanityFilter';
 
 const questionController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -35,8 +36,9 @@ const questionController = (socket: FakeSOSocket) => {
     const { order } = req.query;
     const { search } = req.query;
     const { askedBy } = req.query;
+    const { username } = req.query;
     try {
-      let qlist: Question[] = await getQuestionsByOrder(order);
+      let qlist: Question[] = await getQuestionsByOrder(order, username);
       // Filter by askedBy if provided
       if (askedBy) {
         qlist = filterQuestionsByAskedBy(qlist, askedBy);
@@ -129,22 +131,34 @@ const questionController = (socket: FakeSOSocket) => {
       return;
     }
     const question: Question = req.body;
+
     try {
+      const { hasProfanity, censored } = await checkProfanity(question.text);
+
+      if (hasProfanity) {
+        res.status(400).send(`Profanity detected in question text: ${censored}`);
+        return;
+      }
+
       const questionswithtags: Question = {
         ...question,
         tags: await processTags(question.tags),
       };
+
       if (questionswithtags.tags.length === 0) {
         throw new Error('Invalid tags');
       }
+
       const result = await saveQuestion(questionswithtags);
       if ('error' in result) {
         throw new Error(result.error);
       }
 
-      // Populates the fields of the question that was added, and emits the new object
-      const populatedQuestion = await populateDocument(result._id?.toString(), 'question');
-
+      const populatedQuestion = await populateDocument(
+        result._id?.toString(),
+        'question',
+        question.askedBy,
+      );
       if (populatedQuestion && 'error' in populatedQuestion) {
         throw new Error(populatedQuestion.error);
       }
@@ -152,11 +166,7 @@ const questionController = (socket: FakeSOSocket) => {
       socket.emit('questionUpdate', populatedQuestion as Question);
       res.json(result);
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        res.status(500).send(`Error when saving question: ${err.message}`);
-      } else {
-        res.status(500).send(`Error when saving question`);
-      }
+      res.status(500).send(`Error when saving question: ${(err as Error).message}`);
     }
   };
 

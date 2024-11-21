@@ -8,13 +8,17 @@ const QUESTION_API_URL = `${process.env.REACT_APP_SERVER_URL}/question`;
  *
  * @param order - The order in which to fetch questions. Default is 'newest'.
  * @param search - The search term to filter questions. Default is an empty string.
+ * @param username - The username of the user requesting the questions. Optional field.
  * @throws Error if there is an issue fetching or filtering questions.
  */
 const getQuestionsByFilter = async (
+  username: string,
   order: string = 'newest',
   search: string = '',
 ): Promise<Question[]> => {
-  const res = await api.get(`${QUESTION_API_URL}/getQuestion?order=${order}&search=${search}`);
+  const res = await api.get(
+    `${QUESTION_API_URL}/getQuestion?order=${order}&search=${search}&username=${username}`,
+  );
   if (res.status !== 200) {
     throw new Error('Error when fetching or filtering questions');
   }
