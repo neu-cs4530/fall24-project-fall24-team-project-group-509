@@ -93,6 +93,7 @@ export type QuestionResponse = Question | { error: string };
  * - order - The order in which to sort the questions
  * - search - The search string used to find questions
  * - askedBy - The username of the user who asked the question
+ * - username - The username of the user requesting the questions.
  */
 export interface FindQuestionRequest extends Request {
   query: {

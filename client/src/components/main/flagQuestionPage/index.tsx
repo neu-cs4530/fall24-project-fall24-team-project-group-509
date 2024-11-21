@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useUserContext from '../../../hooks/useUserContext';
+import flagPost from '../../../services/flagService';
 
 /**
  * FlagQuestionPage component allows a user to flag a question for moderator review.
@@ -33,14 +34,18 @@ const FlagQuestionPage = () => {
     setSelectedReason(reason);
   };
 
-  const submitFlaggedQuestion = (reason: string) => {
+  const submitFlaggedQuestion = async (reason: string) => {
     console.log('Flag reason:', reason);
     console.log('Content type: Question');
     console.log('Question ID:', questionID);
     console.log('Username:', askedBy);
     console.log('FlagBy:', user.username);
     console.log('Question:', allQuestionText);
-    // const res = await flagContent(questionID, 'question', selectedReason, user.username);
+    const res = await flagPost(questionID, 'question', reason, user.username);
+    if (res) {
+      navigate('/home');
+      console.log('done');
+    }
     // if (res && res._id) {
     // navigate('/home');
     // }
