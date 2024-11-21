@@ -12,6 +12,7 @@ const FlagCommentPage = () => {
   const { cid } = useParams();
   const { user } = useUserContext();
   const navigate = useNavigate();
+  // to push
   const [text, setText] = useState<string>('');
   const [textErr, setTextErr] = useState<string>('');
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
