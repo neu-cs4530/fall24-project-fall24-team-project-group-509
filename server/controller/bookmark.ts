@@ -19,6 +19,7 @@ import {
   followBookmarkCollection,
   unfollowBookmarkCollection,
   getBookmarkCollectionById,
+  notifyFollowersOfCollectionUpdate,
 } from '../models/application';
 
 const bookmarkController = (socket: FakeSOSocket) => {
@@ -74,11 +75,8 @@ const bookmarkController = (socket: FakeSOSocket) => {
         throw new Error(updatedCollection.error);
       }
 
-      // Emit collection update to followers
-      socket.emit('collectionUpdate', {
-        collectionId,
-        updatedCollection,
-      } as BookmarkCollectionUpdatePayload);
+      // Notify followers of the collection update
+      await notifyFollowersOfCollectionUpdate(collectionId, updatedCollection, socket);
 
       res.json(updatedCollection);
     } catch (err: unknown) {

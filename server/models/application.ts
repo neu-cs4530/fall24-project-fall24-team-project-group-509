@@ -19,6 +19,8 @@ import {
   UserResponse,
   Flag,
   FlagReason,
+  FakeSOSocket,
+  BookmarkCollectionUpdatePayload,
 } from '../types';
 import AnswerModel from './answers';
 import QuestionModel from './questions';
@@ -1189,6 +1191,28 @@ export const getFollowedBookmarkCollections = async (
     return collections;
   } catch (error) {
     return [];
+  }
+};
+
+/**
+ * Notifies all followers of a bookmark collection when it is updated.
+ *
+ * @param socket - The socket instance used for real-time updates.
+ * @param collectionId - The ID of the updated collection.
+ * @param message - A message describing the update.
+ */
+export const notifyFollowersOfCollectionUpdate = async (
+  collectionId: string,
+  updatedCollection: BookmarkCollection,
+  socket: FakeSOSocket,
+): Promise<void> => {
+  if (updatedCollection.followers) {
+    updatedCollection.followers.forEach(follower => {
+      socket.emit('collectionUpdate', {
+        collectionId,
+        updatedCollection,
+      } as BookmarkCollectionUpdatePayload);
+    });
   }
 };
 
