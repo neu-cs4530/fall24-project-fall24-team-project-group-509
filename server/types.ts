@@ -35,6 +35,7 @@ export interface AnswerRequest extends Request {
   body: {
     qid: string;
     ans: Answer;
+    username: string;
   };
 }
 
@@ -122,7 +123,10 @@ export interface FindQuestionByIdRequest extends Request {
  * - body - The question being added.
  */
 export interface AddQuestionRequest extends Request {
-  body: Question;
+  body: {
+    question: Question;
+    username: string; // The username of the user making the request
+  };
 }
 
 /**
@@ -165,6 +169,7 @@ export interface AddCommentRequest extends Request {
     id: string;
     type: 'question' | 'answer';
     comment: Comment;
+    username: string;
   };
 }
 
@@ -501,6 +506,11 @@ export interface Flag {
   flaggedBy: string;
   reason: FlagReason;
   dateFlagged: Date;
+  status: 'pending' | 'reviewed';
+  reviewedBy?: string;
+  reviewedAt?: Date;
+  postId: string;
+  postType: 'question' | 'answer' | 'comment';
 }
 
 /**
@@ -516,5 +526,26 @@ export interface FlagPostRequest extends Request {
     type: 'question' | 'answer' | 'comment';
     reason: FlagReason;
     flaggedBy: string;
+  };
+}
+
+export interface GetFlaggedPostsRequest extends Request {
+  query: {
+    username: string;
+  };
+}
+
+export interface ReviewFlagRequest extends Request {
+  body: {
+    flagId: string;
+    moderatorUsername: string;
+  };
+}
+
+export interface DeletePostRequest extends Request {
+  body: {
+    id: string;
+    type: 'question' | 'answer' | 'comment';
+    moderatorUsername: string;
   };
 }

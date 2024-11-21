@@ -53,7 +53,7 @@ const answerController = (socket: FakeSOSocket) => {
       return;
     }
 
-    const { qid } = req.body;
+    const { qid, username } = req.body;
     const ansInfo: Answer = req.body.ans;
 
     try {
@@ -75,11 +75,7 @@ const answerController = (socket: FakeSOSocket) => {
       }
 
       await updateActivityHistoryWithQuestionID(ansInfo.ansBy, qid, 'answer', ansInfo.ansDateTime);
-      const populatedAns = await populateDocument(
-        ansFromDb._id?.toString(),
-        'answer',
-        ansInfo.ansBy,
-      );
+      const populatedAns = await populateDocument(ansFromDb._id?.toString(), 'answer', username);
 
       if (populatedAns && 'error' in populatedAns) {
         throw new Error(populatedAns.error as string);

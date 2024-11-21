@@ -27,6 +27,7 @@ const mockQuestion: Question = {
   upVotes: [],
   downVotes: [],
   comments: [],
+  flags: [],
 };
 
 const simplifyQuestion = (question: Question) => ({
@@ -56,7 +57,10 @@ describe('POST /addQuestion', () => {
     jest.spyOn(util, 'populateDocument').mockResolvedValueOnce(mockQuestion as Question);
 
     // Making the request
-    const response = await supertest(app).post('/question/addQuestion').send(mockQuestion);
+    const response = await supertest(app).post('/question/addQuestion').send({
+      question: mockQuestion,
+      username: 'test_user',
+    });
 
     // Asserting the response
     expect(response.status).toBe(200);
@@ -70,76 +74,86 @@ describe('POST /addQuestion', () => {
       .mockResolvedValueOnce({ error: 'Error while saving question' });
 
     // Making the request
-    const response = await supertest(app).post('/question/addQuestion').send(mockQuestion);
+    const response = await supertest(app).post('/question/addQuestion').send({
+      question: mockQuestion,
+      username: 'test_user',
+    });
 
     // Asserting the response
     expect(response.status).toBe(500);
+    expect(response.text).toBe('Error when saving question: Error while saving question');
   });
 
-  it('should return 500 if error occurs in `saveQuestion` while adding a new question', async () => {
+  it('should return 500 if error occurs in `populateDocument` while adding a new question', async () => {
     jest.spyOn(util, 'processTags').mockResolvedValue([tag1, tag2] as Tag[]);
     jest.spyOn(util, 'saveQuestion').mockResolvedValueOnce(mockQuestion as Question);
     jest.spyOn(util, 'populateDocument').mockResolvedValueOnce({ error: 'Error while populating' });
 
     // Making the request
-    const response = await supertest(app).post('/question/addQuestion').send(mockQuestion);
+    const response = await supertest(app).post('/question/addQuestion').send({
+      question: mockQuestion,
+      username: 'test_user',
+    });
 
     // Asserting the response
     expect(response.status).toBe(500);
+    expect(response.text).toBe('Error when saving question: Error while populating');
   });
 
-  it('should return 500 if tag ids could not be retrieved', async () => {
+  it('should return 400 if tag ids could not be retrieved', async () => {
     jest.spyOn(util, 'processTags').mockResolvedValue([]);
 
     // Making the request
-    const response = await supertest(app).post('/question/addQuestion').send(mockQuestion);
+    const response = await supertest(app).post('/question/addQuestion').send({
+      question: mockQuestion,
+      username: 'test_user',
+    });
 
     // Asserting the response
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
+    expect(response.text).toBe('Invalid tags');
   });
 
   it('should return bad request if question title is empty string', async () => {
     // Making the request
     const response = await supertest(app)
       .post('/question/addQuestion')
-      .send({ ...mockQuestion, title: '' });
+      .send({
+        question: { ...mockQuestion, title: '' },
+        username: 'test_user',
+      });
 
     // Asserting the response
     expect(response.status).toBe(400);
-    expect(response.text).toBe('Invalid question body');
+    expect(response.text).toBe('Invalid question body or missing username');
   });
 
   it('should return bad request if question text is empty string', async () => {
     // Making the request
     const response = await supertest(app)
       .post('/question/addQuestion')
-      .send({ ...mockQuestion, text: '' });
+      .send({
+        question: { ...mockQuestion, text: '' },
+        username: 'test_user',
+      });
 
     // Asserting the response
     expect(response.status).toBe(400);
-    expect(response.text).toBe('Invalid question body');
-  });
-
-  it('should return bad request if tags are empty', async () => {
-    // Making the request
-    const response = await supertest(app)
-      .post('/question/addQuestion')
-      .send({ ...mockQuestion, tags: [] });
-
-    // Asserting the response
-    expect(response.status).toBe(400);
-    expect(response.text).toBe('Invalid question body');
+    expect(response.text).toBe('Invalid question body or missing username');
   });
 
   it('should return bad request if askedBy is empty string', async () => {
     // Making the request
     const response = await supertest(app)
       .post('/question/addQuestion')
-      .send({ ...mockQuestion, askedBy: '' });
+      .send({
+        question: { ...mockQuestion, askedBy: '' },
+        username: 'test_user',
+      });
 
     // Asserting the response
     expect(response.status).toBe(400);
-    expect(response.text).toBe('Invalid question body');
+    expect(response.text).toBe('Invalid question body or missing username');
   });
 
   it('should ensure only unique tags are added', async () => {
@@ -156,13 +170,14 @@ describe('POST /addQuestion', () => {
       upVotes: [],
       downVotes: [],
       comments: [],
+      flags: [],
     };
 
     const result: Question = {
       _id: new mongoose.Types.ObjectId('65e9b58910afe6e94fc6e6fe'),
       title: 'New Question Title',
       text: 'New Question Text',
-      tags: [tag1, tag2], // Duplicate tags
+      tags: [tag1, tag2], // Unique tags
       answers: [],
       askedBy: 'question3_user',
       askDateTime: new Date('2024-06-06'),
@@ -170,6 +185,7 @@ describe('POST /addQuestion', () => {
       upVotes: [],
       downVotes: [],
       comments: [],
+      flags: [],
     };
 
     // Set up the mock to resolve with unique tags
@@ -182,7 +198,10 @@ describe('POST /addQuestion', () => {
     jest.spyOn(util, 'populateDocument').mockResolvedValueOnce(result);
 
     // Making the request
-    const response = await supertest(app).post('/question/addQuestion').send(mockQuestion);
+    const response = await supertest(app).post('/question/addQuestion').send({
+      question: mockQuestionDuplicates,
+      username: 'test_user',
+    });
 
     // Asserting the response
     expect(response.status).toBe(200);
