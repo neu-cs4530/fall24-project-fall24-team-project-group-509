@@ -126,13 +126,18 @@ const questionController = (socket: FakeSOSocket) => {
    * @returns A Promise that resolves to void.
    */
   const addQuestion = async (req: AddQuestionRequest, res: Response): Promise<void> => {
-    if (!isQuestionBodyValid(req.body.question)) {
-      res.status(400).send('Invalid question body');
+    if (!isQuestionBodyValid(req.body.question || !req.body.username)) {
+      res.status(400).send('Invalid question body or missing username');
       return;
     }
     const { question } = req.body;
     const { username } = req.body;
 
+    // Handle empty tags separately
+    if (!question.tags || question.tags.length === 0) {
+      res.status(400).send('Invalid tags');
+      return;
+    }
     try {
       const { hasProfanity, censored } = await checkProfanity(question.text);
 
@@ -146,8 +151,10 @@ const questionController = (socket: FakeSOSocket) => {
         tags: await processTags(question.tags),
       };
 
+      // If processTags returns an empty array
       if (questionswithtags.tags.length === 0) {
-        throw new Error('Invalid tags');
+        res.status(400).send('Invalid tags');
+        return;
       }
 
       const result = await saveQuestion(questionswithtags);
