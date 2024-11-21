@@ -296,6 +296,7 @@ export interface BookmarkCollection {
  */
 export interface User {
   username: string;
+  password: string;
   bio?: string;
   profilePictureURL?: string;
   activityHistory?: Array<{
