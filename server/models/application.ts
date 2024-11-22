@@ -1611,3 +1611,33 @@ export const unshadowBanUser = async (username: string): Promise<UserResponse> =
     return { error: `Error when un-shadow banning user: ${(error as Error).message}` };
   }
 };
+
+/**
+ * Checks if a user is banned.
+ *
+ * @param username - The username of the user to check.
+ * @returns A Promise that resolves to true if the user is banned, false otherwise.
+ */
+export const isUserBanned = async (username: string): Promise<boolean> => {
+  try {
+    const user = await UserModel.findOne({ username });
+    return user ? user.isBanned === true : false;
+  } catch (error) {
+    return false;
+  }
+};
+
+/**
+ * Checks if a user is shadow banned.
+ *
+ * @param username - The username of the user to check.
+ * @returns A Promise that resolves to true if the user is shadow banned, false otherwise.
+ */
+export const isUserShadowBanned = async (username: string): Promise<boolean> => {
+  try {
+    const user = await UserModel.findOne({ username });
+    return user ? user.isShadowBanned === true : false;
+  } catch (error) {
+    return false;
+  }
+};

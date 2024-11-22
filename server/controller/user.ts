@@ -16,9 +16,10 @@ import {
   addUserProfilePicture,
   getUserByUsername,
   searchUsers,
+  isUserBanned,
+  isUserShadowBanned,
 } from '../models/application';
 import { checkProfanity } from '../profanityFilter';
-import UserModel from '../models/user';
 
 const userController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -85,22 +86,20 @@ const userController = (socket: FakeSOSocket) => {
     const { username } = req.body;
     const { bio } = req.body;
 
-    // Check if user is banned or shadow banned
-    const user = await UserModel.findOne({ username });
-    if (!user) {
-      res.status(404).send('User not found');
-      return;
-    }
-    if (user.isBanned) {
+    const banned = await isUserBanned(username);
+    if (banned) {
       res.status(403).send('Your account has been banned');
       return;
     }
-    if (user.isShadowBanned) {
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
       res
         .status(403)
-        .send('You are not allowed to create collections due to community guideline violations');
+        .send('You are not allowed to post since you did not adhere to community guidelines');
       return;
     }
+
     try {
       const { hasProfanity, censored } = await checkProfanity(bio);
 
@@ -137,20 +136,17 @@ const userController = (socket: FakeSOSocket) => {
       return;
     }
 
-    // Check if user is banned or shadow banned
-    const user = await UserModel.findOne({ username });
-    if (!user) {
-      res.status(404).send('User not found');
-      return;
-    }
-    if (user.isBanned) {
+    const banned = await isUserBanned(username);
+    if (banned) {
       res.status(403).send('Your account has been banned');
       return;
     }
-    if (user.isShadowBanned) {
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
       res
         .status(403)
-        .send('You are not allowed to create collections due to community guideline violations');
+        .send('You are not allowed to post since you did not adhere to community guidelines');
       return;
     }
 

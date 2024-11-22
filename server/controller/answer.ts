@@ -2,12 +2,13 @@ import express, { Response } from 'express';
 import { Answer, AnswerRequest, AnswerResponse, FakeSOSocket } from '../types';
 import {
   addAnswerToQuestion,
+  isUserBanned,
+  isUserShadowBanned,
   populateDocument,
   saveAnswer,
   updateActivityHistoryWithQuestionID,
 } from '../models/application';
 import { checkProfanity } from '../profanityFilter';
-import UserModel from '../models/user';
 
 const answerController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -57,20 +58,17 @@ const answerController = (socket: FakeSOSocket) => {
     const { qid, username } = req.body;
     const ansInfo: Answer = req.body.ans;
 
-    // Check if user is banned or shadow banned
-    const user = await UserModel.findOne({ username });
-    if (!user) {
-      res.status(404).send('User not found');
-      return;
-    }
-    if (user.isBanned) {
+    const banned = await isUserBanned(username);
+    if (banned) {
       res.status(403).send('Your account has been banned');
       return;
     }
-    if (user.isShadowBanned) {
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
       res
         .status(403)
-        .send('You are not allowed to create collections due to community guideline violations');
+        .send('You are not allowed to post since you did not adhere to community guidelines');
       return;
     }
 

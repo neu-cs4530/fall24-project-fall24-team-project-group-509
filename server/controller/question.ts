@@ -17,9 +17,10 @@ import {
   processTags,
   populateDocument,
   saveQuestion,
+  isUserBanned,
+  isUserShadowBanned,
 } from '../models/application';
 import { checkProfanity } from '../profanityFilter';
-import UserModel from '../models/user';
 
 const questionController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -134,20 +135,17 @@ const questionController = (socket: FakeSOSocket) => {
     const { question } = req.body;
     const { username } = req.body;
 
-    // Check if user is banned or shadow banned
-    const user = await UserModel.findOne({ username });
-    if (!user) {
-      res.status(404).send('User not found');
-      return;
-    }
-    if (user.isBanned) {
+    const banned = await isUserBanned(username);
+    if (banned) {
       res.status(403).send('Your account has been banned');
       return;
     }
-    if (user.isShadowBanned) {
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
       res
         .status(403)
-        .send('You are not allowed to create collections due to community guideline violations');
+        .send('You are not allowed to post since you did not adhere to community guidelines');
       return;
     }
     // Handle empty tags separately
