@@ -303,6 +303,8 @@ export interface BookmarkCollection {
  * - activityHistory - The history of the user's activity on the platform.
  * - bookmarkCollections - An array of bookmark collections owned by the user.
  * - followedBookmarkCollections - An array of IDs of bookmark collections the user is following.
+ * - isBanned - A boolean indicating whether the user is banned.
+ * - isShadowBanned - A boolean indicating whether the user is shadow banned.
  */
 export interface User {
   username: string;
@@ -316,6 +318,8 @@ export interface User {
   }>;
   bookmarkCollections?: BookmarkCollection[];
   followedBookmarkCollections?: ObjectId[];
+  isBanned?: boolean;
+  isShadowBanned?: boolean;
 }
 
 /**
@@ -557,5 +561,17 @@ export interface DeletePostRequest extends Request {
 export interface GetPendingFlagsRequest extends Request {
   query: {
     username: string;
+  };
+}
+
+/**
+ * Interface representing the request to ban or unban a user.
+ * - username - The username of the user to ban or unban.
+ * - moderatorUsername - The username of the moderator performing the action.
+ */
+export interface BanUserRequest extends Request {
+  body: {
+    username: string;
+    moderatorUsername: string;
   };
 }

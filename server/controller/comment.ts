@@ -9,6 +9,7 @@ import {
   updateActivityHistoryWithQuestionID,
 } from '../models/application';
 import { checkProfanity } from '../profanityFilter';
+import UserModel from '../models/user';
 
 const commentController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -71,6 +72,23 @@ const commentController = (socket: FakeSOSocket) => {
 
     if (!isCommentValid(comment)) {
       res.status(400).send('Invalid comment body');
+      return;
+    }
+
+    // Check if user is banned or shadow banned
+    const user = await UserModel.findOne({ username });
+    if (!user) {
+      res.status(404).send('User not found');
+      return;
+    }
+    if (user.isBanned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+    if (user.isShadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to create collections due to community guideline violations');
       return;
     }
 

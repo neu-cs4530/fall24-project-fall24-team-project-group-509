@@ -1523,3 +1523,91 @@ export const getFlag = async (id: string): Promise<FlagRepsonse> => {
     return { error: `Error when retrieving flag: ${(error as Error).message}` };
   }
 };
+
+/**
+ * Bans a user by setting their isBanned field to true.
+ *
+ * @param username - The username of the user to ban.
+ * @returns A Promise that resolves to the updated user or an error message.
+ */
+export const banUser = async (username: string): Promise<UserResponse> => {
+  try {
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { username },
+      { isBanned: true },
+      { new: true },
+    );
+    if (!updatedUser) {
+      throw new Error('User not found');
+    }
+    return updatedUser;
+  } catch (error) {
+    return { error: `Error when banning user: ${(error as Error).message}` };
+  }
+};
+
+/**
+ * Shadow bans a user by setting their isShadowBanned field to true.
+ *
+ * @param username - The username of the user to shadow ban.
+ * @returns A Promise that resolves to the updated user or an error message.
+ */
+export const shadowBanUser = async (username: string): Promise<UserResponse> => {
+  try {
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { username },
+      { isShadowBanned: true },
+      { new: true },
+    );
+    if (!updatedUser) {
+      throw new Error('User not found');
+    }
+    return updatedUser;
+  } catch (error) {
+    return { error: `Error when shadow banning user: ${(error as Error).message}` };
+  }
+};
+
+/**
+ * Unbans a user by setting their isBanned field to false.
+ *
+ * @param username - The username of the user to unban.
+ * @returns A Promise that resolves to the updated user or an error message.
+ */
+export const unbanUser = async (username: string): Promise<UserResponse> => {
+  try {
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { username },
+      { isBanned: false },
+      { new: true },
+    );
+    if (!updatedUser) {
+      throw new Error('User not found');
+    }
+    return updatedUser;
+  } catch (error) {
+    return { error: `Error when unbanning user: ${(error as Error).message}` };
+  }
+};
+
+/**
+ * Un-shadow bans a user by setting their isShadowBanned field to false.
+ *
+ * @param username - The username of the user to un-shadow ban.
+ * @returns A Promise that resolves to the updated user or an error message.
+ */
+export const unshadowBanUser = async (username: string): Promise<UserResponse> => {
+  try {
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { username },
+      { isShadowBanned: false },
+      { new: true },
+    );
+    if (!updatedUser) {
+      throw new Error('User not found');
+    }
+    return updatedUser;
+  } catch (error) {
+    return { error: `Error when un-shadow banning user: ${(error as Error).message}` };
+  }
+};

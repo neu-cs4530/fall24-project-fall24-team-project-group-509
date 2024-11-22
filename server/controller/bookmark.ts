@@ -20,6 +20,7 @@ import {
   unfollowBookmarkCollection,
   getBookmarkCollectionById,
 } from '../models/application';
+import UserModel from '../models/user';
 
 const bookmarkController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -37,6 +38,23 @@ const bookmarkController = (socket: FakeSOSocket) => {
 
     if (!username || !title || isPublic === undefined) {
       res.status(400).send('Invalid request');
+      return;
+    }
+
+    // Check if user is banned or shadow banned
+    const user = await UserModel.findOne({ username });
+    if (!user) {
+      res.status(404).send('User not found');
+      return;
+    }
+    if (user.isBanned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+    if (user.isShadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to create collections due to community guideline violations');
       return;
     }
 

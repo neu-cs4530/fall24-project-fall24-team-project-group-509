@@ -7,6 +7,7 @@ import {
   updateActivityHistoryWithQuestionID,
 } from '../models/application';
 import { checkProfanity } from '../profanityFilter';
+import UserModel from '../models/user';
 
 const answerController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -55,6 +56,23 @@ const answerController = (socket: FakeSOSocket) => {
 
     const { qid, username } = req.body;
     const ansInfo: Answer = req.body.ans;
+
+    // Check if user is banned or shadow banned
+    const user = await UserModel.findOne({ username });
+    if (!user) {
+      res.status(404).send('User not found');
+      return;
+    }
+    if (user.isBanned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+    if (user.isShadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to create collections due to community guideline violations');
+      return;
+    }
 
     try {
       const { hasProfanity, censored } = await checkProfanity(ansInfo.text);
