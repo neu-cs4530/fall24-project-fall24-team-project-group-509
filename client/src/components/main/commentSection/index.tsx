@@ -10,6 +10,7 @@ import useUserContext from '../../../hooks/useUserContext';
  *
  * - comments - list of the comment components
  * - handleAddComment - a function that handles adding a new comment, taking a Comment object as an argument
+ * - commentErr - error message for the comment section if profanity is detected
  */
 interface CommentSectionProps {
   comments: Comment[];
@@ -32,7 +33,7 @@ const CommentSection = ({ comments, handleAddComment, handleFlagComment }: Comme
   /**
    * Function to handle the addition of a new comment.
    */
-  const handleAddCommentClick = () => {
+  const handleAddCommentClick = async () => {
     if (text.trim() === '' || user.username.trim() === '') {
       setTextErr(text.trim() === '' ? 'Comment text cannot be empty' : '');
       return;
@@ -44,9 +45,17 @@ const CommentSection = ({ comments, handleAddComment, handleFlagComment }: Comme
       commentDateTime: new Date(),
     };
 
-    handleAddComment(newComment);
-    setText('');
-    setTextErr('');
+    // handleAddComment(newComment);
+    // setText('');
+    // setTextErr('');
+
+    try {
+      await handleAddComment(newComment);
+      setText('');
+      setTextErr('');
+    } catch (err) {
+      setTextErr('Profanity detected');
+    }
   };
 
   return (
