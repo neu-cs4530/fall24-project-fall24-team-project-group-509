@@ -7,12 +7,13 @@ import useUserContext from '../../../hooks/useUserContext';
  * Displays real-time updates for bookmark collections a user is following.
  */
 const NotificationPage = () => {
-  const { socket } = useUserContext(); // `useUserContext` provides the socket instance
+  const { socket } = useUserContext();
   const [notifications, setNotifications] = useState<BookmarkCollectionUpdatePayload[]>([]);
 
   useEffect(() => {
     // Listen for collection updates
     const handleCollectionUpdate = (update: BookmarkCollectionUpdatePayload) => {
+      console.log('Received collection update:', update);
       setNotifications(prev => [update, ...prev]); // Add new notifications at the top
     };
 
