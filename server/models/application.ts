@@ -21,6 +21,7 @@ import {
   UserResponse,
   Flag,
   FlagReason,
+  FollowNotificationLog,
 } from '../types';
 import AnswerModel from './answers';
 import QuestionModel from './questions';
@@ -1258,6 +1259,27 @@ export const notifyFollowersOfCollectionUpdate = async (
         updatedCollection,
       } as BookmarkCollectionUpdatePayload);
     });
+  }
+};
+
+/**
+ * Retrieves the follow update notifications for a given user.
+ * @param username - The username of the user whose notifications are being fetched.
+ * @returns An array of follow update notifications for the user.
+ */
+export const getUserFollowUpdateNotifications = async (
+  username: string,
+): Promise<FollowNotificationLog[] | { error: string }> => {
+  try {
+    const user = await UserModel.findOne({ username }, { followUpdateNotifications: 1 });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return user.followUpdateNotifications || [];
+  } catch (error) {
+    return { error: `Error when unfollowing bookmark collection: ${(error as Error).message}` };
   }
 };
 

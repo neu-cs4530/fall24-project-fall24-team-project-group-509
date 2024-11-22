@@ -76,10 +76,6 @@ const bookmarkController = (socket: FakeSOSocket) => {
       }
 
       // Emit collection update to followers
-      // socket.emit('collectionUpdate', {
-      //   collectionId,
-      //   updatedCollection,
-      // } as BookmarkCollectionUpdatePayload);
       await notifyFollowersOfCollectionUpdate(collectionId, updatedCollection, socket);
 
       res.json(updatedCollection);

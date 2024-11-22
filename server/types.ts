@@ -510,6 +510,12 @@ export interface SearchUserByUsernameRequest extends Request {
   };
 }
 
+export interface GetUserNotificationsRequest extends Request {
+  params: {
+    username: string;
+  };
+}
+
 /**
  * Type representing the possible responses for a user search operation.
  */
