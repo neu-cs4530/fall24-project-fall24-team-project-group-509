@@ -16,6 +16,8 @@ import {
   addUserProfilePicture,
   getUserByUsername,
   searchUsers,
+  isUserBanned,
+  isUserShadowBanned,
 } from '../models/application';
 import { checkProfanity } from '../profanityFilter';
 
@@ -93,6 +95,20 @@ const userController = (socket: FakeSOSocket) => {
     const { username } = req.body;
     const { bio } = req.body;
 
+    const banned = await isUserBanned(username);
+    if (banned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to post since you did not adhere to community guidelines');
+      return;
+    }
+
     try {
       const { hasProfanity, censored } = await checkProfanity(bio);
 
@@ -126,6 +142,20 @@ const userController = (socket: FakeSOSocket) => {
 
     if (!username || !profilePictureFile) {
       res.status(400).send('Invalid request');
+      return;
+    }
+
+    const banned = await isUserBanned(username);
+    if (banned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to post since you did not adhere to community guidelines');
       return;
     }
 

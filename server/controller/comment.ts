@@ -4,6 +4,8 @@ import { Comment, AddCommentRequest, FakeSOSocket } from '../types';
 import {
   addComment,
   findQuestionIDByAnswerID,
+  isUserBanned,
+  isUserShadowBanned,
   populateDocument,
   saveComment,
   updateActivityHistoryWithQuestionID,
@@ -67,10 +69,24 @@ const commentController = (socket: FakeSOSocket) => {
       return;
     }
 
-    const { comment, type } = req.body;
+    const { comment, type, username } = req.body;
 
     if (!isCommentValid(comment)) {
       res.status(400).send('Invalid comment body');
+      return;
+    }
+
+    const banned = await isUserBanned(username);
+    if (banned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to post since you did not adhere to community guidelines');
       return;
     }
 
@@ -115,7 +131,7 @@ const commentController = (socket: FakeSOSocket) => {
 
       // Populates the fields of the question or answer that this comment
       // was added to, and emits the updated object
-      const populatedDoc = await populateDocument(id, type, comment.commentBy);
+      const populatedDoc = await populateDocument(id, type, username);
 
       if (populatedDoc && 'error' in populatedDoc) {
         throw new Error(populatedDoc.error);

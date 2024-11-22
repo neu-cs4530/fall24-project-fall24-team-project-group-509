@@ -35,6 +35,7 @@ export interface AnswerRequest extends Request {
   body: {
     qid: string;
     ans: Answer;
+    username: string;
   };
 }
 
@@ -122,7 +123,10 @@ export interface FindQuestionByIdRequest extends Request {
  * - body - The question being added.
  */
 export interface AddQuestionRequest extends Request {
-  body: Question;
+  body: {
+    question: Question;
+    username: string; // The username of the user making the request
+  };
 }
 
 /**
@@ -165,6 +169,7 @@ export interface AddCommentRequest extends Request {
     id: string;
     type: 'question' | 'answer';
     comment: Comment;
+    username: string;
   };
 }
 
@@ -308,6 +313,8 @@ export interface BookmarkCollection {
  * - activityHistory - The history of the user's activity on the platform.
  * - bookmarkCollections - An array of bookmark collections owned by the user.
  * - followedBookmarkCollections - An array of IDs of bookmark collections the user is following.
+ * - isBanned - A boolean indicating whether the user is banned.
+ * - isShadowBanned - A boolean indicating whether the user is shadow banned.
  * - FollowUpdateNotifications - An array of notifications for when a bookmark collections the user is following is updated. 
  */
 export interface User {
@@ -323,6 +330,8 @@ export interface User {
   }>;
   bookmarkCollections?: BookmarkCollection[];
   followedBookmarkCollections?: ObjectId[];
+  isBanned?: boolean;
+  isShadowBanned?: boolean;
   followUpdateNotifications?: FollowNotificationLog[];
 }
 
@@ -526,10 +535,19 @@ export type FlagReason = 'spam' | 'offensive language' | 'irrelevant content' | 
  * - reason: The reason for flagging.
  * - dateFlagged: The date and time when the post was flagged.
  */
+
 export interface Flag {
+  _id? : string;
   flaggedBy: string;
   reason: FlagReason;
   dateFlagged: Date;
+  status: 'pending' | 'reviewed';
+  reviewedBy?: string;
+  reviewedAt?: Date;
+  postId: string;
+  postType: 'question' | 'answer' | 'comment';
+  postText: string;
+  flaggedUser: string;
 }
 
 /**
@@ -545,5 +563,46 @@ export interface FlagPostRequest extends Request {
     type: 'question' | 'answer' | 'comment';
     reason: FlagReason;
     flaggedBy: string;
+  };
+}
+
+export interface GetFlaggedPostsRequest extends Request {
+  query: {
+    username: string;
+  };
+}
+
+export interface ReviewFlagRequest extends Request {
+  body: {
+    flagId: string;
+    moderatorUsername: string;
+  };
+}
+
+export type FlagRepsonse = Flag | { error: string };
+
+export interface DeletePostRequest extends Request {
+  body: {
+    id: string;
+    type: 'question' | 'answer' | 'comment';
+    moderatorUsername: string;
+  };
+}
+
+export interface GetPendingFlagsRequest extends Request {
+  query: {
+    username: string;
+  };
+}
+
+/**
+ * Interface representing the request to ban or unban a user.
+ * - username - The username of the user to ban or unban.
+ * - moderatorUsername - The username of the moderator performing the action.
+ */
+export interface BanUserRequest extends Request {
+  body: {
+    username: string;
+    moderatorUsername: string;
   };
 }

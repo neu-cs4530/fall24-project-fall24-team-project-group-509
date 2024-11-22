@@ -12,6 +12,8 @@ import { Schema } from 'mongoose';
  * - `activityHistory`: An array of the user's activities.
  * - `bookmarkCollections`: An array of bookmark collections owned by the user.
  * - `followedBookmarkCollections`: An array of bookmark collections the user is following.
+ * - `isBanned`: A boolean indicating whether the user is banned.
+ * - `isShadowBanned`: A boolean indicating whether the user is shadow banned.
  */
 const userSchema: Schema = new Schema(
   {
@@ -68,6 +70,14 @@ const userSchema: Schema = new Schema(
         },
       ],
       default: [],
+    },
+    isBanned: {
+      type: Boolean,
+      default: false,
+    },
+    isShadowBanned: {
+      type: Boolean,
+      default: false,
     },
   },
   { collection: 'User' },

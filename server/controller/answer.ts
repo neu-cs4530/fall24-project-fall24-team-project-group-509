@@ -2,6 +2,8 @@ import express, { Response } from 'express';
 import { Answer, AnswerRequest, AnswerResponse, FakeSOSocket } from '../types';
 import {
   addAnswerToQuestion,
+  isUserBanned,
+  isUserShadowBanned,
   populateDocument,
   saveAnswer,
   updateActivityHistoryWithQuestionID,
@@ -53,8 +55,22 @@ const answerController = (socket: FakeSOSocket) => {
       return;
     }
 
-    const { qid } = req.body;
+    const { qid, username } = req.body;
     const ansInfo: Answer = req.body.ans;
+
+    const banned = await isUserBanned(username);
+    if (banned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to post since you did not adhere to community guidelines');
+      return;
+    }
 
     try {
       const { hasProfanity, censored } = await checkProfanity(ansInfo.text);
@@ -75,11 +91,7 @@ const answerController = (socket: FakeSOSocket) => {
       }
 
       await updateActivityHistoryWithQuestionID(ansInfo.ansBy, qid, 'answer', ansInfo.ansDateTime);
-      const populatedAns = await populateDocument(
-        ansFromDb._id?.toString(),
-        'answer',
-        ansInfo.ansBy,
-      );
+      const populatedAns = await populateDocument(ansFromDb._id?.toString(), 'answer', username);
 
       if (populatedAns && 'error' in populatedAns) {
         throw new Error(populatedAns.error as string);
