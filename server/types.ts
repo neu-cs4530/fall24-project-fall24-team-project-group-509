@@ -500,7 +500,9 @@ export type FlagReason = 'spam' | 'offensive language' | 'irrelevant content' | 
  * - reason: The reason for flagging.
  * - dateFlagged: The date and time when the post was flagged.
  */
+
 export interface Flag {
+  _id? : string;
   flaggedBy: string;
   reason: FlagReason;
   dateFlagged: Date;
@@ -509,6 +511,8 @@ export interface Flag {
   reviewedAt?: Date;
   postId: string;
   postType: 'question' | 'answer' | 'comment';
+  postText: string;
+  flaggedUser: string;
 }
 
 /**
@@ -540,10 +544,18 @@ export interface ReviewFlagRequest extends Request {
   };
 }
 
+export type FlagRepsonse = Flag | { error: string };
+
 export interface DeletePostRequest extends Request {
   body: {
     id: string;
     type: 'question' | 'answer' | 'comment';
     moderatorUsername: string;
+  };
+}
+
+export interface GetPendingFlagsRequest extends Request {
+  query: {
+    username: string;
   };
 }

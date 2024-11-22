@@ -19,6 +19,7 @@ import {
   UserResponse,
   Flag,
   FlagReason,
+  FlagRepsonse,
 } from '../types';
 import AnswerModel from './answers';
 import QuestionModel from './questions';
@@ -388,9 +389,16 @@ export const fetchAndIncrementQuestionViewsById = async (
       {
         path: 'answers',
         model: AnswerModel,
-        populate: { path: 'comments', model: CommentModel },
+        populate: [
+          { path: 'comments', model: CommentModel, populate: { path: 'flags', model: FlagModel } },
+          { path: 'flags', model: FlagModel },
+        ],
       },
-      { path: 'comments', model: CommentModel },
+      {
+        path: 'comments',
+        model: CommentModel,
+        populate: { path: 'flags', model: FlagModel },
+      },
       { path: 'flags', model: FlagModel },
     ]);
 
@@ -404,6 +412,20 @@ export const fetchAndIncrementQuestionViewsById = async (
         if (!answer.flags) return true;
         const answerFlaggedByUser = answer.flags.some(flag => flag.flaggedBy === username);
         return !answerFlaggedByUser;
+      });
+    }
+
+    // Exclude comments on answers flagged by the user
+    if (q && q.answers) {
+      q.answers = (q.answers as Answer[]).map(answer => {
+        if (answer.comments) {
+          answer.comments = (answer.comments as Comment[]).filter(comment => {
+            if (!comment.flags) return true;
+            const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
+            return !commentFlaggedByUser;
+          });
+        }
+        return answer;
       });
     }
 
@@ -1301,6 +1323,39 @@ export const flagPost = async (
   flaggedBy: string,
 ): Promise<QuestionResponse | AnswerResponse | CommentResponse> => {
   try {
+    // Retrieve the post being flagged
+    let post: Question | Answer | Comment | null = null;
+    if (type === 'question') {
+      post = await QuestionModel.findById(id);
+    } else if (type === 'answer') {
+      post = await AnswerModel.findById(id);
+    } else if (type === 'comment') {
+      post = await CommentModel.findById(id);
+    } else {
+      throw new Error('Invalid type specified');
+    }
+
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    // Get postText and flaggedUser
+    let postText = '';
+    let flaggedUser = '';
+    if (type === 'question') {
+      const question = post as Question;
+      postText = question.text;
+      flaggedUser = question.askedBy;
+    } else if (type === 'answer') {
+      const answer = post as Answer;
+      postText = answer.text;
+      flaggedUser = answer.ansBy;
+    } else if (type === 'comment') {
+      const comment = post as Comment;
+      postText = comment.text;
+      flaggedUser = comment.commentBy;
+    }
+
     // Create new flag document
     const newFlag = new FlagModel({
       flaggedBy,
@@ -1309,6 +1364,8 @@ export const flagPost = async (
       status: 'pending',
       postId: id,
       postType: type,
+      postText,
+      flaggedUser,
     });
     const savedFlag = await newFlag.save();
 
@@ -1333,8 +1390,6 @@ export const flagPost = async (
         { $push: { flags: savedFlag._id } },
         { new: true },
       );
-    } else {
-      throw new Error('Invalid type specified');
     }
 
     if (!updatedPost) {
@@ -1344,6 +1399,20 @@ export const flagPost = async (
     return updatedPost;
   } catch (error) {
     return { error: `Error when flagging post: ${(error as Error).message}` };
+  }
+};
+
+/**
+ * Retrieves all pending flags.
+ *
+ * @returns A Promise that resolves to an array of pending flags or an error message.
+ */
+export const getPendingFlags = async (): Promise<Flag[] | { error: string }> => {
+  try {
+    const flags = await FlagModel.find({ status: 'pending' });
+    return flags;
+  } catch (error) {
+    return { error: `Error when retrieving pending flags: ${(error as Error).message}` };
   }
 };
 
@@ -1432,5 +1501,25 @@ export const deletePost = async (
     return { success: true };
   } catch (error) {
     return { success: false, message: (error as Error).message };
+  }
+};
+
+/**
+ * The function to get a flag by id
+ *
+ * @param id - the id of the flag
+ * @returns A Promise that resolves to the flag , or an error message if the operation fails.
+ */
+
+export const getFlag = async (id: string): Promise<FlagRepsonse> => {
+  try {
+    const flag = await FlagModel.findOne({ _id: id });
+
+    if (!flag) {
+      throw new Error('Flag not found');
+    }
+    return flag;
+  } catch (error) {
+    return { error: `Error when retrieving flag: ${(error as Error).message}` };
   }
 };

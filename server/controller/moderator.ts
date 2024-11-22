@@ -1,8 +1,8 @@
 import express, { Response } from 'express';
-import { GetFlaggedPostsRequest, ReviewFlagRequest, DeletePostRequest } from '../types';
+import { GetPendingFlagsRequest, ReviewFlagRequest, DeletePostRequest } from '../types';
 import {
   MODERATORUSERNAME,
-  getFlaggedPosts,
+  getPendingFlags,
   deletePost,
   markFlagAsReviewed,
 } from '../models/application';
@@ -10,8 +10,8 @@ import {
 const moderatorController = () => {
   const router = express.Router();
 
-  const getFlaggedPostsRoute = async (
-    req: GetFlaggedPostsRequest,
+  const getPendingFlagsRoute = async (
+    req: GetPendingFlagsRequest,
     res: Response,
   ): Promise<void> => {
     const { username } = req.query;
@@ -22,10 +22,13 @@ const moderatorController = () => {
     }
 
     try {
-      const flaggedPosts = await getFlaggedPosts();
-      res.json(flaggedPosts);
+      const flags = await getPendingFlags();
+      if ('error' in flags) {
+        throw new Error(flags.error);
+      }
+      res.json(flags);
     } catch (err) {
-      res.status(500).send(`Error when fetching flagged posts: ${(err as Error).message}`);
+      res.status(500).send(`Error when fetching pending flags: ${(err as Error).message}`);
     }
   };
 
@@ -79,7 +82,7 @@ const moderatorController = () => {
     }
   };
 
-  router.get('/flaggedPosts', getFlaggedPostsRoute);
+  router.get('/pendingFlags', getPendingFlagsRoute);
   router.post('/deletePost', deletePostRoute);
   router.post('/reviewFlag', reviewFlagRoute);
 
