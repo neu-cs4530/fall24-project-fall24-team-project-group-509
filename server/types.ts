@@ -257,6 +257,14 @@ export interface ServerToClientEvents {
 }
 
 /**
+ * Interface representing the possible events that the client can emit to the server.
+ */
+export interface ClientToServerEvents {
+  followCollection: (collectionId: string, username: string) => void;
+  unfollowCollection: (collectionId: string, username: string) => void;
+}
+
+/**
  * Interface representing a bookmark, which contains:
  * - postId - The unique identifier of the post (question or answer).
  * - savedAt - The date and time when the post was bookmarked.
@@ -294,11 +302,13 @@ export interface BookmarkCollection {
 /**
  * Interface representing a user of the platform, which contains:
  * - username - The unique identifier for the user.
+ * - password - The password for the user.
  * - bio - A short description of the user. Optional field.
  * - profilePictureURL - The URL of the user's profile picture (if they have one). Optional field.
  * - activityHistory - The history of the user's activity on the platform.
  * - bookmarkCollections - An array of bookmark collections owned by the user.
  * - followedBookmarkCollections - An array of IDs of bookmark collections the user is following.
+ * - FollowUpdateNotifications - An array of notifications for when a bookmark collections the user is following is updated. 
  */
 export interface User {
   username: string;
@@ -313,6 +323,25 @@ export interface User {
   }>;
   bookmarkCollections?: BookmarkCollection[];
   followedBookmarkCollections?: ObjectId[];
+  followUpdateNotifications?: FollowNotificationLog[];
+}
+
+/**
+ * Interface representing a notification log for when a bookmark collection a user is following is updated, which contains:
+ * 
+ * - _id - The unique identifier for the notification log. Optional field.
+ * - qTitle - The title of the question that was added to the bookmark collection.
+ * - collectionId - The unique identifier of the bookmark collection that was updated.
+ * - bookmarkCollectionTitle - The title of the bookmark collection that was updated.
+ * - createdAt - The date and time when the notification was created.
+ */
+export interface FollowNotificationLog {
+  _id?: ObjectId;
+  qTitle: string;
+  collectionId: string;
+  bookmarkCollectionTitle: string;
+  createdAt: Date;
+
 }
 
 /**
@@ -379,7 +408,7 @@ export interface GetBookmarksRequest extends Request {
     requesterUsername: string;
   };
   query: {
-    sortOption: BookmarkSortOption
+    sortOption: BookmarkSortOption;
   };
 }
 

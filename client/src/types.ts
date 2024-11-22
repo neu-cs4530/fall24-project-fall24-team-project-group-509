@@ -19,7 +19,8 @@ export interface User {
  * - bio: A short description of the user.
  * - profilePictureURL: The URL of the user's profile picture.
  * - activityHistory: The list of questions the user has interacted with.
- * - bookmarks: The collections of posts the user has saved.
+ * - bookmarks: The bookmark collections the user has saved.
+ * - followedBookmarkCollections: The bookmark collections the user is following
  */
 export interface UserProfile {
   username: string;
@@ -32,6 +33,9 @@ export interface UserProfile {
     createdAt: Date;
   }>;
   bookmarks: BookmarkCollection[];
+  followedBookmarkCollections: BookmarkCollection[];
+  followUpdateNotifications: FollowNotificationLog[];
+
   // add fields for activityHistory
   // add fields for bookmarks
 }
@@ -184,6 +188,14 @@ export interface ServerToClientEvents {
 }
 
 /**
+ * Interface representing the possible events that the client can emit to the server.
+ */
+export interface ClientToServerEvents {
+  followCollection: (collectionId: string, username: string) => void;
+  unfollowCollection: (collectionId: string, username: string) => void;
+}
+
+/**
  * Interface representing a bookmark collection, which contains:
  * - _id - The unique identifier for the bookmark collection. Optional field.
  * - title - The title of the bookmark collection.
@@ -214,4 +226,20 @@ export interface Bookmark {
   qTitle: string;
   savedAt: Date;
   numAnswers?: number;
+}
+
+/**
+ * Interface representing a notofication log for when a bookmark collection a user follws is updated, which contains:
+ * - _id - The unique identifier for the notification log. Optional field.
+ * - qTitle - The title of the question that was added to the bookmark collection.
+ * - collectionId - The unique identifier for the bookmark collection that was updated.
+ * - bookmarkCollectionTitle - The title of the bookmark collection that was updated.
+ * - createdAt - The date and time when the notification log was created.
+ */
+export interface FollowNotificationLog {
+  _id?: string;
+  qTitle: string;
+  collectionId: string;
+  bookmarkCollectionTitle: string;
+  createdAt: Date;
 }

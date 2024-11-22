@@ -1002,6 +1002,27 @@ export const addQuestionToBookmarkCollection = async (
       throw new Error('Bookmark collection not found');
     }
 
+    // need to access the list of followers for the bookmark collection
+    // and need to add a FollowNotificationLog to each follower's followUpdateNotifications
+    const collectionFollowers = updatedCollection.followers;
+    if (collectionFollowers && collectionFollowers.length > 0) {
+      collectionFollowers.forEach(async follower => {
+        await UserModel.findOneAndUpdate(
+          { username: follower },
+          {
+            $push: {
+              followUpdateNotifications: {
+                qTitle: questionTitle,
+                collectionId,
+                bookmarkCollectionTitle: updatedCollection.title,
+                createdAt: new Date(),
+              },
+            },
+          },
+        );
+      });
+    }
+
     return updatedCollection;
   } catch (error) {
     return {
