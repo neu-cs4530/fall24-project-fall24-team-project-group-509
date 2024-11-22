@@ -117,6 +117,7 @@ const useAnswerPage = () => {
      * @param answer - The updated answer object.
      */
     const handleAnswerUpdate = ({ qid: id, answer }: { qid: string; answer: Answer }) => {
+      // need to do filtering here for flagged answers
       if (id === questionID) {
         setQuestion(prevQuestion =>
           prevQuestion
@@ -140,10 +141,13 @@ const useAnswerPage = () => {
       result: Question | Answer;
       type: 'question' | 'answer';
     }) => {
+      // need to do filtering here
+      // need to filter the question/answer object received from backend
       if (type === 'question') {
         const questionResult = result as Question;
 
         if (questionResult._id === questionID) {
+          // need to do filtering here before the setQuestion
           setQuestion(questionResult);
         }
       } else if (type === 'answer') {
@@ -153,6 +157,7 @@ const useAnswerPage = () => {
               {
                 ...prevQuestion,
                 answers: prevQuestion.answers.map(a =>
+                  // filter out flagged stuff
                   a._id === result._id ? (result as Answer) : a,
                 ),
               }
@@ -168,7 +173,12 @@ const useAnswerPage = () => {
      */
     const handleViewsUpdate = (q: Question) => {
       if (q._id === questionID) {
+        // const fileteredQuestion = q.answers.filter(a => !a.flagged);
+        // filteredQuestion = q.comments.filter(c => !c.flagged);
+        // also need to fiter comments in answers
+        // make a helper for filtering
         setQuestion(q);
+        // at the end do: setQuestion(filteredQuestion)
       }
     };
 

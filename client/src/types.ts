@@ -64,12 +64,14 @@ export type OrderType = keyof typeof orderTypeDisplayName;
  * text - The text of the comment.
  * commentBy - Username of the author of the comment.
  * commentDateTime - Time at which the comment was created.
+ * flags - Flags associated with the comment.
  */
 export interface Comment {
   _id?: string;
   text: string;
   commentBy: string;
   commentDateTime: Date;
+  flags?: Flag[];
 }
 
 /**
@@ -114,6 +116,7 @@ export interface VoteData {
  * - ansBy - The username of the user who wrote the answer
  * - ansDateTime - The date and time when the answer was created
  * - comments - Comments associated with the answer.
+ * - flags - Flags associated with the answer. Optional field
  */
 export interface Answer {
   _id?: string;
@@ -121,7 +124,10 @@ export interface Answer {
   ansBy: string;
   ansDateTime: Date;
   comments: Comment[];
+  flags?: Flag[];
 }
+
+// easiest is to filter on the frontend, need to add flag type in client
 
 /**
  * Interface representing the structure of a Question object.
@@ -137,6 +143,7 @@ export interface Answer {
  * - upVotes - An array of usernames who upvoted the question.
  * - downVotes - An array of usernames who downvoted the question.
  * - comments - Comments associated with the question.
+ * - flags - Flags associated with the question.
  */
 export interface Question {
   _id?: string;
@@ -150,6 +157,7 @@ export interface Question {
   upVotes: string[];
   downVotes: string[];
   comments: Comment[];
+  flags?: Flag[];
 }
 
 /**
@@ -242,4 +250,20 @@ export interface FollowNotificationLog {
   collectionId: string;
   bookmarkCollectionTitle: string;
   createdAt: Date;
+}
+
+export type FlagReason = 'spam' | 'offensive language' | 'irrelevant content' | 'other';
+
+/**
+ * Interface representing a flag, which contains:
+ * - _id - The unique identifier for the flag. Optional field.
+ * - flaggedBy - The username of the user who flagged the content.
+ * - reason - The reason for flagging the content. One of 'spam', 'offensive language', 'irrelevant content', or 'other'.
+ * - dateFlagged - The date and time when the content was flagged.
+ */
+export interface Flag {
+  _id: string;
+  flaggedBy: string;
+  reason: FlagReason;
+  dateFlagged: Date;
 }
