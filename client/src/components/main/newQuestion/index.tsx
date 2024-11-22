@@ -21,6 +21,7 @@ const NewQuestionPage = () => {
     textErr,
     tagErr,
     postQuestion,
+    errorMessage,
   } = useNewQuestion();
 
   return (
@@ -49,6 +50,7 @@ const NewQuestionPage = () => {
         setState={setTagNames}
         err={tagErr}
       />
+      {errorMessage && <p className='error-message'>{errorMessage}</p>}
       <div className='btn_indicator_container'>
         <button
           className='form_postBtn'

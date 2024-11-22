@@ -17,6 +17,7 @@ import {
   getUserByUsername,
   searchUsersByUsername,
 } from '../models/application';
+import { checkProfanity } from '../profanityFilter';
 
 const userController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -93,6 +94,12 @@ const userController = (socket: FakeSOSocket) => {
     const { bio } = req.body;
 
     try {
+      const { hasProfanity, censored } = await checkProfanity(bio);
+
+      if (hasProfanity) {
+        res.status(400).send(`Profanity detected in bio: ${censored}`);
+        return;
+      }
       const result = await addUserBio(username, bio);
       if ('error' in result) {
         throw new Error(result.error as string);

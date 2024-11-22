@@ -21,6 +21,10 @@ const answerSchema: Schema = new Schema(
       type: Date,
     },
     comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
+    flags: {
+      type: [{ type: Schema.Types.ObjectId, ref: 'Flag' }],
+      default: [],
+    },
   },
   { collection: 'Answer' },
 );

@@ -75,7 +75,7 @@ const bookmarkController = (socket: FakeSOSocket) => {
         throw new Error(updatedCollection.error);
       }
 
-      // // Emit collection update to followers
+      // Emit collection update to followers
       // socket.emit('collectionUpdate', {
       //   collectionId,
       //   updatedCollection,
