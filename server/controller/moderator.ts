@@ -4,6 +4,7 @@ import {
   ReviewFlagRequest,
   DeletePostRequest,
   BanUserRequest,
+  GetFlagByIdRequest,
 } from '../types';
 import {
   MODERATORUSERNAME,
@@ -14,6 +15,7 @@ import {
   unbanUser,
   shadowBanUser,
   unshadowBanUser,
+  getFlag,
 } from '../models/application';
 
 const moderatorController = () => {
@@ -38,6 +40,28 @@ const moderatorController = () => {
       res.json(flags);
     } catch (err) {
       res.status(500).send(`Error when fetching pending flags: ${(err as Error).message}`);
+    }
+  };
+
+  const getFlagByIdRoute = async (req: GetFlagByIdRequest, res: Response): Promise<void> => {
+    const { fid } = req.params;
+    const { username } = req.query;
+    if (!username || !MODERATORUSERNAME.includes(username)) {
+      res.status(403).send('User is not authorized to perform this action');
+      return;
+    }
+    if (!fid) {
+      res.status(400).send('Invalid request');
+      return;
+    }
+    try {
+      const flag = await getFlag(fid);
+      if ('error' in flag) {
+        throw new Error(flag.error);
+      }
+      res.json(flag);
+    } catch (err) {
+      res.status(500).send(`Error when fetching flag: ${(err as Error).message}`);
     }
   };
 
@@ -195,6 +219,7 @@ const moderatorController = () => {
   router.post('/shadowBanUser', shadowBanUserRoute);
   router.post('/unshadowBanUser', unshadowBanUserRoute);
   router.get('/pendingFlags', getPendingFlagsRoute);
+  router.get('/getFlag/:fid', getFlagByIdRoute);
   router.post('/deletePost', deletePostRoute);
   router.post('/reviewFlag', reviewFlagRoute);
 

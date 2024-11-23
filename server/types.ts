@@ -534,6 +534,13 @@ export type FlagReason = 'spam' | 'offensive language' | 'irrelevant content' | 
  * - flaggedBy: The username of the user who flagged the post.
  * - reason: The reason for flagging.
  * - dateFlagged: The date and time when the post was flagged.
+ * - status: The status of the flag, either 'pending' or 'reviewed'.
+ * - reviewedBy: The username of the moderator who reviewed the flag. Optional field.
+ * - reviewedAt: The date and time when the flag was reviewed. Optional field.
+ * - postId: The unique identifier of the post being flagged. This can be either a question, comment, or answer.
+ * - postType: The type of the post being flagged, either 'question', 'answer', or 'comment'.
+ * - postText: The text of the post being flagged.
+ * - flaggedUser: The username of the user who created the post being flagged.
  */
 
 export interface Flag {
@@ -572,6 +579,19 @@ export interface GetFlaggedPostsRequest extends Request {
   };
 }
 
+/**
+ * Interface for the request to get a flag object by its ID.
+ * - fid: The unique identifier of the flag.
+ */
+export interface GetFlagByIdRequest extends Request {
+  params: {
+    fid: string;
+  };
+  query: {
+    username: string;
+  };
+}
+
 export interface ReviewFlagRequest extends Request {
   body: {
     flagId: string;
@@ -579,7 +599,7 @@ export interface ReviewFlagRequest extends Request {
   };
 }
 
-export type FlagRepsonse = Flag | { error: string };
+export type FlagResponse = Flag | { error: string };
 
 export interface DeletePostRequest extends Request {
   body: {

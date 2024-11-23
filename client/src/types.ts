@@ -260,10 +260,24 @@ export type FlagReason = 'spam' | 'offensive language' | 'irrelevant content' | 
  * - flaggedBy - The username of the user who flagged the content.
  * - reason - The reason for flagging the content. One of 'spam', 'offensive language', 'irrelevant content', or 'other'.
  * - dateFlagged - The date and time when the content was flagged.
+ * - status - The status of the flag. One of 'pending' or 'reviewed'.
+ * - reviewedBy - The username of the user who reviewed the flag. Optional field.
+ * - reviewedAt - The date and time when the flag was reviewed. Optional field.
+ * - postId - The unique identifier for the post that was flagged.
+ * - postType - The type of the post that was flagged. One of 'question', 'answer', or 'comment'.
+ * - postText - The text of the post that was flagged.
+ * - flaggedUser - The username of the user who was flagged.
  */
 export interface Flag {
-  _id: string;
+  _id?: string;
   flaggedBy: string;
   reason: FlagReason;
   dateFlagged: Date;
+  status: 'pending' | 'reviewed';
+  reviewedBy?: string;
+  reviewedAt?: Date;
+  postId: string;
+  postType: 'question' | 'answer' | 'comment';
+  postText: string;
+  flaggedUser: string;
 }

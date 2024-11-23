@@ -19,7 +19,7 @@ import {
   UserResponse,
   Flag,
   FlagReason,
-  FlagRepsonse,
+  FlagResponse,
 } from '../types';
 import AnswerModel from './answers';
 import QuestionModel from './questions';
@@ -1521,7 +1521,7 @@ export const deletePost = async (
  * @returns A Promise that resolves to the flag , or an error message if the operation fails.
  */
 
-export const getFlag = async (id: string): Promise<FlagRepsonse> => {
+export const getFlag = async (id: string): Promise<FlagResponse> => {
   try {
     const flag = await FlagModel.findOne({ _id: id });
 
