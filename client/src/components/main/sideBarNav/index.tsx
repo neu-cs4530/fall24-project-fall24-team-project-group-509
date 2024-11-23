@@ -32,7 +32,7 @@ const SideBarNav = () => {
         User Profile
       </NavLink>
       <NavLink
-        to='/flaggedPosts'
+        to='/flags'
         id='menu_flaggedPosts'
         className={({ isActive }) => `menu_button ${isActive ? 'menu_selected' : ''}`}>
         Flagged Posts

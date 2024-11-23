@@ -198,6 +198,7 @@ export interface ServerToClientEvents {
   ) => void;
   bookmarkUpdate: (update: BookmarkCollection[]) => void;
   questionDeletionUpdate: (update: string) => void;
+  flagUpdate: (update: Flag) => void;
 }
 
 /**
