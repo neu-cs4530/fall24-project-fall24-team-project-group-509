@@ -21,6 +21,9 @@ export interface User {
  * - activityHistory: The list of questions the user has interacted with.
  * - bookmarks: The bookmark collections the user has saved.
  * - followedBookmarkCollections: The bookmark collections the user is following
+ * - isBanned: A boolean indicating whether the user is banned.
+ * - isShadowBanned: A boolean indicating whether the user is shadow banned.
+ * - followUpdateNotifications: The list of notifications for updates to followed bookmark collections.
  */
 export interface UserProfile {
   username: string;
@@ -34,6 +37,8 @@ export interface UserProfile {
   }>;
   bookmarks: BookmarkCollection[];
   followedBookmarkCollections: BookmarkCollection[];
+  isBanned: boolean;
+  isShadowBanned: boolean;
   followUpdateNotifications: FollowNotificationLog[];
 
   // add fields for activityHistory
