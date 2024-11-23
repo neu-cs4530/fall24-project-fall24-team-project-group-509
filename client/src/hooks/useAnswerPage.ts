@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Comment, Answer, Question, VoteData } from '../types';
 import useUserContext from './useUserContext';
 import addComment from '../services/commentService';
@@ -20,6 +20,44 @@ const useAnswerPage = () => {
   const { user, socket } = useUserContext();
   const [questionID, setQuestionID] = useState<string>(qid || '');
   const [question, setQuestion] = useState<Question | null>(null);
+
+  /**
+   * Filters out a question's flagged content based on the user's username.
+   * @param q - The question object to be filtered
+   * @returns - The question object with flagged content filtered out
+   */
+  const filterFlaggedContentOfQuestion = useCallback(
+    (q: Question) => {
+      const filteredQuestion: Question = {
+        ...q,
+        answers: (q.answers as Answer[]).map(answer => ({
+          ...answer,
+          comments: answer.comments.filter(comment => {
+            if (!comment.flags) return true;
+            const commentFlaggedByUser = comment.flags.some(
+              flag => flag.flaggedBy === user.username,
+            );
+            return !commentFlaggedByUser;
+          }),
+        })),
+        comments: q.comments.filter(comment => {
+          if (!comment.flags) return true;
+          const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === user.username);
+          return !commentFlaggedByUser;
+        }),
+      };
+
+      // Filter out flagged answers by the user
+      filteredQuestion.answers = filteredQuestion.answers.filter(answer => {
+        if (!answer.flags) return true;
+        const answerFlaggedByUser = answer.flags.some(flag => flag.flaggedBy === user.username);
+        return !answerFlaggedByUser;
+      });
+
+      return filteredQuestion;
+    },
+    [user.username],
+  );
 
   /**
    * Function to handle navigation to the "New Answer" page.
@@ -76,16 +114,20 @@ const useAnswerPage = () => {
     targetType: 'question' | 'answer',
     targetId: string | undefined,
   ) => {
-    try {
-      if (targetId === undefined) {
-        throw new Error('No target ID provided.');
-      }
+    // try {
+    //   if (targetId === undefined) {
+    //     throw new Error('No target ID provided.');
+    //   }
 
-      await addComment(targetId, targetType, comment);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error adding comment:', error);
+    //   await addComment(targetId, targetType, comment);
+    // } catch (error) {
+    //   // eslint-disable-next-line no-console
+    //   console.error('Error adding comment:', error);
+    // }
+    if (targetId === undefined) {
+      return;
     }
+    await addComment(targetId, targetType, comment);
   };
 
   useEffect(() => {
@@ -95,7 +137,13 @@ const useAnswerPage = () => {
     const fetchData = async () => {
       try {
         const res = await getQuestionById(questionID, user.username);
-        setQuestion(res || null);
+        if (res) {
+          const filteredQuestion = filterFlaggedContentOfQuestion(res);
+          setQuestion(filteredQuestion);
+        } else {
+          setQuestion(res || null);
+        }
+        // setQuestion(res || null);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Error fetching question:', error);
@@ -104,7 +152,7 @@ const useAnswerPage = () => {
 
     // eslint-disable-next-line no-console
     fetchData().catch(e => console.log(e));
-  }, [questionID, user.username]);
+  }, [filterFlaggedContentOfQuestion, questionID, user.username]);
 
   useEffect(() => {
     /**
@@ -113,6 +161,7 @@ const useAnswerPage = () => {
      * @param answer - The updated answer object.
      */
     const handleAnswerUpdate = ({ qid: id, answer }: { qid: string; answer: Answer }) => {
+      // need to do filtering here for flagged answers
       if (id === questionID) {
         setQuestion(prevQuestion =>
           prevQuestion
@@ -136,20 +185,35 @@ const useAnswerPage = () => {
       result: Question | Answer;
       type: 'question' | 'answer';
     }) => {
+      // need to do filtering here
+      // need to filter the question/answer object received from backend
       if (type === 'question') {
         const questionResult = result as Question;
 
         if (questionResult._id === questionID) {
-          setQuestion(questionResult);
+          // need to do filtering here before the setQuestion
+          const filteredQuestion = filterFlaggedContentOfQuestion(questionResult);
+          // setQuestion(questionResult);
+          setQuestion(filteredQuestion);
         }
       } else if (type === 'answer') {
+        const filteredAnswers: Answer = {
+          ...(result as Answer),
+          comments: result.comments.filter(comment => {
+            if (!comment.flags) return true;
+            const commentFlaggedByUser = comment.flags.some(
+              flag => flag.flaggedBy === user.username,
+            );
+            return !commentFlaggedByUser;
+          }),
+        };
         setQuestion(prevQuestion =>
           prevQuestion
             ? // Updates answers with a matching object ID, and creates a new Question object
               {
                 ...prevQuestion,
                 answers: prevQuestion.answers.map(a =>
-                  a._id === result._id ? (result as Answer) : a,
+                  a._id === result._id ? filteredAnswers : a,
                 ),
               }
             : prevQuestion,
@@ -164,7 +228,14 @@ const useAnswerPage = () => {
      */
     const handleViewsUpdate = (q: Question) => {
       if (q._id === questionID) {
-        setQuestion(q);
+        // const fileteredQuestion = q.answers.filter(a => !a.flagged);
+        // filteredQuestion = q.comments.filter(c => !c.flagged);
+        // also need to fiter comments in answers
+        // make a helper for filtering
+        const filteredQuestion = filterFlaggedContentOfQuestion(q);
+        // setQuestion(q);
+        // at the end do: setQuestion(filteredQuestion)
+        setQuestion(filteredQuestion);
       }
     };
 
@@ -198,7 +269,7 @@ const useAnswerPage = () => {
       socket.off('commentUpdate', handleCommentUpdate);
       socket.off('voteUpdate', handleVoteUpdate);
     };
-  }, [questionID, socket]);
+  }, [filterFlaggedContentOfQuestion, questionID, socket, user.username]);
 
   return {
     questionID,

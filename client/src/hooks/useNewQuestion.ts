@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AxiosError } from 'axios';
 import { validateHyperlink } from '../tool';
 import { addQuestion } from '../services/questionService';
 import useUserContext from './useUserContext';
@@ -26,6 +27,8 @@ const useNewQuestion = () => {
   const [titleErr, setTitleErr] = useState<string>('');
   const [textErr, setTextErr] = useState<string>('');
   const [tagErr, setTagErr] = useState<string>('');
+
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   /**
    * Function to validate the form before submitting the question.
@@ -104,10 +107,26 @@ const useNewQuestion = () => {
       comments: [],
     };
 
-    const res = await addQuestion(question);
+    // const res = await addQuestion(question);
 
-    if (res && res._id) {
-      navigate('/home');
+    /// if resres._id    //   navigate('/home');
+    // }
+    try {
+      const res = await addQuestion(question);
+
+      if (res && res._id) {
+        navigate('/home');
+      }
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+        if (error.response.status === 400) {
+          setErrorMessage('Profanity detected');
+        } else {
+          setErrorMessage('An error occurred while posting the question');
+        }
+      } else {
+        setErrorMessage('An error occurred while posting the question');
+      }
     }
   };
 
@@ -122,6 +141,7 @@ const useNewQuestion = () => {
     textErr,
     tagErr,
     postQuestion,
+    errorMessage,
   };
 };
 

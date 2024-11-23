@@ -315,9 +315,16 @@ export const populateDocument = async (
         {
           path: 'answers',
           model: AnswerModel,
-          populate: { path: 'comments', model: CommentModel },
+          populate: [
+            {
+              path: 'comments',
+              model: CommentModel,
+              populate: { path: 'flags', model: FlagModel },
+            },
+            { path: 'flags', model: FlagModel },
+          ],
         },
-        { path: 'comments', model: CommentModel },
+        { path: 'comments', model: CommentModel, populate: { path: 'flags', model: FlagModel } },
         { path: 'flags', model: FlagModel },
       ]);
       if (result) {
@@ -337,7 +344,7 @@ export const populateDocument = async (
       }
     } else if (type === 'answer') {
       result = await AnswerModel.findOne({ _id: id }).populate([
-        { path: 'comments', model: CommentModel },
+        { path: 'comments', model: CommentModel, populate: { path: 'flags', model: FlagModel } },
         { path: 'flags', model: FlagModel },
       ]);
       if (result) {
@@ -403,38 +410,6 @@ export const fetchAndIncrementQuestionViewsById = async (
 
     if (q && q.flags && q.flags.some(flag => flag.flaggedBy === username)) {
       return { error: 'Question has been flagged by the user' };
-    }
-
-    // Exclude answers flagged by the user
-    if (q && q.answers) {
-      q.answers = (q.answers as Answer[]).filter(answer => {
-        if (!answer.flags) return true;
-        const answerFlaggedByUser = answer.flags.some(flag => flag.flaggedBy === username);
-        return !answerFlaggedByUser;
-      });
-    }
-
-    // Exclude comments on answers flagged by the user
-    if (q && q.answers) {
-      q.answers = (q.answers as Answer[]).map(answer => {
-        if (answer.comments) {
-          answer.comments = (answer.comments as Comment[]).filter(comment => {
-            if (!comment.flags) return true;
-            const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
-            return !commentFlaggedByUser;
-          });
-        }
-        return answer;
-      });
-    }
-
-    // Exclude comments flagged by the user
-    if (q && q.comments) {
-      q.comments = (q.comments as Comment[]).filter(comment => {
-        if (!comment.flags) return true;
-        const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
-        return !commentFlaggedByUser;
-      });
     }
 
     return q;
@@ -1000,6 +975,27 @@ export const addQuestionToBookmarkCollection = async (
 
     if (!updatedCollection) {
       throw new Error('Bookmark collection not found');
+    }
+
+    // need to access the list of followers for the bookmark collection
+    // and need to add a FollowNotificationLog to each follower's followUpdateNotifications
+    const collectionFollowers = updatedCollection.followers;
+    if (collectionFollowers && collectionFollowers.length > 0) {
+      collectionFollowers.forEach(async follower => {
+        await UserModel.findOneAndUpdate(
+          { username: follower },
+          {
+            $push: {
+              followUpdateNotifications: {
+                qTitle: questionTitle,
+                collectionId,
+                bookmarkCollectionTitle: updatedCollection.title,
+                createdAt: new Date(),
+              },
+            },
+          },
+        );
+      });
     }
 
     return updatedCollection;
