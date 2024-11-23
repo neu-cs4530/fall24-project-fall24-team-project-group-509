@@ -35,7 +35,6 @@ export interface AnswerRequest extends Request {
   body: {
     qid: string;
     ans: Answer;
-    username: string;
   };
 }
 
@@ -123,10 +122,7 @@ export interface FindQuestionByIdRequest extends Request {
  * - body - The question being added.
  */
 export interface AddQuestionRequest extends Request {
-  body: {
-    question: Question;
-    username: string; // The username of the user making the request
-  };
+  body: Question;
 }
 
 /**
@@ -169,7 +165,6 @@ export interface AddCommentRequest extends Request {
     id: string;
     type: 'question' | 'answer';
     comment: Comment;
-    username: string;
   };
 }
 

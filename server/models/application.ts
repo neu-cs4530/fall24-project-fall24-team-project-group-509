@@ -291,14 +291,12 @@ export const filterQuestionsBySearch = (qlist: Question[], search: string): Ques
  *
  * @param id The ID of the document to populate.
  * @param type The type of the document, either 'question' or 'answer'.
- * @param username The username of the user making the request.
  *
  * @returns A Promise that resolves to the populated document or an error message.
  */
 export const populateDocument = async (
   id: string | undefined,
   type: 'question' | 'answer',
-  username: string,
 ): Promise<QuestionResponse | AnswerResponse> => {
   try {
     if (!id) {
@@ -328,43 +326,50 @@ export const populateDocument = async (
         { path: 'comments', model: CommentModel, populate: { path: 'flags', model: FlagModel } },
         { path: 'flags', model: FlagModel },
       ]);
-      if (result) {
-        // Exclude answers flagged by the user
-        const question = result as Question;
-        question.answers = (question.answers as Answer[]).filter(answer => {
-          if (!answer.flags) return true;
-          const answerFlaggedByUser = answer.flags.some(flag => flag.flaggedBy === username);
-          return !answerFlaggedByUser;
-        });
-        // Exclude comments flagged by the user
-        question.comments = (question.comments as Comment[]).filter(comment => {
-          if (!comment.flags) return true;
-          const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
-          return !commentFlaggedByUser;
-        });
-      }
     } else if (type === 'answer') {
       result = await AnswerModel.findOne({ _id: id }).populate([
         { path: 'comments', model: CommentModel, populate: { path: 'flags', model: FlagModel } },
         { path: 'flags', model: FlagModel },
       ]);
-      if (result) {
-        // Exclude comments flagged by the user
-        const answer = result as Answer;
-        answer.comments = (answer.comments as Comment[]).filter(comment => {
-          if (!comment.flags) return true;
-          const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
-          return !commentFlaggedByUser;
-        });
-      }
     }
+
+    //   if (result) {
+    //     // Exclude answers flagged by the user
+    //     const question = result as Question;
+    //     question.answers = (question.answers as Answer[]).filter(answer => {
+    //       if (!answer.flags) return true;
+    //       const answerFlaggedByUser = answer.flags.some(flag => flag.flaggedBy === username);
+    //       return !answerFlaggedByUser;
+    //     });
+    //     // Exclude comments flagged by the user
+    //     question.comments = (question.comments as Comment[]).filter(comment => {
+    //       if (!comment.flags) return true;
+    //       const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
+    //       return !commentFlaggedByUser;
+    //     });
+    //   }
+    // } else if (type === 'answer') {
+    //   result = await AnswerModel.findOne({ _id: id }).populate([
+    //     { path: 'comments', model: CommentModel, populate: { path: 'flags', model: FlagModel } },
+    //     { path: 'flags', model: FlagModel },
+    //   ]);
+    //   if (result) {
+    //     // Exclude comments flagged by the user
+    //     const answer = result as Answer;
+    //     answer.comments = (answer.comments as Comment[]).filter(comment => {
+    //       if (!comment.flags) return true;
+    //       const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
+    //       return !commentFlaggedByUser;
+    //     });
+    //   }
+
     if (!result) {
       throw new Error(`Failed to fetch and populate a ${type}`);
     }
     // Exclude the post itself if it is flagged by the user
-    if (result.flags && result.flags.some((flag: Flag) => flag.flaggedBy === username)) {
-      return { error: 'Post has been flagged by the user' };
-    }
+    // if (result.flags && result.flags.some((flag: Flag) => flag.flaggedBy === username)) {
+    //   return { error: 'Post has been flagged by the user' };
+    // }
     return result;
   } catch (error) {
     return { error: `Error when fetching and populating a document: ${(error as Error).message}` };
