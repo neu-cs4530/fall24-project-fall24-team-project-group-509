@@ -128,20 +128,20 @@ const questionController = (socket: FakeSOSocket) => {
    * @returns A Promise that resolves to void.
    */
   const addQuestion = async (req: AddQuestionRequest, res: Response): Promise<void> => {
-    if (!isQuestionBodyValid(req.body.question || !req.body.username)) {
-      res.status(400).send('Invalid question body or missing username');
+    if (!isQuestionBodyValid(req.body)) {
+      res.status(400).send('Invalid question body');
       return;
     }
-    const { question } = req.body;
-    const { username } = req.body;
 
-    const banned = await isUserBanned(username);
+    const question: Question = req.body;
+
+    const banned = await isUserBanned(question.askedBy);
     if (banned) {
       res.status(403).send('Your account has been banned');
       return;
     }
 
-    const shadowBanned = await isUserShadowBanned(username);
+    const shadowBanned = await isUserShadowBanned(question.askedBy);
     if (shadowBanned) {
       res
         .status(403)
@@ -177,11 +177,7 @@ const questionController = (socket: FakeSOSocket) => {
         throw new Error(result.error);
       }
 
-      const populatedQuestion = await populateDocument(
-        result._id?.toString(),
-        'question',
-        username,
-      );
+      const populatedQuestion = await populateDocument(result._id?.toString(), 'question');
       if (populatedQuestion && 'error' in populatedQuestion) {
         throw new Error(populatedQuestion.error);
       }
