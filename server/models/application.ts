@@ -19,6 +19,7 @@ import {
   UserResponse,
   Flag,
   FlagReason,
+  FlagResponse,
 } from '../types';
 import AnswerModel from './answers';
 import QuestionModel from './questions';
@@ -1332,6 +1333,39 @@ export const flagPost = async (
   flaggedBy: string,
 ): Promise<QuestionResponse | AnswerResponse | CommentResponse> => {
   try {
+    // Retrieve the post being flagged
+    let post: Question | Answer | Comment | null = null;
+    if (type === 'question') {
+      post = await QuestionModel.findById(id);
+    } else if (type === 'answer') {
+      post = await AnswerModel.findById(id);
+    } else if (type === 'comment') {
+      post = await CommentModel.findById(id);
+    } else {
+      throw new Error('Invalid type specified');
+    }
+
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    // Get postText and flaggedUser
+    let postText = '';
+    let flaggedUser = '';
+    if (type === 'question') {
+      const question = post as Question;
+      postText = question.text;
+      flaggedUser = question.askedBy;
+    } else if (type === 'answer') {
+      const answer = post as Answer;
+      postText = answer.text;
+      flaggedUser = answer.ansBy;
+    } else if (type === 'comment') {
+      const comment = post as Comment;
+      postText = comment.text;
+      flaggedUser = comment.commentBy;
+    }
+
     // Create new flag document
     const newFlag = new FlagModel({
       flaggedBy,
@@ -1340,6 +1374,8 @@ export const flagPost = async (
       status: 'pending',
       postId: id,
       postType: type,
+      postText,
+      flaggedUser,
     });
     const savedFlag = await newFlag.save();
 
@@ -1364,8 +1400,6 @@ export const flagPost = async (
         { $push: { flags: savedFlag._id } },
         { new: true },
       );
-    } else {
-      throw new Error('Invalid type specified');
     }
 
     if (!updatedPost) {
@@ -1375,6 +1409,20 @@ export const flagPost = async (
     return updatedPost;
   } catch (error) {
     return { error: `Error when flagging post: ${(error as Error).message}` };
+  }
+};
+
+/**
+ * Retrieves all pending flags.
+ *
+ * @returns A Promise that resolves to an array of pending flags or an error message.
+ */
+export const getPendingFlags = async (): Promise<Flag[] | { error: string }> => {
+  try {
+    const flags = await FlagModel.find({ status: 'pending' });
+    return flags;
+  } catch (error) {
+    return { error: `Error when retrieving pending flags: ${(error as Error).message}` };
   }
 };
 
@@ -1463,5 +1511,143 @@ export const deletePost = async (
     return { success: true };
   } catch (error) {
     return { success: false, message: (error as Error).message };
+  }
+};
+
+/**
+ * The function to get a flag by id
+ *
+ * @param id - the id of the flag
+ * @returns A Promise that resolves to the flag , or an error message if the operation fails.
+ */
+
+export const getFlag = async (id: string): Promise<FlagResponse> => {
+  try {
+    const flag = await FlagModel.findOne({ _id: id });
+
+    if (!flag) {
+      throw new Error('Flag not found');
+    }
+    return flag;
+  } catch (error) {
+    return { error: `Error when retrieving flag: ${(error as Error).message}` };
+  }
+};
+
+/**
+ * Bans a user by setting their isBanned field to true.
+ *
+ * @param username - The username of the user to ban.
+ * @returns A Promise that resolves to the updated user or an error message.
+ */
+export const banUser = async (username: string): Promise<UserResponse> => {
+  try {
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { username },
+      { isBanned: true },
+      { new: true },
+    );
+    if (!updatedUser) {
+      throw new Error('User not found');
+    }
+    return updatedUser;
+  } catch (error) {
+    return { error: `Error when banning user: ${(error as Error).message}` };
+  }
+};
+
+/**
+ * Shadow bans a user by setting their isShadowBanned field to true.
+ *
+ * @param username - The username of the user to shadow ban.
+ * @returns A Promise that resolves to the updated user or an error message.
+ */
+export const shadowBanUser = async (username: string): Promise<UserResponse> => {
+  try {
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { username },
+      { isShadowBanned: true },
+      { new: true },
+    );
+    if (!updatedUser) {
+      throw new Error('User not found');
+    }
+    return updatedUser;
+  } catch (error) {
+    return { error: `Error when shadow banning user: ${(error as Error).message}` };
+  }
+};
+
+/**
+ * Unbans a user by setting their isBanned field to false.
+ *
+ * @param username - The username of the user to unban.
+ * @returns A Promise that resolves to the updated user or an error message.
+ */
+export const unbanUser = async (username: string): Promise<UserResponse> => {
+  try {
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { username },
+      { isBanned: false },
+      { new: true },
+    );
+    if (!updatedUser) {
+      throw new Error('User not found');
+    }
+    return updatedUser;
+  } catch (error) {
+    return { error: `Error when unbanning user: ${(error as Error).message}` };
+  }
+};
+
+/**
+ * Un-shadow bans a user by setting their isShadowBanned field to false.
+ *
+ * @param username - The username of the user to un-shadow ban.
+ * @returns A Promise that resolves to the updated user or an error message.
+ */
+export const unshadowBanUser = async (username: string): Promise<UserResponse> => {
+  try {
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { username },
+      { isShadowBanned: false },
+      { new: true },
+    );
+    if (!updatedUser) {
+      throw new Error('User not found');
+    }
+    return updatedUser;
+  } catch (error) {
+    return { error: `Error when un-shadow banning user: ${(error as Error).message}` };
+  }
+};
+
+/**
+ * Checks if a user is banned.
+ *
+ * @param username - The username of the user to check.
+ * @returns A Promise that resolves to true if the user is banned, false otherwise.
+ */
+export const isUserBanned = async (username: string): Promise<boolean> => {
+  try {
+    const user = await UserModel.findOne({ username });
+    return user ? user.isBanned === true : false;
+  } catch (error) {
+    return false;
+  }
+};
+
+/**
+ * Checks if a user is shadow banned.
+ *
+ * @param username - The username of the user to check.
+ * @returns A Promise that resolves to true if the user is shadow banned, false otherwise.
+ */
+export const isUserShadowBanned = async (username: string): Promise<boolean> => {
+  try {
+    const user = await UserModel.findOne({ username });
+    return user ? user.isShadowBanned === true : false;
+  } catch (error) {
+    return false;
   }
 };

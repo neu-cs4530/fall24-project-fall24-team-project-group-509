@@ -17,6 +17,8 @@ import {
   processTags,
   populateDocument,
   saveQuestion,
+  isUserBanned,
+  isUserShadowBanned,
 } from '../models/application';
 import { checkProfanity } from '../profanityFilter';
 
@@ -133,6 +135,19 @@ const questionController = (socket: FakeSOSocket) => {
     const { question } = req.body;
     const { username } = req.body;
 
+    const banned = await isUserBanned(username);
+    if (banned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to post since you did not adhere to community guidelines');
+      return;
+    }
     // Handle empty tags separately
     if (!question.tags || question.tags.length === 0) {
       res.status(400).send('Invalid tags');

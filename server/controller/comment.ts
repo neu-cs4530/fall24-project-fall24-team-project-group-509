@@ -4,6 +4,8 @@ import { Comment, AddCommentRequest, FakeSOSocket } from '../types';
 import {
   addComment,
   findQuestionIDByAnswerID,
+  isUserBanned,
+  isUserShadowBanned,
   populateDocument,
   saveComment,
   updateActivityHistoryWithQuestionID,
@@ -71,6 +73,20 @@ const commentController = (socket: FakeSOSocket) => {
 
     if (!isCommentValid(comment)) {
       res.status(400).send('Invalid comment body');
+      return;
+    }
+
+    const banned = await isUserBanned(username);
+    if (banned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to post since you did not adhere to community guidelines');
       return;
     }
 

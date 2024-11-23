@@ -12,6 +12,8 @@ const flagSchema: Schema = new Schema({
   reviewedAt: { type: Date },
   postId: { type: Schema.Types.ObjectId, required: true },
   postType: { type: String, required: true, enum: ['question', 'answer', 'comment'] },
+  postText: { type: String, required: true },
+  flaggedUser: { type: String, required: true },
 });
 
 export default flagSchema;

@@ -2,6 +2,8 @@ import express, { Response } from 'express';
 import { Answer, AnswerRequest, AnswerResponse, FakeSOSocket } from '../types';
 import {
   addAnswerToQuestion,
+  isUserBanned,
+  isUserShadowBanned,
   populateDocument,
   saveAnswer,
   updateActivityHistoryWithQuestionID,
@@ -55,6 +57,20 @@ const answerController = (socket: FakeSOSocket) => {
 
     const { qid, username } = req.body;
     const ansInfo: Answer = req.body.ans;
+
+    const banned = await isUserBanned(username);
+    if (banned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to post since you did not adhere to community guidelines');
+      return;
+    }
 
     try {
       const { hasProfanity, censored } = await checkProfanity(ansInfo.text);

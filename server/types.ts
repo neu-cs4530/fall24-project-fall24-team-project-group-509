@@ -313,6 +313,8 @@ export interface BookmarkCollection {
  * - activityHistory - The history of the user's activity on the platform.
  * - bookmarkCollections - An array of bookmark collections owned by the user.
  * - followedBookmarkCollections - An array of IDs of bookmark collections the user is following.
+ * - isBanned - A boolean indicating whether the user is banned.
+ * - isShadowBanned - A boolean indicating whether the user is shadow banned.
  * - FollowUpdateNotifications - An array of notifications for when a bookmark collections the user is following is updated. 
  */
 export interface User {
@@ -328,6 +330,8 @@ export interface User {
   }>;
   bookmarkCollections?: BookmarkCollection[];
   followedBookmarkCollections?: ObjectId[];
+  isBanned?: boolean;
+  isShadowBanned?: boolean;
   followUpdateNotifications?: FollowNotificationLog[];
 }
 
@@ -530,8 +534,17 @@ export type FlagReason = 'spam' | 'offensive language' | 'irrelevant content' | 
  * - flaggedBy: The username of the user who flagged the post.
  * - reason: The reason for flagging.
  * - dateFlagged: The date and time when the post was flagged.
+ * - status: The status of the flag, either 'pending' or 'reviewed'.
+ * - reviewedBy: The username of the moderator who reviewed the flag. Optional field.
+ * - reviewedAt: The date and time when the flag was reviewed. Optional field.
+ * - postId: The unique identifier of the post being flagged. This can be either a question, comment, or answer.
+ * - postType: The type of the post being flagged, either 'question', 'answer', or 'comment'.
+ * - postText: The text of the post being flagged.
+ * - flaggedUser: The username of the user who created the post being flagged.
  */
+
 export interface Flag {
+  _id? : string;
   flaggedBy: string;
   reason: FlagReason;
   dateFlagged: Date;
@@ -540,6 +553,8 @@ export interface Flag {
   reviewedAt?: Date;
   postId: string;
   postType: 'question' | 'answer' | 'comment';
+  postText: string;
+  flaggedUser: string;
 }
 
 /**
@@ -564,6 +579,19 @@ export interface GetFlaggedPostsRequest extends Request {
   };
 }
 
+/**
+ * Interface for the request to get a flag object by its ID.
+ * - fid: The unique identifier of the flag.
+ */
+export interface GetFlagByIdRequest extends Request {
+  params: {
+    fid: string;
+  };
+  query: {
+    username: string;
+  };
+}
+
 export interface ReviewFlagRequest extends Request {
   body: {
     flagId: string;
@@ -571,10 +599,30 @@ export interface ReviewFlagRequest extends Request {
   };
 }
 
+export type FlagResponse = Flag | { error: string };
+
 export interface DeletePostRequest extends Request {
   body: {
     id: string;
     type: 'question' | 'answer' | 'comment';
+    moderatorUsername: string;
+  };
+}
+
+export interface GetPendingFlagsRequest extends Request {
+  query: {
+    username: string;
+  };
+}
+
+/**
+ * Interface representing the request to ban or unban a user.
+ * - username - The username of the user to ban or unban.
+ * - moderatorUsername - The username of the moderator performing the action.
+ */
+export interface BanUserRequest extends Request {
+  body: {
+    username: string;
     moderatorUsername: string;
   };
 }
