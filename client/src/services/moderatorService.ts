@@ -94,8 +94,8 @@ const getPendingFlags = async (username: string): Promise<Flag[]> => {
  * @param fid - The ID of the flag to retrieve.
  * @throws Error if there is an issue fetching the flag by ID.
  */
-const getFlagById = async (fid: string): Promise<Flag> => {
-  const res = await api.get(`${MODERATOR_API_URL}/getFlag/${fid}`);
+const getFlagById = async (fid: string, username: string): Promise<Flag> => {
+  const res = await api.get(`${MODERATOR_API_URL}/getFlag/${fid}?username=${username}`);
 
   if (res.status !== 200) {
     throw new Error('Error while fetching flag by id');

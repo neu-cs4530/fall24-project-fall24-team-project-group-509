@@ -310,7 +310,7 @@ export interface BookmarkCollection {
  * - followedBookmarkCollections - An array of IDs of bookmark collections the user is following.
  * - isBanned - A boolean indicating whether the user is banned.
  * - isShadowBanned - A boolean indicating whether the user is shadow banned.
- * - FollowUpdateNotifications - An array of notifications for when a bookmark collections the user is following is updated. 
+ * - FollowUpdateNotifications - An array of notifications for when a bookmark collections the user is following is updated.
  */
 export interface User {
   username: string;
@@ -332,7 +332,7 @@ export interface User {
 
 /**
  * Interface representing a notification log for when a bookmark collection a user is following is updated, which contains:
- * 
+ *
  * - _id - The unique identifier for the notification log. Optional field.
  * - qTitle - The title of the question that was added to the bookmark collection.
  * - collectionId - The unique identifier of the bookmark collection that was updated.
@@ -345,7 +345,6 @@ export interface FollowNotificationLog {
   collectionId: string;
   bookmarkCollectionTitle: string;
   createdAt: Date;
-
 }
 
 /**
@@ -539,7 +538,7 @@ export type FlagReason = 'spam' | 'offensive language' | 'irrelevant content' | 
  */
 
 export interface Flag {
-  _id? : string;
+  _id?: string;
   flaggedBy: string;
   reason: FlagReason;
   dateFlagged: Date;

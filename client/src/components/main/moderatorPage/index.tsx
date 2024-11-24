@@ -11,8 +11,8 @@ const ModeratorPage = () => {
       <ul>
         {pendingFlags.map(flag => (
           <li key={flag._id}>
-            <Link to={`/flag/${flag._id}`}>
-              {flag.flaggedBy} flagged {flag.postType} for {flag.reason}
+            <Link to={`/flags/${flag._id}`}>
+              {flag.flaggedBy} flagged {flag.postType} for {flag.reason} {flag._id}
             </Link>
           </li>
         ))}

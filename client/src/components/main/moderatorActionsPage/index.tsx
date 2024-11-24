@@ -12,15 +12,16 @@ import useUserContext from '../../../hooks/useUserContext';
 
 const ModeratorActionPage = () => {
   const { user } = useUserContext();
-  const { flagId } = useParams<{ flagId: string }>();
+  const { fid } = useParams();
   const navigate = useNavigate();
   const [flag, setFlag] = useState<Flag | null>(null);
+  const [flagId, setFlagId] = useState<string>(fid || '');
 
   useEffect(() => {
     // Fetch the flag details using the flagId from the URL
     const fetchFlagDetails = async () => {
       try {
-        const fetchedFlag = await getFlagById(flagId as string);
+        const fetchedFlag = await getFlagById(flagId, user.username);
         setFlag(fetchedFlag);
       } catch (error) {
         console.error('Error fetching flag details:', error);
@@ -28,7 +29,7 @@ const ModeratorActionPage = () => {
     };
 
     fetchFlagDetails();
-  }, [flagId]);
+  }, [flagId, user.username]);
 
   // Action handlers
   const handleBanUser = async () => {
@@ -75,7 +76,7 @@ const ModeratorActionPage = () => {
     }
   };
 
-  if (!flag) return <p>Loading...</p>;
+  if (!flag) return <p>Loading: {fid}</p>;
 
   return (
     <div>
