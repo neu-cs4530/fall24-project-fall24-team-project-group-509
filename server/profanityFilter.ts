@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const PROFANITY_API_URL = 'https://api.api-ninjas.com/v1/profanityfilter';
-const API_KEY = 'eJMpDhjtu8sZfVFf/x3wXw==M2KQQfvPxtK2U5KI'; 
+const API_KEY = 'eJMpDhjtu8sZfVFf/x3wXw==M2KQQfvPxtK2U5KI';
 
 /**
  * Checks for profanity in the given text using the Profanity Filter API.
@@ -9,7 +9,9 @@ const API_KEY = 'eJMpDhjtu8sZfVFf/x3wXw==M2KQQfvPxtK2U5KI';
  * @param text - The text to be checked for profanity.
  * @returns A promise resolving to whether the text contains profanity.
  */
-export const checkProfanity = async (text: string): Promise<{ hasProfanity: boolean; censored: string }> => {
+export const checkProfanity = async (
+  text: string,
+): Promise<{ hasProfanity: boolean; censored: string }> => {
   try {
     const response = await axios.get(PROFANITY_API_URL, {
       params: { text },

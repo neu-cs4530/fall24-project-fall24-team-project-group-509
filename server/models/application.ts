@@ -19,7 +19,7 @@ import {
   UserResponse,
   Flag,
   FlagReason,
-  FlagRepsonse,
+  FlagResponse,
 } from '../types';
 import AnswerModel from './answers';
 import QuestionModel from './questions';
@@ -291,14 +291,12 @@ export const filterQuestionsBySearch = (qlist: Question[], search: string): Ques
  *
  * @param id The ID of the document to populate.
  * @param type The type of the document, either 'question' or 'answer'.
- * @param username The username of the user making the request.
  *
  * @returns A Promise that resolves to the populated document or an error message.
  */
 export const populateDocument = async (
   id: string | undefined,
   type: 'question' | 'answer',
-  username: string,
 ): Promise<QuestionResponse | AnswerResponse> => {
   try {
     if (!id) {
@@ -316,48 +314,62 @@ export const populateDocument = async (
         {
           path: 'answers',
           model: AnswerModel,
-          populate: { path: 'comments', model: CommentModel },
+          populate: [
+            {
+              path: 'comments',
+              model: CommentModel,
+              populate: { path: 'flags', model: FlagModel },
+            },
+            { path: 'flags', model: FlagModel },
+          ],
         },
-        { path: 'comments', model: CommentModel },
+        { path: 'comments', model: CommentModel, populate: { path: 'flags', model: FlagModel } },
         { path: 'flags', model: FlagModel },
       ]);
-      if (result) {
-        // Exclude answers flagged by the user
-        const question = result as Question;
-        question.answers = (question.answers as Answer[]).filter(answer => {
-          if (!answer.flags) return true;
-          const answerFlaggedByUser = answer.flags.some(flag => flag.flaggedBy === username);
-          return !answerFlaggedByUser;
-        });
-        // Exclude comments flagged by the user
-        question.comments = (question.comments as Comment[]).filter(comment => {
-          if (!comment.flags) return true;
-          const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
-          return !commentFlaggedByUser;
-        });
-      }
     } else if (type === 'answer') {
       result = await AnswerModel.findOne({ _id: id }).populate([
-        { path: 'comments', model: CommentModel },
+        { path: 'comments', model: CommentModel, populate: { path: 'flags', model: FlagModel } },
         { path: 'flags', model: FlagModel },
       ]);
-      if (result) {
-        // Exclude comments flagged by the user
-        const answer = result as Answer;
-        answer.comments = (answer.comments as Comment[]).filter(comment => {
-          if (!comment.flags) return true;
-          const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
-          return !commentFlaggedByUser;
-        });
-      }
     }
+
+    //   if (result) {
+    //     // Exclude answers flagged by the user
+    //     const question = result as Question;
+    //     question.answers = (question.answers as Answer[]).filter(answer => {
+    //       if (!answer.flags) return true;
+    //       const answerFlaggedByUser = answer.flags.some(flag => flag.flaggedBy === username);
+    //       return !answerFlaggedByUser;
+    //     });
+    //     // Exclude comments flagged by the user
+    //     question.comments = (question.comments as Comment[]).filter(comment => {
+    //       if (!comment.flags) return true;
+    //       const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
+    //       return !commentFlaggedByUser;
+    //     });
+    //   }
+    // } else if (type === 'answer') {
+    //   result = await AnswerModel.findOne({ _id: id }).populate([
+    //     { path: 'comments', model: CommentModel, populate: { path: 'flags', model: FlagModel } },
+    //     { path: 'flags', model: FlagModel },
+    //   ]);
+    //   if (result) {
+    //     // Exclude comments flagged by the user
+    //     const answer = result as Answer;
+    //     answer.comments = (answer.comments as Comment[]).filter(comment => {
+    //       if (!comment.flags) return true;
+    //       const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
+    //       return !commentFlaggedByUser;
+    //     });
+    //   }
+
     if (!result) {
       throw new Error(`Failed to fetch and populate a ${type}`);
     }
     // Exclude the post itself if it is flagged by the user
-    if (result.flags && result.flags.some((flag: Flag) => flag.flaggedBy === username)) {
-      return { error: 'Post has been flagged by the user' };
-    }
+    // if (result.flags && result.flags.some((flag: Flag) => flag.flaggedBy === username)) {
+    //   return { error: 'Post has been flagged by the user' };
+    // }
     return result;
   } catch (error) {
     return { error: `Error when fetching and populating a document: ${(error as Error).message}` };
@@ -404,38 +416,6 @@ export const fetchAndIncrementQuestionViewsById = async (
 
     if (q && q.flags && q.flags.some(flag => flag.flaggedBy === username)) {
       return { error: 'Question has been flagged by the user' };
-    }
-
-    // Exclude answers flagged by the user
-    if (q && q.answers) {
-      q.answers = (q.answers as Answer[]).filter(answer => {
-        if (!answer.flags) return true;
-        const answerFlaggedByUser = answer.flags.some(flag => flag.flaggedBy === username);
-        return !answerFlaggedByUser;
-      });
-    }
-
-    // Exclude comments on answers flagged by the user
-    if (q && q.answers) {
-      q.answers = (q.answers as Answer[]).map(answer => {
-        if (answer.comments) {
-          answer.comments = (answer.comments as Comment[]).filter(comment => {
-            if (!comment.flags) return true;
-            const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
-            return !commentFlaggedByUser;
-          });
-        }
-        return answer;
-      });
-    }
-
-    // Exclude comments flagged by the user
-    if (q && q.comments) {
-      q.comments = (q.comments as Comment[]).filter(comment => {
-        if (!comment.flags) return true;
-        const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
-        return !commentFlaggedByUser;
-      });
     }
 
     return q;
@@ -779,12 +759,51 @@ export const getTagCountMap = async (): Promise<Map<string, number> | null | { e
 };
 
 /**
+ * Fetches and populates a user document based on the provided username.
+ * @param username - the username of the user to fetch
+ * @param requesterUsername - the username of the user making the request
+ *
+ * @returns the user document
+ */
+export const getUserByUsername = async (
+  username: string,
+  requesterUsername: string,
+): Promise<UserResponse | null> => {
+  try {
+    if (!username || username === '') {
+      throw new Error('Invalid username');
+    }
+    const result = await UserModel.findOne({ username });
+    // .populate({
+    //   path: 'activityHistory.postId',
+    // });
+    return result;
+  } catch (error) {
+    return { error: 'Error when fetching user by username' };
+  }
+};
+
+/**
  * Saves a new user to the database.
  * @param user - the user to save
  * @returns user - the user saved to the database
  */
 export const saveUser = async (user: User): Promise<UserResponse> => {
   try {
+    const existingUser = await getUserByUsername(user.username, user.username);
+    if (existingUser) {
+      const eUser = existingUser as User;
+      if (eUser.password !== user.password) {
+        return { error: 'Password does not match' };
+      }
+      if (eUser.password === user.password) {
+        const { username } = user;
+        const result = await UserModel.findOne({ username });
+        if (result) {
+          return result as User;
+        }
+      }
+    }
     const result = await UserModel.create(user);
     return result;
   } catch (error) {
@@ -849,31 +868,6 @@ export const addUserProfilePicture = async (
     return result;
   } catch (error) {
     return { error: 'Error when adding profile picture to user' };
-  }
-};
-
-/**
- * Fetches and populates a user document based on the provided username.
- * @param username - the username of the user to fetch
- * @param requesterUsername - the username of the user making the request
- *
- * @returns the user document
- */
-export const getUserByUsername = async (
-  username: string,
-  requesterUsername: string,
-): Promise<UserResponse | null> => {
-  try {
-    if (!username || username === '') {
-      throw new Error('Invalid username');
-    }
-    const result = await UserModel.findOne({ username });
-    // .populate({
-    //   path: 'activityHistory.postId',
-    // });
-    return result;
-  } catch (error) {
-    return { error: 'Error when fetching user by username' };
   }
 };
 
@@ -987,6 +981,27 @@ export const addQuestionToBookmarkCollection = async (
 
     if (!updatedCollection) {
       throw new Error('Bookmark collection not found');
+    }
+
+    // need to access the list of followers for the bookmark collection
+    // and need to add a FollowNotificationLog to each follower's followUpdateNotifications
+    const collectionFollowers = updatedCollection.followers;
+    if (collectionFollowers && collectionFollowers.length > 0) {
+      collectionFollowers.forEach(async follower => {
+        await UserModel.findOneAndUpdate(
+          { username: follower },
+          {
+            $push: {
+              followUpdateNotifications: {
+                qTitle: questionTitle,
+                collectionId,
+                bookmarkCollectionTitle: updatedCollection.title,
+                createdAt: new Date(),
+              },
+            },
+          },
+        );
+      });
     }
 
     return updatedCollection;
@@ -1482,6 +1497,7 @@ export const deletePost = async (
       await AnswerModel.deleteMany({ _id: { $in: question.answers } });
       await CommentModel.deleteMany({ _id: { $in: question.comments } });
       await QuestionModel.deleteOne({ _id: id });
+      await BookmarkCollectionModel.updateMany({}, { $pull: { savedPosts: { postId: id } } });
     } else if (type === 'answer') {
       const answer = await AnswerModel.findById(id);
       if (!answer) {
@@ -1511,7 +1527,7 @@ export const deletePost = async (
  * @returns A Promise that resolves to the flag , or an error message if the operation fails.
  */
 
-export const getFlag = async (id: string): Promise<FlagRepsonse> => {
+export const getFlag = async (id: string): Promise<FlagResponse> => {
   try {
     const flag = await FlagModel.findOne({ _id: id });
 

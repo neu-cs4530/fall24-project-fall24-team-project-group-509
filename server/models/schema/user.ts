@@ -7,6 +7,7 @@ import { Schema } from 'mongoose';
  * Each user includes the following fields:
  * - `username`: The user's username. This is a required field and must be unique.
  * - `bio`: A short description of the user.
+ * - `password`: The user's password. This is a required field
  * - `profilePictureURL`: The URL of the user's profile picture.
  * - `activityHistory`: An array of the user's activities.
  * - `bookmarkCollections`: An array of bookmark collections owned by the user.
@@ -20,6 +21,11 @@ const userSchema: Schema = new Schema(
       type: String,
       required: true,
       unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      default: '',
     },
     bio: {
       type: String,
@@ -52,6 +58,17 @@ const userSchema: Schema = new Schema(
     },
     followedBookmarkCollections: {
       type: [{ type: Schema.Types.ObjectId, ref: 'BookmarkCollection' }],
+      default: [],
+    },
+    followUpdateNotifications: {
+      type: [
+        {
+          qTitle: { type: String, required: true },
+          collectionId: { type: String, required: true },
+          bookmarkCollectionTitle: { type: String, required: true },
+          createdAt: { type: Date, default: Date.now },
+        },
+      ],
       default: [],
     },
     isBanned: {

@@ -91,7 +91,11 @@ const bookmarkController = (socket: FakeSOSocket) => {
       }
 
       // Emit collection update to followers
-      socket.emit('collectionUpdate', {
+      // socket.emit('collectionUpdate', {
+      //   collectionId,
+      //   updatedCollection,
+      // } as BookmarkCollectionUpdatePayload);
+      socket.to(collectionId).emit('collectionUpdate', {
         collectionId,
         updatedCollection,
       } as BookmarkCollectionUpdatePayload);

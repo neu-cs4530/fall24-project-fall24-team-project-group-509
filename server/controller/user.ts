@@ -33,8 +33,17 @@ const userController = (socket: FakeSOSocket) => {
    * @param user The user object to validate.
    * @returns 'true' if the user object is valid, otherwise 'false'.
    */
-  const isUserBodyValid = (user: User): boolean =>
-    user.username !== undefined && user.username !== '';
+  const isUserBodyValid = async (user: User): Promise<boolean> => {
+    if (
+      user.username !== undefined ||
+      user.username !== '' ||
+      user.password !== undefined ||
+      user.password !== ''
+    ) {
+      return false;
+    }
+    return true;
+  };
 
   /**
    * Validates the addUserBio request to ensure all required fields are present.

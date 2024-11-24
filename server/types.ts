@@ -35,7 +35,6 @@ export interface AnswerRequest extends Request {
   body: {
     qid: string;
     ans: Answer;
-    username: string;
   };
 }
 
@@ -94,6 +93,7 @@ export type QuestionResponse = Question | { error: string };
  * - order - The order in which to sort the questions
  * - search - The search string used to find questions
  * - askedBy - The username of the user who asked the question
+ * - username - The username of the user requesting the questions.
  */
 export interface FindQuestionRequest extends Request {
   query: {
@@ -122,10 +122,7 @@ export interface FindQuestionByIdRequest extends Request {
  * - body - The question being added.
  */
 export interface AddQuestionRequest extends Request {
-  body: {
-    question: Question;
-    username: string; // The username of the user making the request
-  };
+  body: Question;
 }
 
 /**
@@ -168,7 +165,6 @@ export interface AddCommentRequest extends Request {
     id: string;
     type: 'question' | 'answer';
     comment: Comment;
-    username: string;
   };
 }
 
@@ -261,6 +257,14 @@ export interface ServerToClientEvents {
 }
 
 /**
+ * Interface representing the possible events that the client can emit to the server.
+ */
+export interface ClientToServerEvents {
+  followCollection: (collectionId: string, username: string) => void;
+  unfollowCollection: (collectionId: string, username: string) => void;
+}
+
+/**
  * Interface representing a bookmark, which contains:
  * - postId - The unique identifier of the post (question or answer).
  * - savedAt - The date and time when the post was bookmarked.
@@ -298,6 +302,7 @@ export interface BookmarkCollection {
 /**
  * Interface representing a user of the platform, which contains:
  * - username - The unique identifier for the user.
+ * - password - The password for the user.
  * - bio - A short description of the user. Optional field.
  * - profilePictureURL - The URL of the user's profile picture (if they have one). Optional field.
  * - activityHistory - The history of the user's activity on the platform.
@@ -305,9 +310,11 @@ export interface BookmarkCollection {
  * - followedBookmarkCollections - An array of IDs of bookmark collections the user is following.
  * - isBanned - A boolean indicating whether the user is banned.
  * - isShadowBanned - A boolean indicating whether the user is shadow banned.
+ * - FollowUpdateNotifications - An array of notifications for when a bookmark collections the user is following is updated.
  */
 export interface User {
   username: string;
+  password: string;
   bio?: string;
   profilePictureURL?: string;
   activityHistory?: Array<{
@@ -320,6 +327,24 @@ export interface User {
   followedBookmarkCollections?: ObjectId[];
   isBanned?: boolean;
   isShadowBanned?: boolean;
+  followUpdateNotifications?: FollowNotificationLog[];
+}
+
+/**
+ * Interface representing a notification log for when a bookmark collection a user is following is updated, which contains:
+ *
+ * - _id - The unique identifier for the notification log. Optional field.
+ * - qTitle - The title of the question that was added to the bookmark collection.
+ * - collectionId - The unique identifier of the bookmark collection that was updated.
+ * - bookmarkCollectionTitle - The title of the bookmark collection that was updated.
+ * - createdAt - The date and time when the notification was created.
+ */
+export interface FollowNotificationLog {
+  _id?: ObjectId;
+  qTitle: string;
+  collectionId: string;
+  bookmarkCollectionTitle: string;
+  createdAt: Date;
 }
 
 /**
@@ -386,7 +411,7 @@ export interface GetBookmarksRequest extends Request {
     requesterUsername: string;
   };
   query: {
-    sortOption: BookmarkSortOption
+    sortOption: BookmarkSortOption;
   };
 }
 
@@ -503,10 +528,17 @@ export type FlagReason = 'spam' | 'offensive language' | 'irrelevant content' | 
  * - flaggedBy: The username of the user who flagged the post.
  * - reason: The reason for flagging.
  * - dateFlagged: The date and time when the post was flagged.
+ * - status: The status of the flag, either 'pending' or 'reviewed'.
+ * - reviewedBy: The username of the moderator who reviewed the flag. Optional field.
+ * - reviewedAt: The date and time when the flag was reviewed. Optional field.
+ * - postId: The unique identifier of the post being flagged. This can be either a question, comment, or answer.
+ * - postType: The type of the post being flagged, either 'question', 'answer', or 'comment'.
+ * - postText: The text of the post being flagged.
+ * - flaggedUser: The username of the user who created the post being flagged.
  */
 
 export interface Flag {
-  _id? : string;
+  _id?: string;
   flaggedBy: string;
   reason: FlagReason;
   dateFlagged: Date;
@@ -541,6 +573,19 @@ export interface GetFlaggedPostsRequest extends Request {
   };
 }
 
+/**
+ * Interface for the request to get a flag object by its ID.
+ * - fid: The unique identifier of the flag.
+ */
+export interface GetFlagByIdRequest extends Request {
+  params: {
+    fid: string;
+  };
+  query: {
+    username: string;
+  };
+}
+
 export interface ReviewFlagRequest extends Request {
   body: {
     flagId: string;
@@ -548,7 +593,7 @@ export interface ReviewFlagRequest extends Request {
   };
 }
 
-export type FlagRepsonse = Flag | { error: string };
+export type FlagResponse = Flag | { error: string };
 
 export interface DeletePostRequest extends Request {
   body: {

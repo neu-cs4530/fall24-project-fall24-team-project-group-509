@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { AxiosError } from 'axios';
 import { validateHyperlink } from '../tool';
 import addAnswer from '../services/answerService';
 import useUserContext from './useUserContext';
@@ -21,6 +22,8 @@ const useAnswerForm = () => {
   const [text, setText] = useState<string>('');
   const [textErr, setTextErr] = useState<string>('');
   const [questionID, setQuestionID] = useState<string>('');
+
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     if (!qid) {
@@ -61,11 +64,30 @@ const useAnswerForm = () => {
       comments: [],
     };
 
-    const res = await addAnswer(questionID, answer);
+    // const res = await addAnswer(questionID, answer);
 
-    if (res && res._id) {
-      // navigate to the question that was answered
-      navigate(`/question/${questionID}`);
+    // if (res && res._id) {
+    //   // navigate to the question that was answered
+    //   navigate(`/question/${questionID}`);
+    // }
+
+    try {
+      const res = await addAnswer(questionID, answer);
+
+      if (res && res._id) {
+        // navigate to the question that was answered
+        navigate(`/question/${questionID}`);
+      }
+    } catch (err) {
+      if (err instanceof AxiosError && err.response) {
+        if (err.response.status === 400) {
+          setErrorMessage('Profanity detected');
+        } else {
+          setErrorMessage('An error occurred while posting the question');
+        }
+      } else {
+        setErrorMessage('An error occurred while posting the question');
+      }
     }
   };
 
@@ -74,6 +96,7 @@ const useAnswerForm = () => {
     textErr,
     setText,
     postAnswer,
+    errorMessage,
   };
 };
 

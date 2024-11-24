@@ -10,6 +10,7 @@ import useUserContext from '../../../hooks/useUserContext';
  */
 const SideBarNav = () => {
   const { username } = useUserContext().user;
+  const modUsernames = ['mod1', 'mod2', 'mod3', 'mod4'];
 
   return (
     <div id='sideBarNav' className='sideBarNav'>
@@ -31,10 +32,18 @@ const SideBarNav = () => {
         className={({ isActive }) => `menu_button ${isActive ? 'menu_selected' : ''}`}>
         User Profile
       </NavLink>
+      {username in modUsernames === True &&
+        <NavLink
+          to='/flags'
+          id='menu_flaggedPosts'
+          className={({ isActive }) => `menu_button ${isActive ? 'menu_selected' : ''}`}>
+          Flagged Posts
+        </NavLink>
+      }
       <NavLink
         to='/'
         id='menu_signout'
-        className={({ isActive }) => `menu_button${isActive ? 'menu_selected' : ''}`}>
+        className={({ isActive }) => `menu_button ${isActive ? 'menu_selected' : ''}`}>
         Sign Out
       </NavLink>
     </div>

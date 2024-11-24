@@ -7,21 +7,35 @@ import useLogin from '../../hooks/useLogin';
  * to the application's context through the useLoginContext hook.
  */
 const Login = () => {
-  const { username, handleSubmit, handleInputChange } = useLogin();
+  const { username, password, handleSubmit, handleUsernameChange, handlePasswordChange } =
+    useLogin();
 
   return (
     <div className='container'>
+<<<<<<< HEAD
       <h2>Welcome to MindSync!</h2>
       <h4>Please enter your username.</h4>
+=======
+      <h2>Welcome to FakeStackOverflow!</h2>
+>>>>>>> 2f4e789853682dea59d81650a2cfd3d29a3507b1
       <form onSubmit={handleSubmit}>
         <input
           type='text'
           value={username}
-          onChange={handleInputChange}
+          onChange={handleUsernameChange}
           placeholder='Enter your username'
           required
           className='input-text'
           id={'usernameInput'}
+        />
+        <input
+          type='password'
+          value={password}
+          onChange={handlePasswordChange}
+          placeholder='Enter your password'
+          required
+          className='input-text'
+          id={'passwordInput'}
         />
         <button type='submit' className='login-button'>
           Submit

@@ -55,16 +55,16 @@ const answerController = (socket: FakeSOSocket) => {
       return;
     }
 
-    const { qid, username } = req.body;
+    const { qid } = req.body;
     const ansInfo: Answer = req.body.ans;
 
-    const banned = await isUserBanned(username);
+    const banned = await isUserBanned(ansInfo.ansBy);
     if (banned) {
       res.status(403).send('Your account has been banned');
       return;
     }
 
-    const shadowBanned = await isUserShadowBanned(username);
+    const shadowBanned = await isUserShadowBanned(ansInfo.ansBy);
     if (shadowBanned) {
       res
         .status(403)
@@ -91,7 +91,7 @@ const answerController = (socket: FakeSOSocket) => {
       }
 
       await updateActivityHistoryWithQuestionID(ansInfo.ansBy, qid, 'answer', ansInfo.ansDateTime);
-      const populatedAns = await populateDocument(ansFromDb._id?.toString(), 'answer', username);
+      const populatedAns = await populateDocument(ansFromDb._id?.toString(), 'answer');
 
       if (populatedAns && 'error' in populatedAns) {
         throw new Error(populatedAns.error as string);
