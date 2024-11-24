@@ -35,17 +35,10 @@ const FlagAnswerPage = () => {
   };
 
   const submitFlaggedAnswer = async (reason: string) => {
-    console.log('Flag reason:', reason);
-    console.log('Content type: Answer');
-    console.log('Answer ID:', answerID);
-    console.log('Username:', answeredBy);
-    console.log('FlagBy:', user.username);
-    console.log('Answer:', answerText);
     const res = await flagPost(answerID, 'answer', reason, user.username);
 
     if (res) {
       navigate('/home');
-      console.log('done');
     }
 
     // const res = await flagContent(questionID, 'question', selectedReason, user.username);

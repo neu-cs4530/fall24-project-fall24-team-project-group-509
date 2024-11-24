@@ -233,6 +233,13 @@ export const getQuestionsByOrder = async (
       { path: 'flags', model: FlagModel },
     ]);
     qlist = excludeFlaggedQuestions(qlist, username);
+
+    // Exclude questions flagged by the current user
+    qlist = qlist.filter(question => {
+      const flaggedByUser = question.flags?.some(flag => flag.flaggedBy === username) ?? false;
+      return !flaggedByUser;
+    });
+
     if (order === 'unanswered') {
       return sortQuestionsByUnanswered(qlist);
     }

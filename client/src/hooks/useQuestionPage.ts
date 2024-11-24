@@ -43,12 +43,45 @@ const useQuestionPage = () => {
 
   useEffect(() => {
     /**
+     * Function to handle the `postFlagged` event.
+     *
+     * @param payload - Object containing the post ID and type of the flagged post.
+     */
+    const handlePostFlagged = (payload: {
+      id: string;
+      type: 'question' | 'answer' | 'comment';
+    }) => {
+      console.log('Post flagged:', payload);
+
+      const { id, type } = payload;
+
+      if (type === 'question') {
+        // Update flagged question UI
+        setQlist(prevQlist =>
+          prevQlist.map(q => (q._id === id ? { ...q, isFlaggedForOthers: true } : q)),
+        );
+      }
+
+      // Optionally, you can handle `answer` or `comment` flagging here
+      if (type === 'answer' || type === 'comment') {
+        console.log(`Flagging updates for ${type} not implemented yet.`);
+      }
+    };
+
+    /**
      * Function to fetch questions based on the filter and update the question list.
      */
     const fetchData = async () => {
       try {
         const res = await getQuestionsByFilter(user.username, questionOrder, search);
-        setQlist(res || []);
+
+        // Add `isFlaggedForOthers` to each question
+        const updatedQuestions = res.map((question: Question) => ({
+          ...question,
+          isFlaggedForOthers:
+            question.flags?.some(flag => flag.flaggedBy !== user.username) ?? false,
+        }));
+        setQlist(updatedQuestions || []);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.log(error);
@@ -64,12 +97,17 @@ const useQuestionPage = () => {
       setQlist(prevQlist => {
         const questionExists = prevQlist.some(q => q._id === question._id);
 
-        if (questionExists) {
-          // Update the existing question
-          return prevQlist.map(q => (q._id === question._id ? question : q));
-        }
+        const updatedQuestion = {
+          ...question,
+          isFlaggedForOthers:
+            question.flags?.some(flag => flag.flaggedBy !== user.username) ?? false,
+        };
 
-        return [question, ...prevQlist];
+        if (questionExists) {
+          // Update the existing
+          return prevQlist.map(q => (q._id === question._id ? updatedQuestion : q));
+        }
+        return [updatedQuestion, ...prevQlist];
       });
     };
 
@@ -96,16 +134,18 @@ const useQuestionPage = () => {
 
     fetchData();
 
+    socket.on('postFlagged', handlePostFlagged);
     socket.on('questionUpdate', handleQuestionUpdate);
     socket.on('answerUpdate', handleAnswerUpdate);
     socket.on('viewsUpdate', handleViewsUpdate);
 
     return () => {
+      socket.off('postFlagged', handlePostFlagged);
       socket.off('questionUpdate', handleQuestionUpdate);
       socket.off('answerUpdate', handleAnswerUpdate);
       socket.off('viewsUpdate', handleViewsUpdate);
     };
-  }, [questionOrder, search, socket]);
+  }, [questionOrder, search, socket, user.username]);
 
   return { titleText, qlist, setQuestionOrder };
 };

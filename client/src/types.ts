@@ -150,6 +150,8 @@ export interface Question {
   upVotes: string[];
   downVotes: string[];
   comments: Comment[];
+  flags?: Flag[];
+  isFlaggedForOthers: boolean;
 }
 
 /**
@@ -195,6 +197,7 @@ export interface ServerToClientEvents {
   bookmarkUpdate: (update: BookmarkCollection[]) => void;
   questionDeletionUpdate: (update: string) => void;
   collectionUpdate: (update: BookmarkCollectionUpdatePayload) => void;
+  postFlagged: (payload: { id: string; type: 'question' | 'answer' | 'comment' }) => void;
 }
 
 /**
@@ -252,4 +255,19 @@ export interface FollowNotificationLog {
   collectionId: string;
   bookmarkCollectionTitle: string;
   createdAt: Date;
+}
+export type FlagReason = 'spam' | 'offensive language' | 'irrelevant content' | 'other';
+
+/**
+ * Interface representing a flag, which contains:
+ * - _id - The unique identifier for the flag. Optional field.
+ * - flaggedBy - The username of the user who flagged the content.
+ * - reason - The reason for flagging the content. One of 'spam', 'offensive language', 'irrelevant content', or 'other'.
+ * - dateFlagged - The date and time when the content was flagged.
+ */
+export interface Flag {
+  _id: string;
+  flaggedBy: string;
+  reason: FlagReason;
+  dateFlagged: Date;
 }

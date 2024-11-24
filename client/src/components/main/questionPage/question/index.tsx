@@ -12,6 +12,7 @@ import BookmarkButton from '../../bookmarkButton';
  */
 interface QuestionProps {
   q: Question;
+  isFlaggedForOthers?: boolean;
 }
 
 /**
@@ -21,7 +22,7 @@ interface QuestionProps {
  *
  * @param q - The question object containing question details.
  */
-const QuestionView = ({ q }: QuestionProps) => {
+const QuestionView = ({ q, isFlaggedForOthers }: QuestionProps) => {
   const navigate = useNavigate();
 
   /**
@@ -45,47 +46,57 @@ const QuestionView = ({ q }: QuestionProps) => {
     navigate(`/question/${questionID}`);
   };
 
+  const warningMessage = isFlaggedForOthers ? 'This post has been flagged by other users.' : '';
+
   return (
-    <div
-      className='question right_padding'
-      onClick={() => {
-        if (q._id) {
-          handleAnswer(q._id);
-        }
-      }}>
-      <div className='postStats'>
-        <div>{q.answers.length || 0} answers</div>
-        <div>{q.views.length} views</div>
-      </div>
-      <div className='question_mid'>
-        <div className='postTitle'>{q.title}</div>
-        <div className='question_tags'>
-          {q.tags.map((tag, idx) => (
-            <button
-              key={idx}
-              className='question_tag_button'
-              onClick={e => {
-                e.stopPropagation();
-                clickTag(tag.name);
-              }}>
-              {tag.name}
-            </button>
-          ))}
+    <div className={`question-container ${warningMessage ? 'flagged-question' : ''}`}>
+      {warningMessage && (
+        <div className='warning-banner'>
+          <span className='warning-icon'>⚠️</span>
+          <span className='warning-text'>{warningMessage}</span>
         </div>
-      </div>
-      <div className='lastActivity'>
-        <div className='question_author'>{q.askedBy}</div>
-        <div>&nbsp;</div>
-        <div className='question_meta'>asked {getMetaData(new Date(q.askDateTime))}</div>
-        {/* Bookmark button */}
-        {q._id && (
-          <div
-            className='bookmark-icon-container'
-            onClick={e => e.stopPropagation()} // Prevent navigation on icon click
-          >
-            <BookmarkButton questionId={q._id} />
+      )}
+      <div
+        className='question right_padding'
+        onClick={() => {
+          if (q._id) {
+            handleAnswer(q._id);
+          }
+        }}>
+        <div className='postStats'>
+          <div>{q.answers.length || 0} answers</div>
+          <div>{q.views.length} views</div>
+        </div>
+        <div className='question_mid'>
+          <div className='postTitle'>{q.title}</div>
+          <div className='question_tags'>
+            {q.tags.map((tag, idx) => (
+              <button
+                key={idx}
+                className='question_tag_button'
+                onClick={e => {
+                  e.stopPropagation();
+                  clickTag(tag.name);
+                }}>
+                {tag.name}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
+        <div className='lastActivity'>
+          <div className='question_author'>{q.askedBy}</div>
+          <div>&nbsp;</div>
+          <div className='question_meta'>asked {getMetaData(new Date(q.askDateTime))}</div>
+          {/* Bookmark button */}
+          {q._id && (
+            <div
+              className='bookmark-icon-container'
+              onClick={e => e.stopPropagation()} // Prevent navigation on icon click
+            >
+              <BookmarkButton questionId={q._id} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

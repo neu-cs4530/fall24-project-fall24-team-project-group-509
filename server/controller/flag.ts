@@ -1,5 +1,5 @@
 import express, { Response } from 'express';
-import { FlagPostRequest, FakeSOSocket } from '../types';
+import { FlagPostRequest, FakeSOSocket, QuestionResponse } from '../types';
 import { flagPost } from '../models/application';
 
 const flagController = (socket: FakeSOSocket) => {
@@ -29,6 +29,12 @@ const flagController = (socket: FakeSOSocket) => {
 
       // Emit the 'postFlagged' event to the client
       socket.emit('postFlagged', { id, type });
+
+      // Emit the updated post via the socket
+      // If it's a question, emit a specific "questionUpdate" event
+      if (type === 'question') {
+        socket.emit('questionUpdate', result as QuestionResponse);
+      }
 
       res.json({ message: 'Post flagged successfully' });
     } catch (err) {

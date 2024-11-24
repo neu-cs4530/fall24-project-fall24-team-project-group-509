@@ -21,7 +21,7 @@ const QuestionPage = () => {
       />
       <div id='question_list' className='question_list'>
         {qlist.map((q, idx) => (
-          <QuestionView q={q} key={idx} />
+          <QuestionView key={q._id} q={q} isFlaggedForOthers={q.isFlaggedForOthers} />
         ))}
       </div>
       {titleText === 'Search Results' && !qlist.length && (
