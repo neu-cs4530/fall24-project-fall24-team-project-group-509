@@ -1003,355 +1003,356 @@ describe('application module', () => {
     // TODO:
     // need some kind of testing for profile picture uploading
   });
-});
 
-describe('createBookmarkCollection', () => {
-  test('createBookmarkCollection should return the created bookmark collection', async () => {
-    const result = (await createBookmarkCollection(
-      'testUsername',
-      'testBookmarkCollectionTitle',
-      true,
-    )) as BookmarkCollection;
+  describe('createBookmarkCollection', () => {
+    test('createBookmarkCollection should return the created bookmark collection', async () => {
+      const result = (await createBookmarkCollection(
+        'testUsername',
+        'testBookmarkCollectionTitle',
+        true,
+      )) as BookmarkCollection;
 
-    expect(result._id).toBeDefined();
-    expect(result.owner).toEqual('testUsername');
-    expect(result.title).toEqual('testBookmarkCollectionTitle');
-    expect(result.savedPosts).toEqual([]);
-  });
+      expect(result._id).toBeDefined();
+      expect(result.owner).toEqual('testUsername');
+      expect(result.title).toEqual('testBookmarkCollectionTitle');
+      expect(result.savedPosts).toEqual([]);
+    });
 
-  test('createBookmarkCollection should return an object with error if save throws an error', async () => {
-    mockingoose(BookmarkCollectionModel).toReturn(new Error('error'), 'save');
+    test('createBookmarkCollection should return an object with error if save throws an error', async () => {
+      mockingoose(BookmarkCollectionModel).toReturn(new Error('error'), 'save');
 
-    const result = await createBookmarkCollection(
-      'testUsername',
-      'testBookmarkCollectionTitle',
-      true,
-    );
+      const result = await createBookmarkCollection(
+        'testUsername',
+        'testBookmarkCollectionTitle',
+        true,
+      );
 
-    expect(result).toEqual({ error: 'Error when creating bookmark collection' });
-  });
-});
-
-describe('removeQuestionFromBookmarkCollection', () => {
-  test('removeQuestionFromBookmarkCollection should return an object with error if the bookmark collection id does not exist', async () => {
-    mockingoose(BookmarkCollectionModel).toReturn(null, 'findOneAndUpdate');
-
-    const result = await removeQuestionFromBookmarkCollection(
-      '507f191e810c19729de860ea',
-      QUESTIONS[0]._id?.toString() || '',
-    );
-
-    expect(result).toEqual({
-      error: 'Error when removing question from bookmark collection: Bookmark collection not found',
+      expect(result).toEqual({ error: 'Error when creating bookmark collection' });
     });
   });
 
-  test('removeQuestionFromBookmarkCollection should return an object with error if findOneAndUpdate throws an error', async () => {
-    mockingoose(BookmarkCollectionModel).toReturn(new Error('error'), 'findOneAndUpdate');
+  describe('removeQuestionFromBookmarkCollection', () => {
+    test('removeQuestionFromBookmarkCollection should return an object with error if the bookmark collection id does not exist', async () => {
+      mockingoose(BookmarkCollectionModel).toReturn(null, 'findOneAndUpdate');
 
-    const result = await removeQuestionFromBookmarkCollection(
-      '507f191e810c19729de860ea',
-      QUESTIONS[0]._id?.toString() || '',
-    );
+      const result = await removeQuestionFromBookmarkCollection(
+        '507f191e810c19729de860ea',
+        QUESTIONS[0]._id?.toString() || '',
+      );
 
-    expect(result).toEqual({
-      error: 'Error when removing question from bookmark collection: error',
+      expect(result).toEqual({
+        error:
+          'Error when removing question from bookmark collection: Bookmark collection not found',
+      });
+    });
+
+    test('removeQuestionFromBookmarkCollection should return an object with error if findOneAndUpdate throws an error', async () => {
+      mockingoose(BookmarkCollectionModel).toReturn(new Error('error'), 'findOneAndUpdate');
+
+      const result = await removeQuestionFromBookmarkCollection(
+        '507f191e810c19729de860ea',
+        QUESTIONS[0]._id?.toString() || '',
+      );
+
+      expect(result).toEqual({
+        error: 'Error when removing question from bookmark collection: error',
+      });
     });
   });
-});
 
-describe('getUserBookmarkCollections', () => {
-  test('getUserBookmarkCollections should return a list of all bookmark collections if the requesterUsername and username are the same', async () => {
-    const user: User = {
-      username: 'testUsername',
-    };
-    const bookmarkCollections = [
-      {
+  describe('getUserBookmarkCollections', () => {
+    test('getUserBookmarkCollections should return a list of all bookmark collections if the requesterUsername and username are the same', async () => {
+      const user: User = {
+        username: 'testUsername',
+      };
+      const bookmarkCollections = [
+        {
+          _id: new ObjectId('507f191e810c19729de860ea'),
+          owner: 'testUsername',
+          title: 'testBookmarkCollectionTitle',
+          savedPosts: [],
+          isPublic: true,
+        },
+        {
+          _id: new ObjectId('507f191e810c19729de860eb'),
+          owner: 'testUsername',
+          title: 'anotherBookmarkCollectionTitle',
+          savedPosts: [],
+          isPublic: false,
+        },
+      ];
+
+      mockingoose(UserModel).toReturn(user, 'findOne');
+      mockingoose(BookmarkCollectionModel).toReturn(bookmarkCollections, 'find');
+
+      const result = await getUserBookmarkCollections('testUsername', 'testUsername');
+
+      expect(result.length).toEqual(2);
+      expect(result[0].title).toEqual('testBookmarkCollectionTitle');
+      expect(result[1].title).toEqual('anotherBookmarkCollectionTitle');
+    });
+
+    test('getUserBookmarkCollections should return a list of public bookmark collections if the requesterUsername and username are different', async () => {
+      const user: User = {
+        username: 'testUsername',
+      };
+      const bookmarkCollections = [
+        {
+          _id: new ObjectId('507f191e810c19729de860ea'),
+          owner: 'testUsername',
+          title: 'testBookmarkCollectionTitle',
+          savedPosts: [],
+          isPublic: true,
+        },
+        {
+          _id: new ObjectId('507f191e810c19729de860eb'),
+          owner: 'testUsername',
+          title: 'anotherBookmarkCollectionTitle',
+          savedPosts: [],
+          isPublic: false,
+        },
+      ];
+
+      mockingoose(UserModel).toReturn(user, 'findOne');
+      mockingoose(BookmarkCollectionModel).toReturn(
+        bookmarkCollections.filter(collection => collection.isPublic),
+        'find',
+      );
+
+      const result = await getUserBookmarkCollections('testUsername', 'requesterUsername');
+
+      expect(result.length).toEqual(1);
+      expect(result[0].title).toEqual('testBookmarkCollectionTitle');
+    });
+
+    test('getUserBookmarkCollections should return all public bookmark collections and private ones if the requesterUsername follows them', async () => {
+      const user: User = {
+        username: 'someUsername',
+      };
+
+      const bookmarkCollections = [
+        {
+          _id: new ObjectId('507f191e810c19729de860ea'),
+          owner: 'testUsername',
+          title: 'testBookmarkCollectionTitle',
+          savedPosts: [{ postId: QUESTIONS[0], savedAt: new Date() }],
+          isPublic: true,
+        },
+        {
+          _id: new ObjectId('507f191e810c19729de860eb'),
+          owner: 'testUsername',
+          title: 'anotherBookmarkCollectionTitle',
+          followers: ['someUsername', 'bruh'],
+          savedPosts: [
+            { postId: QUESTIONS[0], savedAt: new Date() },
+            { postId: QUESTIONS[1], savedAt: new Date() },
+          ],
+          isPublic: false,
+        },
+      ];
+
+      mockingoose(UserModel).toReturn(user, 'findOne');
+      mockingoose(BookmarkCollectionModel).toReturn(bookmarkCollections, 'find');
+
+      const result = await getUserBookmarkCollections('testUsername', 'someUsername');
+
+      expect(result.length).toEqual(2);
+      expect(result[0].title).toEqual('testBookmarkCollectionTitle');
+      expect(result[1].title).toEqual('anotherBookmarkCollectionTitle');
+      expect(result[1].savedPosts.length).toEqual(2);
+      expect(result[1].savedPosts[0].postId).toEqual(new ObjectId('65e9b58910afe6e94fc6e6dc'));
+      // console.log(result[1].savedPosts[0].postId as Question);
+      // expect((result[1].savedPosts[0].postId as Question).title).toEqual(
+      //   'Quick question about storage on android',
+      // );
+    });
+
+    test('getUserBookmarkCollections should return an empty array if  the username does not exist', async () => {
+      mockingoose(UserModel).toReturn(null, 'findOne');
+
+      const result = await getUserBookmarkCollections('nonExistentUsername', 'requesterUsername');
+
+      expect(result.length).toEqual(0);
+    });
+
+    // test('getUserBookmarkCollections should return an object with error if find throws an error', async () => {
+    //   mockingoose(BookmarkCollectionModel).toReturn(new Error('error'), 'find');
+
+    //   const result = await getUserBookmarkCollections('testUsername');
+
+    //   expect(result).toEqual({ error: 'Error when fetching bookmark collections' });
+    // });
+
+    // test('getUserBookmarkCollections should return an object with error if find returns null', async () => {
+    //   mockingoose(BookmarkCollectionModel).toReturn(null, 'find');
+
+    //   const result = await getUserBookmarkCollections('testUsername');
+
+    //   expect(result).toEqual({ error: 'Error when fetching bookmark collections' });
+    // });
+  });
+
+  describe('followBookmarkCollection', () => {
+    test('followBookmarkCollection should return the updated bookmark collection', async () => {
+      const bookmarkCollection: BookmarkCollection = {
         _id: new ObjectId('507f191e810c19729de860ea'),
         owner: 'testUsername',
         title: 'testBookmarkCollectionTitle',
         savedPosts: [],
-        isPublic: true,
-      },
-      {
-        _id: new ObjectId('507f191e810c19729de860eb'),
-        owner: 'testUsername',
-        title: 'anotherBookmarkCollectionTitle',
-        savedPosts: [],
         isPublic: false,
-      },
-    ];
-
-    mockingoose(UserModel).toReturn(user, 'findOne');
-    mockingoose(BookmarkCollectionModel).toReturn(bookmarkCollections, 'find');
-
-    const result = await getUserBookmarkCollections('testUsername', 'testUsername');
-
-    expect(result.length).toEqual(2);
-    expect(result[0].title).toEqual('testBookmarkCollectionTitle');
-    expect(result[1].title).toEqual('anotherBookmarkCollectionTitle');
-  });
-
-  test('getUserBookmarkCollections should return a list of public bookmark collections if the requesterUsername and username are different', async () => {
-    const user: User = {
-      username: 'testUsername',
-    };
-    const bookmarkCollections = [
-      {
-        _id: new ObjectId('507f191e810c19729de860ea'),
-        owner: 'testUsername',
-        title: 'testBookmarkCollectionTitle',
-        savedPosts: [],
-        isPublic: true,
-      },
-      {
-        _id: new ObjectId('507f191e810c19729de860eb'),
-        owner: 'testUsername',
-        title: 'anotherBookmarkCollectionTitle',
-        savedPosts: [],
-        isPublic: false,
-      },
-    ];
-
-    mockingoose(UserModel).toReturn(user, 'findOne');
-    mockingoose(BookmarkCollectionModel).toReturn(
-      bookmarkCollections.filter(collection => collection.isPublic),
-      'find',
-    );
-
-    const result = await getUserBookmarkCollections('testUsername', 'requesterUsername');
-
-    expect(result.length).toEqual(1);
-    expect(result[0].title).toEqual('testBookmarkCollectionTitle');
-  });
-
-  test('getUserBookmarkCollections should return all public bookmark collections and private ones if the requesterUsername follows them', async () => {
-    const user: User = {
-      username: 'someUsername',
-    };
-
-    const bookmarkCollections = [
-      {
-        _id: new ObjectId('507f191e810c19729de860ea'),
-        owner: 'testUsername',
-        title: 'testBookmarkCollectionTitle',
-        savedPosts: [{ postId: QUESTIONS[0], savedAt: new Date() }],
-        isPublic: true,
-      },
-      {
-        _id: new ObjectId('507f191e810c19729de860eb'),
-        owner: 'testUsername',
-        title: 'anotherBookmarkCollectionTitle',
-        followers: ['someUsername', 'bruh'],
-        savedPosts: [
-          { postId: QUESTIONS[0], savedAt: new Date() },
-          { postId: QUESTIONS[1], savedAt: new Date() },
-        ],
-        isPublic: false,
-      },
-    ];
-
-    mockingoose(UserModel).toReturn(user, 'findOne');
-    mockingoose(BookmarkCollectionModel).toReturn(bookmarkCollections, 'find');
-
-    const result = await getUserBookmarkCollections('testUsername', 'someUsername');
-
-    expect(result.length).toEqual(2);
-    expect(result[0].title).toEqual('testBookmarkCollectionTitle');
-    expect(result[1].title).toEqual('anotherBookmarkCollectionTitle');
-    expect(result[1].savedPosts.length).toEqual(2);
-    expect(result[1].savedPosts[0].postId).toEqual(new ObjectId('65e9b58910afe6e94fc6e6dc'));
-    // console.log(result[1].savedPosts[0].postId as Question);
-    // expect((result[1].savedPosts[0].postId as Question).title).toEqual(
-    //   'Quick question about storage on android',
-    // );
-  });
-
-  test('getUserBookmarkCollections should return an empty array if  the username does not exist', async () => {
-    mockingoose(UserModel).toReturn(null, 'findOne');
-
-    const result = await getUserBookmarkCollections('nonExistentUsername', 'requesterUsername');
-
-    expect(result.length).toEqual(0);
-  });
-
-  // test('getUserBookmarkCollections should return an object with error if find throws an error', async () => {
-  //   mockingoose(BookmarkCollectionModel).toReturn(new Error('error'), 'find');
-
-  //   const result = await getUserBookmarkCollections('testUsername');
-
-  //   expect(result).toEqual({ error: 'Error when fetching bookmark collections' });
-  // });
-
-  // test('getUserBookmarkCollections should return an object with error if find returns null', async () => {
-  //   mockingoose(BookmarkCollectionModel).toReturn(null, 'find');
-
-  //   const result = await getUserBookmarkCollections('testUsername');
-
-  //   expect(result).toEqual({ error: 'Error when fetching bookmark collections' });
-  // });
-});
-
-describe('followBookmarkCollection', () => {
-  test('followBookmarkCollection should return the updated bookmark collection', async () => {
-    const bookmarkCollection: BookmarkCollection = {
-      _id: new ObjectId('507f191e810c19729de860ea'),
-      owner: 'testUsername',
-      title: 'testBookmarkCollectionTitle',
-      savedPosts: [],
-      isPublic: false,
-      followers: ['mordecai', 'rigby'],
-    };
-
-    // Mock the findOneAndUpdate method to return the updated bookmark collection
-    mockingoose(BookmarkCollectionModel).toReturn(
-      {
-        ...bookmarkCollection,
-        followers: ['mordecai', 'rigby', 'someUsername'],
-      },
-      'findOneAndUpdate',
-    );
-
-    // mock the user's followedBookmarkCollections ???
-
-    const result = (await followBookmarkCollection(
-      '507f191e810c19729de860ea',
-      'someUsername',
-    )) as BookmarkCollection;
-
-    expect(result.followers?.length).toEqual(3);
-    expect(result.followers?.[2]).toEqual('someUsername');
-  });
-
-  test('followBookmarkCollection should return an object with error if findOneAndUpdate throws an error', async () => {
-    mockingoose(BookmarkCollectionModel).toReturn(new Error('error'), 'findOneAndUpdate');
-
-    const result = await followBookmarkCollection('507f191e810c19729de860ea', 'someUsername');
-
-    expect(result).toEqual({ error: 'Error when following bookmark collection: error' });
-  });
-
-  test('followBookmarkCollection should return an object with error if the bookmark collection id does not exist', async () => {
-    mockingoose(BookmarkCollectionModel).toReturn(null, 'findOneAndUpdate');
-
-    const result = await followBookmarkCollection('507f191e810c19729de860ea', 'someUsername');
-
-    expect(result).toEqual({
-      error:
-        'Error when following bookmark collection: Bookmark collection not found or is not public',
-    });
-  });
-});
-
-describe('unfollowBookmarkCollection', () => {
-  test('unfollowBookmarkCollection should return the updated bookmark collection', async () => {
-    const bookmarkCollection: BookmarkCollection = {
-      _id: new ObjectId('507f191e810c19729de860ea'),
-      owner: 'testUsername',
-      title: 'testBookmarkCollectionTitle',
-      savedPosts: [],
-      isPublic: false,
-      followers: ['mordecai', 'someUsername', 'rigby'],
-    };
-
-    // Mock the findOneAndUpdate method to return the updated bookmark collection
-    mockingoose(BookmarkCollectionModel).toReturn(
-      {
-        ...bookmarkCollection,
         followers: ['mordecai', 'rigby'],
-      },
-      'findOneAndUpdate',
-    );
+      };
 
-    const result = (await unfollowBookmarkCollection(
-      '507f191e810c19729de860ea',
-      'someUsername',
-    )) as BookmarkCollection;
+      // Mock the findOneAndUpdate method to return the updated bookmark collection
+      mockingoose(BookmarkCollectionModel).toReturn(
+        {
+          ...bookmarkCollection,
+          followers: ['mordecai', 'rigby', 'someUsername'],
+        },
+        'findOneAndUpdate',
+      );
 
-    expect(result.followers?.length).toEqual(2);
-    expect(result.followers).not.toContain('someUsername');
-  });
+      // mock the user's followedBookmarkCollections ???
 
-  test('unfollowBookmarkCollection should return an object with error if findOneAndUpdate throws an error', async () => {
-    mockingoose(BookmarkCollectionModel).toReturn(new Error('error'), 'findOneAndUpdate');
+      const result = (await followBookmarkCollection(
+        '507f191e810c19729de860ea',
+        'someUsername',
+      )) as BookmarkCollection;
 
-    const result = await unfollowBookmarkCollection('507f191e810c19729de860ea', 'someUsername');
+      expect(result.followers?.length).toEqual(3);
+      expect(result.followers?.[2]).toEqual('someUsername');
+    });
 
-    expect(result).toEqual({ error: 'Error when unfollowing bookmark collection: error' });
-  });
+    test('followBookmarkCollection should return an object with error if findOneAndUpdate throws an error', async () => {
+      mockingoose(BookmarkCollectionModel).toReturn(new Error('error'), 'findOneAndUpdate');
 
-  test('unfollowBookmarkCollection should return an object with error if the bookmark collection id does not exist', async () => {
-    mockingoose(BookmarkCollectionModel).toReturn(null, 'findOneAndUpdate');
+      const result = await followBookmarkCollection('507f191e810c19729de860ea', 'someUsername');
 
-    const result = await unfollowBookmarkCollection('507f191e810c19729de860ea', 'someUsername');
+      expect(result).toEqual({ error: 'Error when following bookmark collection: error' });
+    });
 
-    expect(result).toEqual({
-      error: 'Error when unfollowing bookmark collection: Bookmark collection not found',
+    test('followBookmarkCollection should return an object with error if the bookmark collection id does not exist', async () => {
+      mockingoose(BookmarkCollectionModel).toReturn(null, 'findOneAndUpdate');
+
+      const result = await followBookmarkCollection('507f191e810c19729de860ea', 'someUsername');
+
+      expect(result).toEqual({
+        error:
+          'Error when following bookmark collection: Bookmark collection not found or is not public',
+      });
     });
   });
-});
 
-describe('getFollowedBookmarkCollections', () => {
-  test('getFollowedBookmarkCollections should return a list of bookmark collections that the user follows', async () => {
-    const user: User = {
-      username: 'someUsername',
-    };
-
-    const bookmarkCollections = [
-      {
+  describe('unfollowBookmarkCollection', () => {
+    test('unfollowBookmarkCollection should return the updated bookmark collection', async () => {
+      const bookmarkCollection: BookmarkCollection = {
         _id: new ObjectId('507f191e810c19729de860ea'),
         owner: 'testUsername',
         title: 'testBookmarkCollectionTitle',
         savedPosts: [],
         isPublic: false,
-        followers: ['someUsername'],
-      },
-      {
-        _id: new ObjectId('507f191e810c19729de860eb'),
-        owner: 'testUsername',
-        title: 'anotherBookmarkCollectionTitle',
-        savedPosts: [],
-        isPublic: false,
-        followers: ['someUsername'],
-      },
-      {
-        _id: new ObjectId('507f191e810c19729de860ec'),
-        owner: 'anotherUser',
-        title: 'thirdBookmarkCollectionTitle',
-        savedPosts: [],
-        isPublic: true,
-        followers: ['bob', 'alice'],
-      },
-    ];
+        followers: ['mordecai', 'someUsername', 'rigby'],
+      };
 
-    mockingoose(UserModel).toReturn(user, 'findOne');
+      // Mock the findOneAndUpdate method to return the updated bookmark collection
+      mockingoose(BookmarkCollectionModel).toReturn(
+        {
+          ...bookmarkCollection,
+          followers: ['mordecai', 'rigby'],
+        },
+        'findOneAndUpdate',
+      );
 
-    mockingoose(BookmarkCollectionModel).toReturn(bookmarkCollections.slice(0, -1), 'find');
+      const result = (await unfollowBookmarkCollection(
+        '507f191e810c19729de860ea',
+        'someUsername',
+      )) as BookmarkCollection;
 
-    const result = await getFollowedBookmarkCollections('someUsername');
+      expect(result.followers?.length).toEqual(2);
+      expect(result.followers).not.toContain('someUsername');
+    });
 
-    expect(result.length).toEqual(2);
-    expect(result[0].title).toEqual('testBookmarkCollectionTitle');
-    expect(result[1].title).toEqual('anotherBookmarkCollectionTitle');
+    test('unfollowBookmarkCollection should return an object with error if findOneAndUpdate throws an error', async () => {
+      mockingoose(BookmarkCollectionModel).toReturn(new Error('error'), 'findOneAndUpdate');
+
+      const result = await unfollowBookmarkCollection('507f191e810c19729de860ea', 'someUsername');
+
+      expect(result).toEqual({ error: 'Error when unfollowing bookmark collection: error' });
+    });
+
+    test('unfollowBookmarkCollection should return an object with error if the bookmark collection id does not exist', async () => {
+      mockingoose(BookmarkCollectionModel).toReturn(null, 'findOneAndUpdate');
+
+      const result = await unfollowBookmarkCollection('507f191e810c19729de860ea', 'someUsername');
+
+      expect(result).toEqual({
+        error: 'Error when unfollowing bookmark collection: Bookmark collection not found',
+      });
+    });
   });
 
-  test('getFollowedBookmarkCollections should return an empty array if the user does not exist', async () => {
-    mockingoose(UserModel).toReturn(null, 'findOne');
+  describe('getFollowedBookmarkCollections', () => {
+    test('getFollowedBookmarkCollections should return a list of bookmark collections that the user follows', async () => {
+      const user: User = {
+        username: 'someUsername',
+      };
 
-    const result = await getFollowedBookmarkCollections('nonExistentUsername');
+      const bookmarkCollections = [
+        {
+          _id: new ObjectId('507f191e810c19729de860ea'),
+          owner: 'testUsername',
+          title: 'testBookmarkCollectionTitle',
+          savedPosts: [],
+          isPublic: false,
+          followers: ['someUsername'],
+        },
+        {
+          _id: new ObjectId('507f191e810c19729de860eb'),
+          owner: 'testUsername',
+          title: 'anotherBookmarkCollectionTitle',
+          savedPosts: [],
+          isPublic: false,
+          followers: ['someUsername'],
+        },
+        {
+          _id: new ObjectId('507f191e810c19729de860ec'),
+          owner: 'anotherUser',
+          title: 'thirdBookmarkCollectionTitle',
+          savedPosts: [],
+          isPublic: true,
+          followers: ['bob', 'alice'],
+        },
+      ];
 
-    expect(result.length).toEqual(0);
+      mockingoose(UserModel).toReturn(user, 'findOne');
+
+      mockingoose(BookmarkCollectionModel).toReturn(bookmarkCollections.slice(0, -1), 'find');
+
+      const result = await getFollowedBookmarkCollections('someUsername');
+
+      expect(result.length).toEqual(2);
+      expect(result[0].title).toEqual('testBookmarkCollectionTitle');
+      expect(result[1].title).toEqual('anotherBookmarkCollectionTitle');
+    });
+
+    test('getFollowedBookmarkCollections should return an empty array if the user does not exist', async () => {
+      mockingoose(UserModel).toReturn(null, 'findOne');
+
+      const result = await getFollowedBookmarkCollections('nonExistentUsername');
+
+      expect(result.length).toEqual(0);
+    });
   });
-});
 
-describe('getBookmarkCollectionById', () => {
-  test('getBookmarkCollectionById should return an object with error if the bookmark collection id does not exist', async () => {
-    mockingoose(BookmarkCollectionModel).toReturn(null, 'findOne');
+  describe('getBookmarkCollectionById', () => {
+    test('getBookmarkCollectionById should return an object with error if the bookmark collection id does not exist', async () => {
+      mockingoose(BookmarkCollectionModel).toReturn(null, 'findOne');
 
-    const result = await getBookmarkCollectionById('507f191e810c19729de860ea');
+      const result = await getBookmarkCollectionById('507f191e810c19729de860ea');
 
-    expect(result).toEqual({
-      error: 'Error when retrieving bookmark collection: Bookmark collection not found',
+      expect(result).toEqual({
+        error: 'Error when retrieving bookmark collection: Bookmark collection not found',
+      });
     });
   });
 });

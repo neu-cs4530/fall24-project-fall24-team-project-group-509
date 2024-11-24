@@ -1,60 +1,185 @@
+/* Main Layout Container */
 .main {
   display: flex;
   flex-direction: row;
-  height: 90%;
+  height: calc(100vh - 70px); /* Adjusted for the header height */
+  width: 100%;
+  background: linear-gradient(to bottom right, #f0f4f8, #e8eff5); /* Soft gradient for a modern look */
+  box-sizing: border-box;
+  overflow: hidden;
+  border-top: 4px solid #007bff; /* Subtle branding with a top border */
 }
 
+/* Right Content Area */
 .right_main {
-  width: 85%;
-  overflow: auto;
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto; /* Vertical scrolling for large content */
+  background: #ffffff;
+  border-left: 2px solid #e0e0e0; /* Clean separator for the sidebar */
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05); /* Soft shadow for depth */
+  border-radius: 10px 0 0 10px; /* Rounded edges for visual appeal */
 }
 
+/* Space Between Utility Class */
 .space_between {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #e6e6e6; /* Section separator for content */
 }
 
+/* Padding Utility Class */
 .right_padding {
-  padding: 2% 0 2% 2%;
+  padding: 20px;
 }
 
+/* Title Styling */
 .bold_title {
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 40px;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #333333;
+  margin-bottom: 10px;
 }
 
+/* Blue Button Styling */
 .bluebtn {
-  background: #3090e2;
+  background: #007bff;
   color: #ffffff;
-  border: #000000 1px solid;
-  font-size: 20px;
-  padding: 10px 10px 10px 10px;
-  margin-right: 5%;
+  border: none;
+  font-size: 16px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 .bluebtn:hover {
   background: #0056b3;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
+.bluebtn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Button Container with Gap */
 .btn_indicator_container {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* This will push child elements to the extremes of the container */
-  width: 100%;
+  justify-content: flex-start;
+  gap: 15px; /* Space between child elements */
+  margin-top: 20px;
 }
 
+/* Form Post Button */
 .form_postBtn {
-  background: #3090e2;
+  background: #007bff;
   color: #ffffff;
-  padding: 10px 20px;
+  padding: 12px 30px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form_postBtn:hover {
+  background: #0056b3;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.form_postBtn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Mandatory Indicator */
+.mandatory_indicator {
+  font-size: 0.9rem;
+  color: #ff4d4f;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .right_main {
+    width: 100%;
+    padding: 15px;
+    border-left: none;
+    border-radius: 0;
+  }
+
+  .bluebtn,
+  .form_postBtn {
+    width: 100%;
+    text-align: center;
+    font-size: 14px;
+    padding: 12px;
+  }
+}
+
+/* Card-Like Content Sections */
+.card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.card_header {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333333;
+  margin-bottom: 10px;
+}
+
+.card_content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555555;
+}
+
+/* Sidebar Section for Potential Extensions */
+.sidebar {
+  width: 300px;
+  background: #ffffff;
+  padding: 20px;
+  border-right: 2px solid #e0e0e0;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar_title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #007bff;
+  margin-bottom: 15px;
+}
+
+.sidebar_item {
+  font-size: 14px;
+  color: #555555;
+  margin: 10px 0;
   cursor: pointer;
 }
 
-.mandatory_indicator {
-  font-size: 0.8rem;
-  color: red;
-  margin-top: 10px;
+.sidebar_item:hover {
+  color: #007bff;
+  text-decoration: underline;
 }
+
+

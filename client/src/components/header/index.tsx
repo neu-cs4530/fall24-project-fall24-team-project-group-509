@@ -13,7 +13,7 @@ const Header = () => {
   return (
     <div id='header' className='header'>
       <div></div>
-      <div className='title'>Fake Stack Overflow</div>
+      <div className='title'>MindSync</div>
       <input
         id='searchBar'
         placeholder='Search ...'

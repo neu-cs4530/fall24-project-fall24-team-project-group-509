@@ -1,13 +1,114 @@
+/* Header Container */
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  height: 10%;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 70px;
   width: 100%;
-  background: #dddddd;
+  background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+  font-family: 'Arial', sans-serif;
+  box-sizing: border-box;
+  z-index: 1000;
 }
 
+/* Title Styling */
 .title {
-  font-size: 32px;
-  font-weight: 800;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.3s ease, text-shadow 0.3s ease;
+}
+
+.title:hover {
+  transform: scale(1.1);
+  text-shadow: 0 3px 8px rgba(255, 255, 255, 0.6);
+}
+
+/* Search Bar Styling */
+#searchBar {
+  width: 40%;
+  height: 42px;
+  padding: 0 15px;
+  border: none;
+  border-radius: 21px;
+  font-size: 16px;
+  background-color: #ffffff;
+  color: #333333;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+#searchBar::placeholder {
+  color: #aaaaaa;
+  font-size: 14px;
+}
+
+#searchBar:focus {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border: 1px solid #00bfff;
+  transform: scale(1.02);
+}
+
+/* Header Hover Effect */
+.header:hover {
+  background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%);
+  transition: background 0.4s ease-in-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    height: auto;
+    padding: 15px 10px;
+    gap: 10px;
+  }
+
+  .title {
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+
+  #searchBar {
+    width: 90%;
+    height: 38px;
+    font-size: 14px;
+  }
+}
+
+/* Icon/Button Styling (Optional for Header) */
+.header .icon {
+  font-size: 18px;
+  color: #ffffff;
+  margin-left: 15px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.header .icon:hover {
+  color: #ffdd57;
+}
+
+/* Dropdown or Profile Button (Optional) */
+.profile-button {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border: none;
+  padding: 8px 15px;
+  color: #ffffff;
+  font-size: 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.profile-button:hover {
+  background: linear-gradient(135deg, #0056b3, #003f7f);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 }
