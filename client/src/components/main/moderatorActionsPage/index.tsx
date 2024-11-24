@@ -68,7 +68,7 @@ const ModeratorActionPage = () => {
   const handleDeletePost = async () => {
     if (flag) {
       try {
-        await deletePost(flag.postId, flag.postType, 'moderatorUsername');
+        await deletePost(flag.postId, flag.postType, user.username);
         navigate('/flags');
       } catch (error) {
         console.error('Error deleting post:', error);

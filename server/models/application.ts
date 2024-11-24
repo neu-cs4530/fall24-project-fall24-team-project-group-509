@@ -1497,6 +1497,7 @@ export const deletePost = async (
       await AnswerModel.deleteMany({ _id: { $in: question.answers } });
       await CommentModel.deleteMany({ _id: { $in: question.comments } });
       await QuestionModel.deleteOne({ _id: id });
+      await BookmarkCollectionModel.updateMany({}, { $pull: { savedPosts: { postId: id } } });
     } else if (type === 'answer') {
       const answer = await AnswerModel.findById(id);
       if (!answer) {
