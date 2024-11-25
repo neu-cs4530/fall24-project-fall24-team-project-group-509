@@ -19,7 +19,6 @@ import ModeratorPage from './main/moderatorPage';
 import ModeratorActionPage from './main/moderatorActionsPage';
 import SearchResultsPage from './main/searchResultsPage';
 
-
 const ProtectedRoute = ({
   user,
   socket,
