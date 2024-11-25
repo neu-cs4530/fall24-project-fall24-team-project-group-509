@@ -20,6 +20,8 @@ const useQuestionPage = () => {
   const [questionOrder, setQuestionOrder] = useState<OrderType>('newest');
   const [qlist, setQlist] = useState<Question[]>([]);
 
+  const { user } = useUserContext();
+
   useEffect(() => {
     let pageTitle = 'All Questions';
     let searchString = '';
@@ -45,7 +47,7 @@ const useQuestionPage = () => {
      */
     const fetchData = async () => {
       try {
-        const res = await getQuestionsByFilter(questionOrder, search);
+        const res = await getQuestionsByFilter(user.username, questionOrder, search);
         setQlist(res || []);
       } catch (error) {
         // eslint-disable-next-line no-console
@@ -103,7 +105,7 @@ const useQuestionPage = () => {
       socket.off('answerUpdate', handleAnswerUpdate);
       socket.off('viewsUpdate', handleViewsUpdate);
     };
-  }, [questionOrder, search, socket]);
+  }, [questionOrder, search, socket, user.username]);
 
   return { titleText, qlist, setQuestionOrder };
 };

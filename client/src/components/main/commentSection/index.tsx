@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AxiosError } from 'axios';
 import { getMetaData } from '../../../tool';
 import { Comment } from '../../../types';
 import './index.css';
@@ -10,10 +11,12 @@ import useUserContext from '../../../hooks/useUserContext';
  *
  * - comments - list of the comment components
  * - handleAddComment - a function that handles adding a new comment, taking a Comment object as an argument
+ * - commentErr - error message for the comment section if profanity is detected
  */
 interface CommentSectionProps {
   comments: Comment[];
   handleAddComment: (comment: Comment) => void;
+  handleFlagComment: (cid: string, cText: string, commentBy: string) => void;
 }
 
 /**
@@ -22,7 +25,7 @@ interface CommentSectionProps {
  * @param comments: an array of Comment objects
  * @param handleAddComment: function to handle the addition of a new comment
  */
-const CommentSection = ({ comments, handleAddComment }: CommentSectionProps) => {
+const CommentSection = ({ comments, handleAddComment, handleFlagComment }: CommentSectionProps) => {
   const { user } = useUserContext();
   const [text, setText] = useState<string>('');
   const [textErr, setTextErr] = useState<string>('');
@@ -31,7 +34,7 @@ const CommentSection = ({ comments, handleAddComment }: CommentSectionProps) => 
   /**
    * Function to handle the addition of a new comment.
    */
-  const handleAddCommentClick = () => {
+  const handleAddCommentClick = async () => {
     if (text.trim() === '' || user.username.trim() === '') {
       setTextErr(text.trim() === '' ? 'Comment text cannot be empty' : '');
       return;
@@ -43,9 +46,32 @@ const CommentSection = ({ comments, handleAddComment }: CommentSectionProps) => 
       commentDateTime: new Date(),
     };
 
-    handleAddComment(newComment);
-    setText('');
-    setTextErr('');
+    // handleAddComment(newComment);
+    // setText('');
+    // setTextErr('');
+
+    try {
+      await handleAddComment(newComment);
+      setText('');
+      setTextErr('');
+    } catch (err) {
+      if (err instanceof AxiosError && err.response) {
+        if (
+          err.response.data ===
+          'You are not allowed to post since you did not adhere to community guidelines'
+        ) {
+          setTextErr(
+            'You are not allowed to post since you did not adhere to community guidelines',
+          );
+        } else if (err.response.data.includes('Profanity detected in comment')) {
+          setTextErr('Profanity detected');
+        } else {
+          setTextErr('An error occurred while posting the comment');
+        }
+      } else {
+        setTextErr('An unknown error occurred');
+      }
+    }
   };
 
   return (
@@ -61,10 +87,17 @@ const CommentSection = ({ comments, handleAddComment }: CommentSectionProps) => 
               comments.map((comment, index) => (
                 <li key={index} className='comment-item'>
                   <p className='comment-text'>{comment.text}</p>
+                  <p className='comment-text'>{comment._id}</p>
                   <small className='comment-meta'>
                     <Link to={`/user/${comment.commentBy}`}>{comment.commentBy}</Link>,{' '}
                     {getMetaData(new Date(comment.commentDateTime))}
                   </small>
+                  <button
+                    onClick={() =>
+                      handleFlagComment(comment._id as string, comment.text, comment.commentBy)
+                    }>
+                    Flag Comment
+                  </button>
                 </li>
               ))
             ) : (

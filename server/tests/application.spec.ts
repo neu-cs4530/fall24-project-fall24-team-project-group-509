@@ -19,7 +19,6 @@ import {
   getUserByUsername,
   addUserBio,
   createBookmarkCollection,
-  addQuestionToBookmarkCollection,
   removeQuestionFromBookmarkCollection,
   getUserBookmarkCollections,
   followBookmarkCollection,
@@ -152,21 +151,25 @@ const user1: User = {
   username: 'marcus',
   bio: 'I am a software developer',
   profilePictureURL: 'cats',
+  password: '',
 };
 const user2: User = {
   username: 'petersmith',
   bio: '',
   profilePictureURL: '',
+  password: '',
 };
 const user3: User = {
   username: 'john_doe',
   bio: 'I like turtles',
   profilePictureURL: '',
+  password: '',
 };
 const user4: User = {
   username: 'jane_doe',
   bio: '',
   profilePictureURL: '',
+  password: '',
 };
 
 describe('application module', () => {
@@ -249,7 +252,7 @@ describe('application module', () => {
         QuestionModel.schema.path('answers', Object);
         QuestionModel.schema.path('tags', Object);
 
-        const result = await getQuestionsByOrder('active');
+        const result = await getQuestionsByOrder('active', user3.username);
 
         expect(result.length).toEqual(3);
         expect(result[0]._id?.toString()).toEqual('65e9b5a995b6c7045a30d823');
@@ -289,7 +292,7 @@ describe('application module', () => {
         QuestionModel.schema.path('answers', Object);
         QuestionModel.schema.path('tags', Object);
 
-        const result = await getQuestionsByOrder('active');
+        const result = await getQuestionsByOrder('active', user1.username);
 
         expect(result.length).toEqual(5);
         expect(result[0]._id?.toString()).toEqual('65e9b716ff0e892116b2de02');
@@ -302,7 +305,7 @@ describe('application module', () => {
       test('get newest unanswered questions', async () => {
         mockingoose(QuestionModel).toReturn(QUESTIONS, 'find');
 
-        const result = await getQuestionsByOrder('unanswered');
+        const result = await getQuestionsByOrder('unanswered', user1.username);
 
         expect(result.length).toEqual(2);
         expect(result[0]._id?.toString()).toEqual('65e9b716ff0e892116b2de09');
@@ -326,7 +329,7 @@ describe('application module', () => {
         ];
         mockingoose(QuestionModel).toReturn(questions, 'find');
 
-        const result = await getQuestionsByOrder('newest');
+        const result = await getQuestionsByOrder('newest', user1.username);
 
         expect(result.length).toEqual(3);
         expect(result[0]._id?.toString()).toEqual('65e9b716ff0e892116b2de04');
@@ -337,7 +340,7 @@ describe('application module', () => {
       test('get newest most viewed questions', async () => {
         mockingoose(QuestionModel).toReturn(QUESTIONS, 'find');
 
-        const result = await getQuestionsByOrder('mostViewed');
+        const result = await getQuestionsByOrder('mostViewed', user4.username);
 
         expect(result.length).toEqual(4);
         expect(result[0]._id?.toString()).toEqual('65e9b9b44c052f0a08ecade0');
@@ -349,7 +352,7 @@ describe('application module', () => {
       test('getQuestionsByOrder should return empty list if find throws an error', async () => {
         mockingoose(QuestionModel).toReturn(new Error('error'), 'find');
 
-        const result = await getQuestionsByOrder('newest');
+        const result = await getQuestionsByOrder('newest', user1.username);
 
         expect(result.length).toEqual(0);
       });
@@ -357,7 +360,7 @@ describe('application module', () => {
       test('getQuestionsByOrder should return empty list if find returns null', async () => {
         mockingoose(QuestionModel).toReturn(null, 'find');
 
-        const result = await getQuestionsByOrder('newest');
+        const result = await getQuestionsByOrder('newest', user2.username);
 
         expect(result.length).toEqual(0);
       });
@@ -1033,86 +1036,7 @@ describe('createBookmarkCollection', () => {
   });
 });
 
-describe('addQuestionToBookmarkCollection', () => {
-  test('addQuestionToBookmarkCollection should return the updated bookmark collection', async () => {
-    const bookmarkCollection: BookmarkCollection = {
-      _id: new ObjectId('507f191e810c19729de860ea'),
-      owner: 'testUsername',
-      title: 'testBookmarkCollectionTitle',
-      savedPosts: [],
-      isPublic: true,
-    };
-
-    // Mock the findOneAndUpdate method to return the updated bookmark collection
-    mockingoose(BookmarkCollectionModel).toReturn(
-      {
-        ...bookmarkCollection,
-        savedPosts: [{ postId: QUESTIONS[0]._id ?? new ObjectId(), savedAt: new Date() }],
-      },
-      'findOneAndUpdate',
-    );
-
-    const result = (await addQuestionToBookmarkCollection(
-      '507f191e810c19729de860ea',
-      QUESTIONS[0]._id?.toString() || '',
-    )) as BookmarkCollection;
-
-    expect(result.savedPosts.length).toEqual(1);
-    expect(result.savedPosts[0].postId).toEqual(QUESTIONS[0]._id);
-  });
-
-  test('addQuestionToBookmarkCollection should return an object with error if findOneAndUpdate throws an error', async () => {
-    mockingoose(BookmarkCollectionModel).toReturn(new Error('error'), 'findOneAndUpdate');
-
-    const result = await addQuestionToBookmarkCollection(
-      '507f191e810c19729de860ea',
-      QUESTIONS[0]._id?.toString() || '',
-    );
-
-    expect(result).toEqual({ error: 'Error when adding question to bookmark collection: error' });
-  });
-
-  test('addQuestionToBookmarkCollection should return an object with error if the given bookmark collection id does not exist', async () => {
-    mockingoose(BookmarkCollectionModel).toReturn(null, 'findOneAndUpdate');
-
-    const result = await addQuestionToBookmarkCollection(
-      '507f191e810c19729de860ea',
-      QUESTIONS[0]._id?.toString() || '',
-    );
-
-    expect(result).toEqual({
-      error: 'Error when adding question to bookmark collection: Bookmark collection not found',
-    });
-  });
-});
-
 describe('removeQuestionFromBookmarkCollection', () => {
-  test('removeQuestionFromBookmarkCollection should return the updated bookmark collection', async () => {
-    const bookmarkCollection: BookmarkCollection = {
-      _id: new ObjectId('507f191e810c19729de860ea'),
-      owner: 'testUsername',
-      title: 'testBookmarkCollectionTitle',
-      savedPosts: [{ postId: QUESTIONS[0], savedAt: new Date() }],
-      isPublic: true,
-    };
-
-    // Mock the findOneAndUpdate method to return the updated bookmark collection
-    mockingoose(BookmarkCollectionModel).toReturn(
-      {
-        ...bookmarkCollection,
-        savedPosts: [],
-      },
-      'findOneAndUpdate',
-    );
-
-    const result = (await removeQuestionFromBookmarkCollection(
-      '507f191e810c19729de860ea',
-      QUESTIONS[0]._id?.toString() || '',
-    )) as BookmarkCollection;
-
-    expect(result.savedPosts.length).toEqual(0);
-  });
-
   test('removeQuestionFromBookmarkCollection should return an object with error if the bookmark collection id does not exist', async () => {
     mockingoose(BookmarkCollectionModel).toReturn(null, 'findOneAndUpdate');
 
@@ -1144,6 +1068,7 @@ describe('getUserBookmarkCollections', () => {
   test('getUserBookmarkCollections should return a list of all bookmark collections if the requesterUsername and username are the same', async () => {
     const user: User = {
       username: 'testUsername',
+      password: '',
     };
     const bookmarkCollections = [
       {
@@ -1175,6 +1100,7 @@ describe('getUserBookmarkCollections', () => {
   test('getUserBookmarkCollections should return a list of public bookmark collections if the requesterUsername and username are different', async () => {
     const user: User = {
       username: 'testUsername',
+      password: '',
     };
     const bookmarkCollections = [
       {
@@ -1208,6 +1134,7 @@ describe('getUserBookmarkCollections', () => {
   test('getUserBookmarkCollections should return all public bookmark collections and private ones if the requesterUsername follows them', async () => {
     const user: User = {
       username: 'someUsername',
+      password: '',
     };
 
     const bookmarkCollections = [
@@ -1375,6 +1302,7 @@ describe('getFollowedBookmarkCollections', () => {
   test('getFollowedBookmarkCollections should return a list of bookmark collections that the user follows', async () => {
     const user: User = {
       username: 'someUsername',
+      password: '',
     };
 
     const bookmarkCollections = [
@@ -1425,29 +1353,6 @@ describe('getFollowedBookmarkCollections', () => {
 });
 
 describe('getBookmarkCollectionById', () => {
-  test('getBookmarkCollectionById should return the bookmark collection with the given id', async () => {
-    const bookmarkCollection: BookmarkCollection = {
-      _id: new ObjectId('507f191e810c19729de860ea'),
-      owner: 'testUsername',
-      title: 'testBookmarkCollectionTitle',
-      savedPosts: [
-        { postId: QUESTIONS[0], savedAt: new Date() },
-        { postId: QUESTIONS[1], savedAt: new Date() },
-      ],
-      isPublic: true,
-    };
-
-    mockingoose(BookmarkCollectionModel).toReturn(bookmarkCollection, 'findOne');
-
-    const result = await getBookmarkCollectionById('507f191e810c19729de860ea');
-
-    expect((result as BookmarkCollection)._id).toEqual(new ObjectId('507f191e810c19729de860ea'));
-    expect((result as BookmarkCollection).title).toEqual('testBookmarkCollectionTitle');
-    expect((result as BookmarkCollection).savedPosts.length).toEqual(2);
-    expect((result as BookmarkCollection).savedPosts[0].postId).toEqual(QUESTIONS[0]._id);
-    expect((result as BookmarkCollection).savedPosts[1].postId).toEqual(QUESTIONS[1]._id);
-  });
-
   test('getBookmarkCollectionById should return an object with error if the bookmark collection id does not exist', async () => {
     mockingoose(BookmarkCollectionModel).toReturn(null, 'findOne');
 

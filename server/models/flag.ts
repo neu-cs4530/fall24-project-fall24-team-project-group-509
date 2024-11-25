@@ -1,0 +1,14 @@
+import mongoose, { Model } from 'mongoose';
+import { Flag } from '../types';
+import flagSchema from './schema/flagSchema';
+
+/**
+ * Mongoose model for the Flag collection.
+ *
+ * This model is created using the Flag interface and the flagSchema, representing the
+ * Flag collection in the MongoDB database, and provides an interface for interacting with
+ * the stored flags.
+ */
+const FlagModel: Model<Flag> = mongoose.model<Flag>('Flag', flagSchema);
+
+export default FlagModel;

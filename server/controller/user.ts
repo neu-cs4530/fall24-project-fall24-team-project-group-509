@@ -8,6 +8,7 @@ import {
   AddUserBioRequest,
   AddUserProfilePicRequest,
   FindUserByUsernameRequest,
+  isUserBannedRequest,
   SearchUserByUsernameRequest,
 } from '../types';
 import {
@@ -15,8 +16,11 @@ import {
   addUserBio,
   addUserProfilePicture,
   getUserByUsername,
+  isUserBanned,
+  isUserShadowBanned,
   searchUsersByUsername,
 } from '../models/application';
+import { checkProfanity } from '../profanityFilter';
 
 const userController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -30,8 +34,17 @@ const userController = (socket: FakeSOSocket) => {
    * @param user The user object to validate.
    * @returns 'true' if the user object is valid, otherwise 'false'.
    */
-  const isUserBodyValid = (user: User): boolean =>
-    user.username !== undefined && user.username !== '';
+  const isUserBodyValid = async (user: User): Promise<boolean> => {
+    if (
+      user.username !== undefined ||
+      user.username !== '' ||
+      user.password !== undefined ||
+      user.password !== ''
+    ) {
+      return false;
+    }
+    return true;
+  };
 
   /**
    * Validates the addUserBio request to ensure all required fields are present.
@@ -83,7 +96,27 @@ const userController = (socket: FakeSOSocket) => {
     const { username } = req.body;
     const { bio } = req.body;
 
+    const banned = await isUserBanned(username);
+    if (banned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to post since you did not adhere to community guidelines');
+      return;
+    }
+
     try {
+      const { hasProfanity, censored } = await checkProfanity(bio);
+
+      if (hasProfanity) {
+        res.status(400).send(`Profanity detected in bio: ${censored}`);
+        return;
+      }
       const result = await addUserBio(username, bio);
       if ('error' in result) {
         throw new Error(result.error as string);
@@ -110,6 +143,20 @@ const userController = (socket: FakeSOSocket) => {
 
     if (!username || !profilePictureFile) {
       res.status(400).send('Invalid request');
+      return;
+    }
+
+    const banned = await isUserBanned(username);
+    if (banned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to post since you did not adhere to community guidelines');
       return;
     }
 
@@ -198,10 +245,26 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Checks if a user is banned.
+   * @param req - The HTTP request object containing the username of the user to check.
+   * @param res - The HTTP response object used to send back the result of the operation.
+   */
+  const isUserBannedRoute = async (req: isUserBannedRequest, res: Response): Promise<void> => {
+    const { username } = req.params;
+    try {
+      const banned = await isUserBanned(username);
+      res.json(banned);
+    } catch (err: unknown) {
+      res.status(500).send(`Error when checking if user is banned: ${(err as Error).message}`);
+    }
+  };
+
   router.post('/addUser', addUser);
   router.post('/addUserBio', addUserBioRoute);
   router.post('/addUserProfilePic', upload.single('profilePictureFile'), addUserProfilePicRoute);
   router.get('/getUser/:username', getUserByUsernameRoute);
+  router.get('/isBanned/:username', isUserBannedRoute);
   router.get('/search/:username', searchUsersByUsernameRoute);
 
   return router;

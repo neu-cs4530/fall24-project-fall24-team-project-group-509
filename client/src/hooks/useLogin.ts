@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ChangeEvent, useState } from 'react';
 import useLoginContext from './useLoginContext';
-import { addUser } from '../services/userService';
+import { addUser, isUserBanned } from '../services/userService';
 
 /**
  * Custom hook to handle login input and submission.
@@ -14,14 +14,25 @@ const useLogin = () => {
   const [username, setUsername] = useState<string>('');
   const { setUser } = useLoginContext();
   const navigate = useNavigate();
+  const [password, setPassword] = useState<string>('');
+  const [banMessage, setBanMessage] = useState<string>('');
 
   /**
-   * Function to handle the input change event.
+   * Function to handle the username change event.
    *
    * @param e - the event object.
    */
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleUsernameChange = (e: ChangeEvent<HTMLInputElement>) => {
     setUsername(e.target.value);
+  };
+
+  /**
+   * Function to handle the password change event.
+   *
+   * @param e - the event object.
+   */
+  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
   };
 
   /**
@@ -32,18 +43,30 @@ const useLogin = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-      await addUser({ username });
+      const isBanned = await isUserBanned(username);
+      if (isBanned) {
+        setBanMessage('You are banned from the site.');
+        return;
+      }
+      await addUser({ username, password });
+      setUser({ username, password });
+      navigate('/home');
     } catch (error) {
       // REMOVE THIS LATER
       // eslint-disable-next-line no-console
       console.error('Error adding user:', error);
       // Proceed with login as usual if there is an error (e.g., user already exists)
     }
-    setUser({ username });
-    navigate('/home');
   };
 
-  return { username, handleInputChange, handleSubmit };
+  return {
+    username,
+    password,
+    handleUsernameChange,
+    handlePasswordChange,
+    handleSubmit,
+    banMessage,
+  };
 };
 
 export default useLogin;

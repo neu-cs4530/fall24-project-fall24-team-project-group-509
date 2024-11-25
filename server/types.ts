@@ -23,6 +23,7 @@ export interface Answer {
   ansBy: string;
   ansDateTime: Date;
   comments: Comment[] | ObjectId[];
+  flags?: Flag[];
 }
 
 /**
@@ -79,6 +80,7 @@ export interface Question {
   upVotes: string[];
   downVotes: string[];
   comments: Comment[] | ObjectId[];
+  flags?: Flag[];
 }
 
 /**
@@ -91,12 +93,14 @@ export type QuestionResponse = Question | { error: string };
  * - order - The order in which to sort the questions
  * - search - The search string used to find questions
  * - askedBy - The username of the user who asked the question
+ * - username - The username of the user requesting the questions.
  */
 export interface FindQuestionRequest extends Request {
   query: {
     order: OrderType;
     search: string;
     askedBy: string;
+    username: string;
   };
 }
 
@@ -147,6 +151,7 @@ export interface Comment {
   text: string;
   commentBy: string;
   commentDateTime: Date;
+  flags?: Flag[];
 }
 
 /**
@@ -248,16 +253,29 @@ export interface ServerToClientEvents {
   commentUpdate: (comment: CommentUpdatePayload) => void;
   profileUpdate: (update: ProfileUpdatePayload) => void;
   collectionUpdate: (update: BookmarkCollectionUpdatePayload) => void;
+  postFlagged: (payload: { id: string; type: 'question' | 'answer' | 'comment' }) => void;
+}
+
+/**
+ * Interface representing the possible events that the client can emit to the server.
+ */
+export interface ClientToServerEvents {
+  followCollection: (collectionId: string, username: string) => void;
+  unfollowCollection: (collectionId: string, username: string) => void;
 }
 
 /**
  * Interface representing a bookmark, which contains:
  * - postId - The unique identifier of the post (question or answer).
  * - savedAt - The date and time when the post was bookmarked.
+ * - qTitle - The title of the question that the post belongs to.
  */
 export interface Bookmark {
-  postId: ObjectId | Question;
+  _id?: ObjectId;
+  postId: string;
+  qTitle: string;
   savedAt: Date;
+  numAnswers?: number;
   //  continue leveraging the tags from the Question documents without modifying the Bookmark structure for 1.5
 }
 
@@ -284,23 +302,49 @@ export interface BookmarkCollection {
 /**
  * Interface representing a user of the platform, which contains:
  * - username - The unique identifier for the user.
+ * - password - The password for the user.
  * - bio - A short description of the user. Optional field.
  * - profilePictureURL - The URL of the user's profile picture (if they have one). Optional field.
  * - activityHistory - The history of the user's activity on the platform.
  * - bookmarkCollections - An array of bookmark collections owned by the user.
  * - followedBookmarkCollections - An array of IDs of bookmark collections the user is following.
+ * - isBanned - A boolean indicating whether the user is banned.
+ * - isShadowBanned - A boolean indicating whether the user is shadow banned.
+ * - FollowUpdateNotifications - An array of notifications for when a bookmark collections the user is following is updated.
  */
 export interface User {
   username: string;
+  password: string;
   bio?: string;
   profilePictureURL?: string;
   activityHistory?: Array<{
     postId: string;
     postType: 'Question' | 'Answer' | 'Comment';
+    qTitle: string;
     createdAt: Date;
   }>;
   bookmarkCollections?: BookmarkCollection[];
   followedBookmarkCollections?: ObjectId[];
+  isBanned?: boolean;
+  isShadowBanned?: boolean;
+  followUpdateNotifications?: FollowNotificationLog[];
+}
+
+/**
+ * Interface representing a notification log for when a bookmark collection a user is following is updated, which contains:
+ *
+ * - _id - The unique identifier for the notification log. Optional field.
+ * - qTitle - The title of the question that was added to the bookmark collection.
+ * - collectionId - The unique identifier of the bookmark collection that was updated.
+ * - bookmarkCollectionTitle - The title of the bookmark collection that was updated.
+ * - createdAt - The date and time when the notification was created.
+ */
+export interface FollowNotificationLog {
+  _id?: ObjectId;
+  qTitle: string;
+  collectionId: string;
+  bookmarkCollectionTitle: string;
+  createdAt: Date;
 }
 
 /**
@@ -367,7 +411,7 @@ export interface GetBookmarksRequest extends Request {
     requesterUsername: string;
   };
   query: {
-    sortOption: BookmarkSortOption
+    sortOption: BookmarkSortOption;
   };
 }
 
@@ -470,6 +514,119 @@ export interface SearchUserByUsernameRequest extends Request {
 }
 
 /**
+ * Interface representing the request to check if a user is banned.
+ * - username - The username of the user to check.
+ */
+export interface isUserBannedRequest extends Request {
+  params: {
+    username: string;
+  };
+}
+
+/**
  * Type representing the possible responses for a user search operation.
  */
 export type UserSearchResponse = User[] | { error: string };
+
+/**
+ * Enum representing the possible reasons for flagging a post.
+ */
+export type FlagReason = 'spam' | 'offensive language' | 'irrelevant content' | 'other';
+
+/**
+ * Interface representing a flag on a post.
+ * - flaggedBy: The username of the user who flagged the post.
+ * - reason: The reason for flagging.
+ * - dateFlagged: The date and time when the post was flagged.
+ * - status: The status of the flag, either 'pending' or 'reviewed'.
+ * - reviewedBy: The username of the moderator who reviewed the flag. Optional field.
+ * - reviewedAt: The date and time when the flag was reviewed. Optional field.
+ * - postId: The unique identifier of the post being flagged. This can be either a question, comment, or answer.
+ * - postType: The type of the post being flagged, either 'question', 'answer', or 'comment'.
+ * - postText: The text of the post being flagged.
+ * - flaggedUser: The username of the user who created the post being flagged.
+ */
+
+export interface Flag {
+  _id?: string;
+  flaggedBy: string;
+  reason: FlagReason;
+  dateFlagged: Date;
+  status: 'pending' | 'reviewed';
+  reviewedBy?: string;
+  reviewedAt?: Date;
+  postId: string;
+  postType: 'question' | 'answer' | 'comment';
+  postText: string;
+  flaggedUser: string;
+}
+
+/**
+ * Interface for the request body when flagging a post.
+ * - id: The unique identifier of the post being flagged.
+ * - type: The type of the post, either 'question', 'answer', or 'comment'.
+ * - reason: The reason for flagging the post.
+ * - flaggedBy: The username of the user flagging the post.
+ */
+export interface FlagPostRequest extends Request {
+  body: {
+    id: string;
+    type: 'question' | 'answer' | 'comment';
+    reason: FlagReason;
+    flaggedBy: string;
+  };
+}
+
+export interface GetFlaggedPostsRequest extends Request {
+  query: {
+    username: string;
+  };
+}
+
+/**
+ * Interface for the request to get a flag object by its ID.
+ * - fid: The unique identifier of the flag.
+ */
+export interface GetFlagByIdRequest extends Request {
+  params: {
+    fid: string;
+  };
+  query: {
+    username: string;
+  };
+}
+
+export interface ReviewFlagRequest extends Request {
+  body: {
+    flagId: string;
+    moderatorUsername: string;
+  };
+}
+
+export type FlagResponse = Flag | { error: string };
+
+export interface DeletePostRequest extends Request {
+  body: {
+    id: string;
+    type: 'question' | 'answer' | 'comment';
+    moderatorUsername: string;
+  };
+}
+
+export interface GetPendingFlagsRequest extends Request {
+  query: {
+    username: string;
+  };
+}
+
+/**
+ * Interface representing the request to ban or unban a user.
+ * - username - The username of the user to ban or unban.
+ * - moderatorUsername - The username of the moderator performing the action.
+ */
+export interface BanUserRequest extends Request {
+  body: {
+    username: string;
+    moderatorUsername: string;
+  };
+}

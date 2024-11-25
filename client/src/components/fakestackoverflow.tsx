@@ -11,6 +11,12 @@ import NewQuestionPage from './main/newQuestion';
 import NewAnswerPage from './main/newAnswer';
 import AnswerPage from './main/answerPage';
 import ProfileView from './main/userPage/userProfile';
+import BookmarkPage from './main/bookmarkPage';
+import FlagQuestionPage from './main/flagQuestionPage';
+import FlagAnswerPage from './main/flagAnswerPage';
+import FlagCommentPage from './main/flagCommentPage';
+import ModeratorPage from './main/moderatorPage';
+import ModeratorActionPage from './main/moderatorActionsPage';
 import SearchResultsPage from './main/searchResultsPage';
 
 const ProtectedRoute = ({
@@ -58,6 +64,12 @@ const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
             <Route path='/search-results' element={<SearchResultsPage />} />
             <Route path='/profile/:username' element={<ProfileView />} />
             <Route path='/user/:username' element={<ProfileView />} />
+            <Route path='/user/bookmarks/:collectionId' element={<BookmarkPage />} />
+            <Route path='/flag/question/:qid' element={<FlagQuestionPage />} />
+            <Route path='/flag/answer/:aid' element={<FlagAnswerPage />} />
+            <Route path='/flag/comment/:cid' element={<FlagCommentPage />} />
+            <Route path='/flags' element={<ModeratorPage />} />
+            <Route path='flags/:fid' element={<ModeratorActionPage />} />
           </Route>
         }
       </Routes>

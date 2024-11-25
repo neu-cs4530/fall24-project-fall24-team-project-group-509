@@ -16,6 +16,8 @@ import commentController from './controller/comment';
 import { FakeSOSocket } from './types';
 import userController from './controller/user';
 import bookmarkController from './controller/bookmark';
+import flagController from './controller/flag';
+import moderatorController from './controller/moderator';
 
 dotenv.config();
 
@@ -74,5 +76,7 @@ app.use('/answer', answerController(socket));
 app.use('/comment', commentController(socket));
 app.use('/user', userController(socket));
 app.use('/bookmark', bookmarkController(socket));
+app.use('/flag', flagController(socket));
+app.use('/moderator', moderatorController());
 // Export the app instance
 export { app, server, startServer };

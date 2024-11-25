@@ -19,6 +19,8 @@ import {
   followBookmarkCollection,
   unfollowBookmarkCollection,
   getBookmarkCollectionById,
+  isUserBanned,
+  isUserShadowBanned,
 } from '../models/application';
 
 const bookmarkController = (socket: FakeSOSocket) => {
@@ -37,6 +39,20 @@ const bookmarkController = (socket: FakeSOSocket) => {
 
     if (!username || !title || isPublic === undefined) {
       res.status(400).send('Invalid request');
+      return;
+    }
+
+    const banned = await isUserBanned(username);
+    if (banned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+
+    const shadowBanned = await isUserShadowBanned(username);
+    if (shadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to post since you did not adhere to community guidelines');
       return;
     }
 
@@ -75,7 +91,11 @@ const bookmarkController = (socket: FakeSOSocket) => {
       }
 
       // Emit collection update to followers
-      socket.emit('collectionUpdate', {
+      // socket.emit('collectionUpdate', {
+      //   collectionId,
+      //   updatedCollection,
+      // } as BookmarkCollectionUpdatePayload);
+      socket.to(collectionId).emit('collectionUpdate', {
         collectionId,
         updatedCollection,
       } as BookmarkCollectionUpdatePayload);

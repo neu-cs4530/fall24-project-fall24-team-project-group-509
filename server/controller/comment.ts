@@ -4,10 +4,13 @@ import { Comment, AddCommentRequest, FakeSOSocket } from '../types';
 import {
   addComment,
   findQuestionIDByAnswerID,
+  isUserBanned,
+  isUserShadowBanned,
   populateDocument,
   saveComment,
   updateActivityHistoryWithQuestionID,
 } from '../models/application';
+import { checkProfanity } from '../profanityFilter';
 
 const commentController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -73,7 +76,27 @@ const commentController = (socket: FakeSOSocket) => {
       return;
     }
 
+    const banned = await isUserBanned(comment.commentBy);
+    if (banned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+
+    const shadowBanned = await isUserShadowBanned(comment.commentBy);
+    if (shadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to post since you did not adhere to community guidelines');
+      return;
+    }
+
     try {
+      const { hasProfanity, censored } = await checkProfanity(comment.text);
+
+      if (hasProfanity) {
+        res.status(400).send(`Profanity detected in comment text: ${censored}`);
+        return;
+      }
       const comFromDb = await saveComment(comment);
 
       if ('error' in comFromDb) {

@@ -18,6 +18,7 @@ describe('Get /getUser/:username', () => {
       username: 'user1',
       bio: 'I love cats',
       profilePictureURL: 'google.com',
+      password: '',
     };
 
     const mockReqParams = {
@@ -113,6 +114,7 @@ describe('Post /addUserBio', () => {
       username: 'user1',
       bio: 'I love capybaras',
       profilePictureURL: 'google.com',
+      password: '',
     };
 
     jest.spyOn(util, 'addUserBio').mockResolvedValueOnce(mockUser as User);
