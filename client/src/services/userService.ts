@@ -92,8 +92,20 @@ const isUserBanned = async (username: string): Promise<boolean> => {
   const res = await api.get(`${USER_API_URL}/isBanned/${username}`);
   if (res.status !== 200) {
     throw new Error('Error while checking if user is banned');
+
+ /**
+ * Searches for users by a partial or full username.
+ *
+ * @param username - The partial or full username to search for.
+ * @returns A list of users matching the search criteria.
+ */
+const searchUsersByUsername = async (username: string): Promise<User[]> => {
+  const res = await api.get(`${USER_API_URL}/search/${username}`);
+  if (res.status !== 200) {
+    throw new Error('Error while searching for users by username');
+
   }
   return res.data;
 };
 
-export { addUser, addUserBio, addUserProfilePicture, getUserByUsername, isUserBanned };
+export { addUser, addUserBio, addUserProfilePicture, getUserByUsername, isUserBanned, searchUsersByUsername };

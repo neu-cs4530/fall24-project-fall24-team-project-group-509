@@ -8,17 +8,17 @@ import {
   AddUserBioRequest,
   AddUserProfilePicRequest,
   FindUserByUsernameRequest,
-  SearchUserRequest,
   isUserBannedRequest,
+  SearchUserByUsernameRequest,
 } from '../types';
 import {
   saveUser,
   addUserBio,
   addUserProfilePicture,
   getUserByUsername,
-  searchUsers,
   isUserBanned,
   isUserShadowBanned,
+  searchUsersByUsername,
 } from '../models/application';
 import { checkProfanity } from '../profanityFilter';
 
@@ -221,26 +221,27 @@ const userController = (socket: FakeSOSocket) => {
   };
 
   /**
-   * Searches for users based on a keyword in their bio or username.
-   * @param req The HTTP request object containing the search query parameter.
-   * @param res The HTTP response object used to send back the list of users.
+   * Searches for users by a partial or full username.
+   * @param req The request object containing the query parameter `username`.
+   * @param res The response object to send back the list of matching users.
    */
-  const searchUsersRoute = async (req: SearchUserRequest, res: Response): Promise<void> => {
+  const searchUsersByUsernameRoute = async (
+    req: SearchUserByUsernameRequest,
+    res: Response,
+  ): Promise<void> => {
+    const { username } = req.params;
+
+    if (!username || typeof username !== 'string') {
+      res.status(400).send('Username query parameter is required');
+      return;
+    }
+
     try {
-      const { search } = req.query;
-      if (!search) {
-        res.status(400).send('Search query parameter is missing');
-        return;
-      }
-
-      const users = await searchUsers(search);
-      if ('error' in users) {
-        throw new Error(users.error);
-      }
-
+      // Search for users by a case-insensitive partial match on the username
+      const users = await searchUsersByUsername(username);
       res.json(users);
     } catch (err: unknown) {
-      res.status(500).send(`Error when searching for users: ${(err as Error).message}`);
+      res.status(500).send(`Error when fetching user by username: ${(err as Error).message}`);
     }
   };
 
@@ -263,8 +264,8 @@ const userController = (socket: FakeSOSocket) => {
   router.post('/addUserBio', addUserBioRoute);
   router.post('/addUserProfilePic', upload.single('profilePictureFile'), addUserProfilePicRoute);
   router.get('/getUser/:username', getUserByUsernameRoute);
-  router.get('/search', searchUsersRoute);
   router.get('/isBanned/:username', isUserBannedRoute);
+  router.get('/search/:username', searchUsersByUsernameRoute);
 
   return router;
 };

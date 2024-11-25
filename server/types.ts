@@ -504,12 +504,12 @@ export interface GetBookmarkCollectionByIdRequest extends Request {
 }
 
 /**
- * Interface representing the request to search for users.
- * - search - The search string used to find users.
+ * Interface representing the request to search for users by a partial or full username.
+ * - username - The search term to match against usernames.
  */
-export interface SearchUserRequest extends Request {
+export interface SearchUserByUsernameRequest extends Request {
   query: {
-    search: string;
+    username: string;
   };
 }
 

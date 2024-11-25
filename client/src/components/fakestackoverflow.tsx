@@ -17,6 +17,8 @@ import FlagAnswerPage from './main/flagAnswerPage';
 import FlagCommentPage from './main/flagCommentPage';
 import ModeratorPage from './main/moderatorPage';
 import ModeratorActionPage from './main/moderatorActionsPage';
+import SearchResultsPage from './main/searchResultsPage';
+
 
 const ProtectedRoute = ({
   user,
@@ -60,6 +62,8 @@ const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
             <Route path='/question/:qid' element={<AnswerPage />} />
             <Route path='/new/question' element={<NewQuestionPage />} />
             <Route path='/new/answer/:qid' element={<NewAnswerPage />} />
+            <Route path='/search-results' element={<SearchResultsPage />} />
+            <Route path='/profile/:username' element={<ProfileView />} />
             <Route path='/user/:username' element={<ProfileView />} />
             <Route path='/user/bookmarks/:collectionId' element={<BookmarkPage />} />
             <Route path='/flag/question/:qid' element={<FlagQuestionPage />} />

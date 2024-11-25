@@ -872,19 +872,47 @@ export const addUserProfilePicture = async (
 };
 
 /**
- * Searches for users based on a search string.
- * @param searchString - the search string used to find users
- * @returns an array of users matching the search criteria
+ * Fetches and populates a user document based on the provided username.
+ * @param username - the username of the user to fetch
+ * @param requesterUsername - the username of the user making the request
+ *
+ * @returns the user document
  */
-export const searchUsers = async (searchString: string): Promise<User[] | { error: string }> => {
+export const getUserByUsername = async (
+  username: string,
+  requesterUsername: string,
+): Promise<UserResponse | null> => {
   try {
-    const users = await UserModel.find({
-      $text: { $search: searchString },
-    });
+    if (!username || username === '') {
+      throw new Error('Invalid username');
+    }
+    const result = await UserModel.findOne({ username });
+    // .populate({
+    //   path: 'activityHistory.postId',
+    // });
+    return result;
+  } catch (error) {
+    return { error: 'Error when fetching user by username' };
+  }
+};
 
+/**
+ * Searches for users by a partial or full username.
+ * @param username The username to search for.
+ * @returns A list of matching users with only their `username` field or an error object if something goes wrong.
+ */
+export const searchUsersByUsername = async (
+  username: string,
+): Promise<{ username: string }[] | { error: string }> => {
+  try {
+    if (!username || username.trim() === '') {
+      throw new Error('Invalid username');
+    }
+    // Search for users by a case-insensitive partial match on the username
+    const users = await UserModel.find({ username: new RegExp(username, 'i') }).select('username');
     return users;
   } catch (error) {
-    return { error: 'Error when searching for users' };
+    return { error: 'Error when searching user by username' };
   }
 };
 

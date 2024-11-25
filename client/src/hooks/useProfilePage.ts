@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { BookmarkCollection, UserProfile } from '../types';
 import useUserContext from './useUserContext';
 import { addUserBio, addUserProfilePicture, getUserByUsername } from '../services/userService';
@@ -18,6 +18,9 @@ const useProfilePage = () => {
   const [bookmarks, setBookmarks] = useState<BookmarkCollection[]>([]);
   const [pfp, setPfp] = useState<string>('');
   const [isEditingBio, setIsEditingBio] = useState(false);
+  // for handle Search routing
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const sortActivityHistory = (
     history: Array<{ postID: string; postType: string; qTitle: string; createdAt: Date }>,
@@ -93,6 +96,13 @@ const useProfilePage = () => {
     setIsEditingBio(false);
   };
 
+  // Handle search functionality
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/search-results?query=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
   return {
     requesterUsername,
     bio,
@@ -108,6 +118,9 @@ const useProfilePage = () => {
     handleSaveClick,
     username,
     isEditingBio,
+    searchQuery,
+    setSearchQuery,
+    handleSearch,
   };
 };
 

@@ -28,6 +28,9 @@ const ProfileView = () => {
     handleSaveClick,
     username,
     isEditingBio,
+    searchQuery,
+    setSearchQuery,
+    handleSearch,
   } = useProfilePage();
 
   const getArticle = (type: string) => (type.toLowerCase() === 'answer' ? 'an' : 'a');
@@ -86,6 +89,16 @@ const ProfileView = () => {
             <p>No activity history for {username}</p>
           )}
         </ul>
+      </div>
+      {/* Search Bar */}
+      <div className='search-bar'>
+        <input
+          type='text'
+          placeholder='Search for users...'
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
+        <button onClick={handleSearch}>Search</button>
       </div>
       <div className='collections'>
         <h3>Bookmark Collections</h3>
