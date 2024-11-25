@@ -32,14 +32,14 @@ const SideBarNav = () => {
         className={({ isActive }) => `menu_button ${isActive ? 'menu_selected' : ''}`}>
         User Profile
       </NavLink>
-      {username in modUsernames === True &&
+      {modUsernames.includes(username) && (
         <NavLink
           to='/flags'
           id='menu_flaggedPosts'
           className={({ isActive }) => `menu_button ${isActive ? 'menu_selected' : ''}`}>
           Flagged Posts
         </NavLink>
-      }
+      )}
       <NavLink
         to='/'
         id='menu_signout'
