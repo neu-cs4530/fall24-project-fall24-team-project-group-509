@@ -183,6 +183,15 @@ export interface CommentUpdatePayload {
   result: Question | Answer;
   type: 'question' | 'answer';
 }
+/**
+ * Interface representing the payload for a bookmark collection update event, which contains:
+ * - collectionId - The unique identifier of the bookmark collection.
+ * - updatedCollection - The updated bookmark collection.
+ */
+export interface BookmarkCollectionUpdatePayload {
+  collectionId: string;
+  updatedCollection: BookmarkCollection;
+}
 
 /**
  * Interface representing the possible events that the server can emit to the client.
@@ -198,6 +207,7 @@ export interface ServerToClientEvents {
   ) => void;
   bookmarkUpdate: (update: BookmarkCollection[]) => void;
   flagUpdate: (update: Flag) => void;
+  collectionUpdate: (update: BookmarkCollectionUpdatePayload) => void;
 }
 
 /**

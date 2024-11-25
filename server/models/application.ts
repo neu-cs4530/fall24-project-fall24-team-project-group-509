@@ -8,9 +8,11 @@ import {
   Bookmark,
   BookmarkCollection,
   BookmarkCollectionResponse,
+  BookmarkCollectionUpdatePayload,
   BookmarkSortOption,
   Comment,
   CommentResponse,
+  FakeSOSocket,
   OrderType,
   Question,
   QuestionResponse,
@@ -20,6 +22,7 @@ import {
   Flag,
   FlagReason,
   FlagResponse,
+  FollowNotificationLog,
 } from '../types';
 import AnswerModel from './answers';
 import QuestionModel from './questions';
@@ -1215,6 +1218,49 @@ export const getFollowedBookmarkCollections = async (
     return collections;
   } catch (error) {
     return [];
+  }
+};
+
+/**
+ * Notifies all followers of a bookmark collection when it is updated.
+ *
+ * @param socket - The socket instance used for real-time updates.
+ * @param collectionId - The ID of the updated collection.
+ * @param message - A message describing the update.
+ */
+export const notifyFollowersOfCollectionUpdate = async (
+  collectionId: string,
+  updatedCollection: BookmarkCollection,
+  socket: FakeSOSocket,
+): Promise<void> => {
+  if (updatedCollection.followers) {
+    updatedCollection.followers.forEach(follower => {
+      socket.emit('collectionUpdate', {
+        collectionId,
+        updatedCollection,
+      } as BookmarkCollectionUpdatePayload);
+    });
+  }
+};
+
+/**
+ * Retrieves the follow update notifications for a given user.
+ * @param username - The username of the user whose notifications are being fetched.
+ * @returns An array of follow update notifications for the user.
+ */
+export const getUserFollowUpdateNotifications = async (
+  username: string,
+): Promise<FollowNotificationLog[] | { error: string }> => {
+  try {
+    const user = await UserModel.findOne({ username }, { followUpdateNotifications: 1 });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return user.followUpdateNotifications || [];
+  } catch (error) {
+    return { error: `Error when unfollowing bookmark collection: ${(error as Error).message}` };
   }
 };
 

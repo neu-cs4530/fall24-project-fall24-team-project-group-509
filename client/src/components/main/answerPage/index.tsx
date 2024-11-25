@@ -40,6 +40,7 @@ const AnswerPage = () => {
       />
       <CommentSection
         comments={question.comments}
+        flags={question.flags || []}
         handleAddComment={(comment: Comment) => handleNewComment(comment, 'question', questionID)}
         handleFlagComment={handleFlagComment}
       />
@@ -51,6 +52,7 @@ const AnswerPage = () => {
           ansBy={a.ansBy}
           meta={getMetaData(new Date(a.ansDateTime))}
           comments={a.comments}
+          flags={a.flags}
           handleAddComment={(comment: Comment) => handleNewComment(comment, 'answer', a._id)}
           handleFlagAnswer={handleFlagAnswer}
           handleFlagComment={handleFlagComment}
