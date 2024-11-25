@@ -31,11 +31,9 @@ const useBookmarkPage = () => {
       setSavedPosts(fetchedCollection.savedPosts || []);
     };
     fetchSavedPosts();
+  }, [collectionID]);
 
-    socket.on('questionDeletionUpdate', (q_id: string) => {
-      setSavedPosts(savedPosts.filter(post => post._id !== q_id));
-    });
-
+  useEffect(() => {
     socket.on('bookmarkUpdate', (updatedCollections: BookmarkCollection[]) => {
       const updatedCollection = updatedCollections.find(col => col._id === collectionID);
       if (updatedCollection) {
@@ -45,10 +43,9 @@ const useBookmarkPage = () => {
     });
 
     return () => {
-      socket.off('questionDeletionUpdate');
       socket.off('bookmarkUpdate');
     };
-  });
+  }, [collectionID, socket]);
 
   const handleFollowCollection = async () => {
     const updatedCollection = await followBookmarkCollection(collectionID, user.username);
@@ -71,10 +68,16 @@ const useBookmarkPage = () => {
   };
 
   const handleDeleteFromCollection = async (q_id: string) => {
-    const updatedCollection = await removeQuestionFromBookmarkCollection(collectionID, q_id);
-    setCollection(updatedCollection);
-    setSavedPosts(prev => prev.filter(post => post._id !== q_id));
-    socket.emit('questionDeletionUpdate', q_id);
+    setSavedPosts(prevPosts => prevPosts.filter(post => post.postId !== q_id));
+    try {
+      const updatedCollection = await removeQuestionFromBookmarkCollection(collectionID, q_id);
+      setCollection(updatedCollection);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to delete question:', error);
+      const fetchedCollection = await getBookmarkCollectionById(collectionID);
+      setSavedPosts(fetchedCollection.savedPosts || []);
+    }
   };
 
   const sortedPosts = [...savedPosts].sort((a, b) => {
@@ -82,7 +85,7 @@ const useBookmarkPage = () => {
       return new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime();
     }
     if (a.numAnswers && b.numAnswers && sortOption === 'mostAnswers') {
-      return a.numAnswers - b.numAnswers;
+      return b.numAnswers - a.numAnswers;
     }
     return 0;
   });

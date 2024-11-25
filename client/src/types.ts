@@ -197,7 +197,6 @@ export interface ServerToClientEvents {
     update: Array<{ postID: string; postType: string; qTitle: string; createdAt: Date }>,
   ) => void;
   bookmarkUpdate: (update: BookmarkCollection[]) => void;
-  questionDeletionUpdate: (update: string) => void;
   flagUpdate: (update: Flag) => void;
 }
 
