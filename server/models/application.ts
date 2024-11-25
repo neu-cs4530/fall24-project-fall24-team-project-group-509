@@ -872,31 +872,6 @@ export const addUserProfilePicture = async (
 };
 
 /**
- * Fetches and populates a user document based on the provided username.
- * @param username - the username of the user to fetch
- * @param requesterUsername - the username of the user making the request
- *
- * @returns the user document
- */
-export const getUserByUsername = async (
-  username: string,
-  requesterUsername: string,
-): Promise<UserResponse | null> => {
-  try {
-    if (!username || username === '') {
-      throw new Error('Invalid username');
-    }
-    const result = await UserModel.findOne({ username });
-    // .populate({
-    //   path: 'activityHistory.postId',
-    // });
-    return result;
-  } catch (error) {
-    return { error: 'Error when fetching user by username' };
-  }
-};
-
-/**
  * Searches for users by a partial or full username.
  * @param username The username to search for.
  * @returns A list of matching users with only their `username` field or an error object if something goes wrong.
