@@ -1,7 +1,16 @@
 import express, { Response } from 'express';
 import { ObjectId } from 'mongodb';
 import { Comment, AddCommentRequest, FakeSOSocket } from '../types';
-import { addComment, populateDocument, saveComment } from '../models/application';
+import {
+  addComment,
+  findQuestionIDByAnswerID,
+  isUserBanned,
+  isUserShadowBanned,
+  populateDocument,
+  saveComment,
+  updateActivityHistoryWithQuestionID,
+} from '../models/application';
+import { checkProfanity } from '../profanityFilter';
 
 const commentController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -67,7 +76,27 @@ const commentController = (socket: FakeSOSocket) => {
       return;
     }
 
+    const banned = await isUserBanned(comment.commentBy);
+    if (banned) {
+      res.status(403).send('Your account has been banned');
+      return;
+    }
+
+    const shadowBanned = await isUserShadowBanned(comment.commentBy);
+    if (shadowBanned) {
+      res
+        .status(403)
+        .send('You are not allowed to post since you did not adhere to community guidelines');
+      return;
+    }
+
     try {
+      const { hasProfanity, censored } = await checkProfanity(comment.text);
+
+      if (hasProfanity) {
+        res.status(400).send(`Profanity detected in comment text: ${censored}`);
+        return;
+      }
       const comFromDb = await saveComment(comment);
 
       if ('error' in comFromDb) {
@@ -78,6 +107,26 @@ const commentController = (socket: FakeSOSocket) => {
 
       if (status && 'error' in status) {
         throw new Error(status.error);
+      }
+
+      // update user's activityHistory
+      if (type === 'question') {
+        await updateActivityHistoryWithQuestionID(
+          comment.commentBy,
+          id,
+          'comment',
+          comment.commentDateTime,
+        );
+      }
+      // currently failing right now this condition
+      else if (type === 'answer') {
+        const gainedQID = await findQuestionIDByAnswerID(id);
+        await updateActivityHistoryWithQuestionID(
+          comment.commentBy,
+          gainedQID as string,
+          'comment',
+          comment.commentDateTime,
+        );
       }
 
       // Populates the fields of the question or answer that this comment

@@ -7,10 +7,13 @@ import { Question } from '../types';
 const saveCommentSpy = jest.spyOn(util, 'saveComment');
 const addCommentSpy = jest.spyOn(util, 'addComment');
 const popDocSpy = jest.spyOn(util, 'populateDocument');
+const findQIDByAID = jest.spyOn(util, 'findQuestionIDByAnswerID');
+const updateActivityHistorySpy = jest.spyOn(util, 'updateActivityHistoryWithQuestionID');
 
 describe('POST /addComment', () => {
   afterEach(async () => {
     await mongoose.connection.close(); // Ensure the connection is properly closed
+    jest.resetAllMocks(); // Reset all mocks
   });
 
   afterAll(async () => {
@@ -354,11 +357,117 @@ describe('POST /addComment', () => {
 
     saveCommentSpy.mockResolvedValueOnce(mockComment);
     addCommentSpy.mockResolvedValueOnce(mockQuestion);
+    updateActivityHistorySpy.mockResolvedValueOnce(undefined);
+    findQIDByAID.mockResolvedValueOnce('someQuestionId');
     popDocSpy.mockResolvedValueOnce({ error: 'Error when populating document' });
 
     const response = await supertest(app).post('/comment/addComment').send(mockReqBody);
 
     expect(response.status).toBe(500);
     expect(response.text).toBe('Error when adding comment: Error when populating document');
+  });
+
+  it('should return a forbidden error if user is banned', async () => {
+    const validQid = new mongoose.Types.ObjectId();
+    const mockReqBody = {
+      id: validQid.toString(),
+      type: 'question',
+      comment: {
+        text: 'This is a test comment',
+        commentBy: 'bannedUser',
+        commentDateTime: new Date('2024-06-03'),
+      },
+    };
+
+    jest.spyOn(util, 'isUserBanned').mockResolvedValueOnce(true);
+
+    const response = await supertest(app).post('/comment/addComment').send(mockReqBody);
+
+    expect(response.status).toBe(403);
+    expect(response.text).toBe('Your account has been banned');
+  });
+
+  it('should return a forbidden error if user is shadow-banned', async () => {
+    const validQid = new mongoose.Types.ObjectId();
+    const mockReqBody = {
+      id: validQid.toString(),
+      type: 'answer',
+      comment: {
+        text: 'This is a test comment',
+        commentBy: 'shadowBannedUser',
+        commentDateTime: new Date('2024-06-03'),
+      },
+    };
+
+    jest.spyOn(util, 'isUserShadowBanned').mockResolvedValueOnce(true);
+
+    const response = await supertest(app).post('/comment/addComment').send(mockReqBody);
+
+    expect(response.status).toBe(403);
+    expect(response.text).toBe(
+      'You are not allowed to post since you did not adhere to community guidelines',
+    );
+  });
+
+  it('should handle errors thrown when updating user activity history for answers', async () => {
+    const validAid = new mongoose.Types.ObjectId();
+    const validCid = new mongoose.Types.ObjectId();
+    const mockReqBody = {
+      id: validAid.toString(),
+      type: 'answer',
+      comment: {
+        text: 'This is a test comment',
+        commentBy: 'dummyUserId',
+        commentDateTime: new Date('2024-06-03'),
+      },
+    };
+
+    const mockComment = {
+      _id: validCid,
+      text: 'This is a test comment',
+      commentBy: 'dummyUserId',
+      commentDateTime: new Date('2024-06-03'),
+    };
+
+    saveCommentSpy.mockResolvedValueOnce(mockComment);
+    addCommentSpy.mockResolvedValueOnce({
+      _id: validAid,
+      text: 'This is a test answer',
+      ansBy: 'dummyUserId',
+      ansDateTime: new Date('2024-06-03'),
+      comments: [mockComment._id],
+    });
+
+    findQIDByAID.mockResolvedValueOnce('validQuestionId');
+    jest
+      .spyOn(util, 'updateActivityHistoryWithQuestionID')
+      .mockRejectedValueOnce(new Error('Failed to update activity history'));
+
+    const response = await supertest(app).post('/comment/addComment').send(mockReqBody);
+
+    expect(response.status).toBe(500);
+    expect(response.text).toBe('Error when adding comment: Failed to update activity history');
+  });
+
+  it('should handle unexpected errors gracefully', async () => {
+    const validQid = new mongoose.Types.ObjectId();
+    const mockReqBody = {
+      id: validQid.toString(),
+      type: 'question',
+      comment: {
+        text: 'This is a test comment',
+        commentBy: 'dummyUserId',
+        commentDateTime: new Date('2024-06-03'),
+      },
+    };
+
+    jest.spyOn(util, 'saveComment').mockImplementationOnce(() => {
+      throw new Error('Unexpected Error');
+    });
+
+    const response = await supertest(app).post('/comment/addComment').send(mockReqBody);
+
+    expect(response.status).toBe(500);
+    expect(response.text).toBe('Error when adding comment: Unexpected Error');
   });
 });
