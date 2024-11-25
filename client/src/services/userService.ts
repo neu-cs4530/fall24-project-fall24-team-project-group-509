@@ -96,7 +96,7 @@ const isUserBanned = async (username: string): Promise<boolean> => {
   return res.data;
 };
 
- /**
+/**
  * Searches for users by a partial or full username.
  *
  * @param username - The partial or full username to search for.
@@ -110,4 +110,11 @@ const searchUsersByUsername = async (username: string): Promise<User[]> => {
   return res.data;
 };
 
-export { addUser, addUserBio, addUserProfilePicture, getUserByUsername, isUserBanned, searchUsersByUsername };
+export {
+  addUser,
+  addUserBio,
+  addUserProfilePicture,
+  getUserByUsername,
+  isUserBanned,
+  searchUsersByUsername,
+};
