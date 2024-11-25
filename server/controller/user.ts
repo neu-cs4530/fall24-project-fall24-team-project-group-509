@@ -23,7 +23,6 @@ import {
   getUserFollowUpdateNotifications,
 } from '../models/application';
 import { checkProfanity } from '../profanityFilter';
-import UserModel from '../models/user';
 
 const userController = (socket: FakeSOSocket) => {
   const router = express.Router();
