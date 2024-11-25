@@ -7,8 +7,14 @@ import useLogin from '../../hooks/useLogin';
  * to the application's context through the useLoginContext hook.
  */
 const Login = () => {
-  const { username, password, handleSubmit, handleUsernameChange, handlePasswordChange } =
-    useLogin();
+  const {
+    username,
+    password,
+    handleSubmit,
+    handleUsernameChange,
+    handlePasswordChange,
+    banMessage,
+  } = useLogin();
 
   return (
     <div className='container'>
@@ -35,6 +41,9 @@ const Login = () => {
         <button type='submit' className='login-button'>
           Submit
         </button>
+        {banMessage === 'You are banned from the site.' && (
+          <div className='error'>{banMessage}</div>
+        )}
       </form>
     </div>
   );

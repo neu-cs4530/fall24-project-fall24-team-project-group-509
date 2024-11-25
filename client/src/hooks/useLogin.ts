@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ChangeEvent, useState } from 'react';
 import useLoginContext from './useLoginContext';
-import { addUser } from '../services/userService';
+import { addUser, isUserBanned } from '../services/userService';
 
 /**
  * Custom hook to handle login input and submission.
@@ -15,6 +15,7 @@ const useLogin = () => {
   const { setUser } = useLoginContext();
   const navigate = useNavigate();
   const [password, setPassword] = useState<string>('');
+  const [banMessage, setBanMessage] = useState<string>('');
 
   /**
    * Function to handle the username change event.
@@ -42,6 +43,11 @@ const useLogin = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
+      const isBanned = await isUserBanned(username);
+      if (isBanned) {
+        setBanMessage('You are banned from the site.');
+        return;
+      }
       await addUser({ username, password });
       setUser({ username, password });
       navigate('/home');
@@ -53,7 +59,14 @@ const useLogin = () => {
     }
   };
 
-  return { username, password, handleUsernameChange, handlePasswordChange, handleSubmit };
+  return {
+    username,
+    password,
+    handleUsernameChange,
+    handlePasswordChange,
+    handleSubmit,
+    banMessage,
+  };
 };
 
 export default useLogin;

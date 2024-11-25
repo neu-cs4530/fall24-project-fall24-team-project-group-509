@@ -32,10 +32,23 @@ const ModeratorActionPage = () => {
   }, [flagId, user.username]);
 
   // Action handlers
+
+  const handleIgnoreFlag = async () => {
+    if (flag) {
+      try {
+        await reviewFlag(flag._id as string, user.username);
+        navigate('/flags');
+      } catch (error) {
+        console.error('Error ignoring flag:', error);
+      }
+    }
+  };
+
   const handleBanUser = async () => {
     if (flag) {
       try {
-        await banUser(flag.flaggedBy, user.username);
+        await banUser(flag.flaggedUser, user.username);
+        await handleIgnoreFlag();
         navigate('/flags');
       } catch (error) {
         console.error('Error banning user:', error);
@@ -46,21 +59,11 @@ const ModeratorActionPage = () => {
   const handleRestrictUser = async () => {
     if (flag) {
       try {
-        await shadowBanUser(flag.flaggedBy, user.username);
+        await shadowBanUser(flag.flaggedUser, user.username);
+        await handleIgnoreFlag();
         navigate('/flags');
       } catch (error) {
         console.error('Error restricting user:', error);
-      }
-    }
-  };
-
-  const handleIgnoreFlag = async () => {
-    if (flag) {
-      try {
-        await reviewFlag(flag._id as string, user.username);
-        navigate('/flags');
-      } catch (error) {
-        console.error('Error ignoring flag:', error);
       }
     }
   };

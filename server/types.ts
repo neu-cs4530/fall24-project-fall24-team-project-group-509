@@ -514,6 +514,16 @@ export interface SearchUserRequest extends Request {
 }
 
 /**
+ * Interface representing the request to check if a user is banned.
+ * - username - The username of the user to check.
+ */
+export interface isUserBannedRequest extends Request {
+  params: {
+    username: string;
+  };
+}
+
+/**
  * Type representing the possible responses for a user search operation.
  */
 export type UserSearchResponse = User[] | { error: string };

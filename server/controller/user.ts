@@ -9,6 +9,7 @@ import {
   AddUserProfilePicRequest,
   FindUserByUsernameRequest,
   SearchUserRequest,
+  isUserBannedRequest,
 } from '../types';
 import {
   saveUser,
@@ -243,11 +244,27 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Checks if a user is banned.
+   * @param req - The HTTP request object containing the username of the user to check.
+   * @param res - The HTTP response object used to send back the result of the operation.
+   */
+  const isUserBannedRoute = async (req: isUserBannedRequest, res: Response): Promise<void> => {
+    const { username } = req.params;
+    try {
+      const banned = await isUserBanned(username);
+      res.json(banned);
+    } catch (err: unknown) {
+      res.status(500).send(`Error when checking if user is banned: ${(err as Error).message}`);
+    }
+  };
+
   router.post('/addUser', addUser);
   router.post('/addUserBio', addUserBioRoute);
   router.post('/addUserProfilePic', upload.single('profilePictureFile'), addUserProfilePicRoute);
   router.get('/getUser/:username', getUserByUsernameRoute);
   router.get('/search', searchUsersRoute);
+  router.get('/isBanned/:username', isUserBannedRoute);
 
   return router;
 };

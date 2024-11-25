@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AxiosError } from 'axios';
 import { getMetaData } from '../../../tool';
 import { Comment } from '../../../types';
 import './index.css';
@@ -54,7 +55,22 @@ const CommentSection = ({ comments, handleAddComment, handleFlagComment }: Comme
       setText('');
       setTextErr('');
     } catch (err) {
-      setTextErr('Profanity detected');
+      if (err instanceof AxiosError && err.response) {
+        if (
+          err.response.data ===
+          'You are not allowed to post since you did not adhere to community guidelines'
+        ) {
+          setTextErr(
+            'You are not allowed to post since you did not adhere to community guidelines',
+          );
+        } else if (err.response.data.includes('Profanity detected in comment')) {
+          setTextErr('Profanity detected');
+        } else {
+          setTextErr('An error occurred while posting the comment');
+        }
+      } else {
+        setTextErr('An unknown error occurred');
+      }
     }
   };
 
