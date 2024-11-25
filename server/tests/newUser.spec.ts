@@ -8,6 +8,7 @@ const mockUser: User = {
   username: 'user1',
   bio: '',
   profilePictureURL: '',
+  password: '',
 };
 describe('Post /addUser', () => {
   afterEach(async () => {

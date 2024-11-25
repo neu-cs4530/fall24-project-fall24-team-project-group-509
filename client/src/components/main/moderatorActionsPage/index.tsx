@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import {
@@ -15,6 +16,7 @@ const ModeratorActionPage = () => {
   const { fid } = useParams();
   const navigate = useNavigate();
   const [flag, setFlag] = useState<Flag | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [flagId, setFlagId] = useState<string>(fid || '');
 
   useEffect(() => {

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { Comment, Answer, Question, VoteData } from '../types';

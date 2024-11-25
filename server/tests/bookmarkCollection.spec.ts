@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import supertest from 'supertest';
 import * as util from '../models/application';
 import { app } from '../app';
-import { Bookmark, BookmarkCollection, BookmarkCollectionResponse, Question, Tag } from '../types';
+import { BookmarkCollection } from '../types';
 
 // const mockBookmarkCollection: BookmarkCollection = {
 //   _id: new mongoose.Types.ObjectId('507f191e810c19729de860ea'),

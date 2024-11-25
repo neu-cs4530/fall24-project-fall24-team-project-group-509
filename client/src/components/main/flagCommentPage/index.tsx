@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useUserContext from '../../../hooks/useUserContext';
@@ -13,9 +14,8 @@ const FlagCommentPage = () => {
   const { user } = useUserContext();
   const navigate = useNavigate();
   // to push
-  const [text, setText] = useState<string>('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [textErr, setTextErr] = useState<string>('');
-  const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [commentID, setCommentID] = useState<string>('');
 
   const location = useLocation();
@@ -30,10 +30,6 @@ const FlagCommentPage = () => {
 
     setCommentID(cid);
   }, [cid, navigate]);
-
-  const handleReasonChange = (reason: string) => {
-    setSelectedReason(reason);
-  };
 
   const submitFlaggedComment = async (reason: string) => {
     console.log('Flag reason:', reason);

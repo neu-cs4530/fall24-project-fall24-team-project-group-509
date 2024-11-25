@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useUserContext from '../../../hooks/useUserContext';
@@ -12,9 +13,8 @@ const FlagQuestionPage = () => {
   const { qid } = useParams();
   const { user } = useUserContext();
   const navigate = useNavigate();
-  const [text, setText] = useState<string>('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [textErr, setTextErr] = useState<string>('');
-  const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [questionID, setQuestionID] = useState<string>('');
 
   const location = useLocation();
@@ -29,10 +29,6 @@ const FlagQuestionPage = () => {
 
     setQuestionID(qid);
   }, [qid, navigate]);
-
-  const handleReasonChange = (reason: string) => {
-    setSelectedReason(reason);
-  };
 
   const submitFlaggedQuestion = async (reason: string) => {
     console.log('Flag reason:', reason);

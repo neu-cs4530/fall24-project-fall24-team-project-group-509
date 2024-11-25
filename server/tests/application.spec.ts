@@ -151,21 +151,25 @@ const user1: User = {
   username: 'marcus',
   bio: 'I am a software developer',
   profilePictureURL: 'cats',
+  password: '',
 };
 const user2: User = {
   username: 'petersmith',
   bio: '',
   profilePictureURL: '',
+  password: '',
 };
 const user3: User = {
   username: 'john_doe',
   bio: 'I like turtles',
   profilePictureURL: '',
+  password: '',
 };
 const user4: User = {
   username: 'jane_doe',
   bio: '',
   profilePictureURL: '',
+  password: '',
 };
 
 describe('application module', () => {
@@ -1064,6 +1068,7 @@ describe('getUserBookmarkCollections', () => {
   test('getUserBookmarkCollections should return a list of all bookmark collections if the requesterUsername and username are the same', async () => {
     const user: User = {
       username: 'testUsername',
+      password: '',
     };
     const bookmarkCollections = [
       {
@@ -1095,6 +1100,7 @@ describe('getUserBookmarkCollections', () => {
   test('getUserBookmarkCollections should return a list of public bookmark collections if the requesterUsername and username are different', async () => {
     const user: User = {
       username: 'testUsername',
+      password: '',
     };
     const bookmarkCollections = [
       {
@@ -1128,6 +1134,7 @@ describe('getUserBookmarkCollections', () => {
   test('getUserBookmarkCollections should return all public bookmark collections and private ones if the requesterUsername follows them', async () => {
     const user: User = {
       username: 'someUsername',
+      password: '',
     };
 
     const bookmarkCollections = [
@@ -1295,6 +1302,7 @@ describe('getFollowedBookmarkCollections', () => {
   test('getFollowedBookmarkCollections should return a list of bookmark collections that the user follows', async () => {
     const user: User = {
       username: 'someUsername',
+      password: '',
     };
 
     const bookmarkCollections = [

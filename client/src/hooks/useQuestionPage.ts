@@ -105,7 +105,7 @@ const useQuestionPage = () => {
       socket.off('answerUpdate', handleAnswerUpdate);
       socket.off('viewsUpdate', handleViewsUpdate);
     };
-  }, [questionOrder, search, socket]);
+  }, [questionOrder, search, socket, user.username]);
 
   return { titleText, qlist, setQuestionOrder };
 };
