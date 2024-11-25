@@ -48,7 +48,7 @@ const useBookmarkPage = () => {
       socket.off('questionDeletionUpdate');
       socket.off('bookmarkUpdate');
     };
-  }, [collectionID, socket, savedPosts]);
+  });
 
   const handleFollowCollection = async () => {
     const updatedCollection = await followBookmarkCollection(collectionID, user.username);

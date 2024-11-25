@@ -78,7 +78,7 @@ const ProfileView = () => {
         <ul className='history-list'>
           {activityHistory.length > 0 ? (
             activityHistory.map(post => (
-              <li key={post.postID} className='history-item'>
+              <li key={post.postID + post.postType} className='history-item'>
                 <p className='history-text'>
                   {username} added {getArticle(post.postType)} {post.postType.toLowerCase()} on{' '}
                   <Link to={`/question/${post.postID}`}>{post.qTitle}</Link>
