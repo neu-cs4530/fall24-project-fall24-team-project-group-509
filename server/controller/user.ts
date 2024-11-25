@@ -10,6 +10,7 @@ import {
   FindUserByUsernameRequest,
   isUserBannedRequest,
   SearchUserByUsernameRequest,
+  GetUserNotificationsRequest,
 } from '../types';
 import {
   saveUser,
@@ -19,8 +20,10 @@ import {
   isUserBanned,
   isUserShadowBanned,
   searchUsersByUsername,
+  getUserFollowUpdateNotifications,
 } from '../models/application';
 import { checkProfanity } from '../profanityFilter';
+import UserModel from '../models/user';
 
 const userController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -260,6 +263,31 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Handles the HTTP request to retrieve follow update notifications for a user.
+   * @param req - The request object containing the username parameter.
+   * @param res - The response object.
+   */
+  const getUserNotifications = async (
+    req: GetUserNotificationsRequest,
+    res: Response,
+  ): Promise<void> => {
+    const { username } = req.params;
+
+    if (!username) {
+      res.status(400).send('Username is required');
+      return;
+    }
+
+    try {
+      const notifications = await getUserFollowUpdateNotifications(username);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).send(`Error retrieving notifications: ${(error as Error).message}`);
+    }
+  };
+
+  router.get('/notifications/:username', getUserNotifications);
   router.post('/addUser', addUser);
   router.post('/addUserBio', addUserBioRoute);
   router.post('/addUserProfilePic', upload.single('profilePictureFile'), addUserProfilePicRoute);

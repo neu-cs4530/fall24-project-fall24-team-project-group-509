@@ -18,6 +18,7 @@ import FlagCommentPage from './main/flagCommentPage';
 import ModeratorPage from './main/moderatorPage';
 import ModeratorActionPage from './main/moderatorActionsPage';
 import SearchResultsPage from './main/searchResultsPage';
+import NotificationPage from './main/notificationsPage';
 
 const ProtectedRoute = ({
   user,
@@ -70,6 +71,7 @@ const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
             <Route path='/flag/comment/:cid' element={<FlagCommentPage />} />
             <Route path='/flags' element={<ModeratorPage />} />
             <Route path='flags/:fid' element={<ModeratorActionPage />} />
+            <Route path='/notifications' element={<NotificationPage />} />
           </Route>
         }
       </Routes>

@@ -513,6 +513,12 @@ export interface SearchUserByUsernameRequest extends Request {
   };
 }
 
+export interface GetUserNotificationsRequest extends Request {
+  params: {
+    username: string;
+  };
+}
+
 /**
  * Interface representing the request to check if a user is banned.
  * - username - The username of the user to check.
