@@ -332,44 +332,9 @@ export const populateDocument = async (
         { path: 'flags', model: FlagModel },
       ]);
     }
-
-    //   if (result) {
-    //     // Exclude answers flagged by the user
-    //     const question = result as Question;
-    //     question.answers = (question.answers as Answer[]).filter(answer => {
-    //       if (!answer.flags) return true;
-    //       const answerFlaggedByUser = answer.flags.some(flag => flag.flaggedBy === username);
-    //       return !answerFlaggedByUser;
-    //     });
-    //     // Exclude comments flagged by the user
-    //     question.comments = (question.comments as Comment[]).filter(comment => {
-    //       if (!comment.flags) return true;
-    //       const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
-    //       return !commentFlaggedByUser;
-    //     });
-    //   }
-    // } else if (type === 'answer') {
-    //   result = await AnswerModel.findOne({ _id: id }).populate([
-    //     { path: 'comments', model: CommentModel, populate: { path: 'flags', model: FlagModel } },
-    //     { path: 'flags', model: FlagModel },
-    //   ]);
-    //   if (result) {
-    //     // Exclude comments flagged by the user
-    //     const answer = result as Answer;
-    //     answer.comments = (answer.comments as Comment[]).filter(comment => {
-    //       if (!comment.flags) return true;
-    //       const commentFlaggedByUser = comment.flags.some(flag => flag.flaggedBy === username);
-    //       return !commentFlaggedByUser;
-    //     });
-    //   }
-
     if (!result) {
       throw new Error(`Failed to fetch and populate a ${type}`);
     }
-    // Exclude the post itself if it is flagged by the user
-    // if (result.flags && result.flags.some((flag: Flag) => flag.flaggedBy === username)) {
-    //   return { error: 'Post has been flagged by the user' };
-    // }
     return result;
   } catch (error) {
     return { error: `Error when fetching and populating a document: ${(error as Error).message}` };
@@ -466,28 +431,6 @@ export const saveQuestion = async (question: Question): Promise<QuestionResponse
 export const saveAnswer = async (answer: Answer): Promise<AnswerResponse> => {
   try {
     const result = await AnswerModel.create(answer);
-
-    // // find the question that contains the answer
-    // const question = await QuestionModel.findOne({ answers: result._id });
-
-    // // if (!question) {
-    // //   throw new Error('Question not found for the answer');
-    // // }
-
-    // // Update the user's activity history
-    // await UserModel.findOneAndUpdate(
-    //   { username: answer.ansBy },
-    //   {
-    //     $push: {
-    //       activityHistory: {
-    //         postId: question ? question._id : null,
-    //         postType: 'Answer',
-    //         createdAt: answer.ansDateTime,
-    //       },
-    //     },
-    //   },
-    // );
-
     return result;
   } catch (error) {
     return { error: 'Error when saving an answer' };
@@ -774,9 +717,6 @@ export const getUserByUsername = async (
       throw new Error('Invalid username');
     }
     const result = await UserModel.findOne({ username });
-    // .populate({
-    //   path: 'activityHistory.postId',
-    // });
     return result;
   } catch (error) {
     return { error: 'Error when fetching user by username' };
@@ -950,16 +890,6 @@ export const addQuestionToBookmarkCollection = async (
       numAnswers: numberAnswers,
     };
 
-    // const updatedCollection = await BookmarkCollectionModel.findOneAndUpdate(
-    //   { _id: new ObjectId(collectionId) },
-    //   { $push: { savedPosts: bookmark } },
-    //   { new: true },
-    // );
-
-    // if (!updatedCollection) {
-    //   throw new Error('Bookmark collection not found');
-    // }
-    // Find the collection to check if the question is already bookmarked
     const collection = await BookmarkCollectionModel.findById(collectionId);
 
     if (!collection) {
@@ -1069,11 +999,6 @@ export const getUserBookmarkCollections = async (
     if (username === requesterUsername) {
       // If the requester is the owner, retrieve all collections
       collections = await BookmarkCollectionModel.find({ owner: username });
-      // .populate({
-      //   path: 'savedPosts',
-      //   model: 'Question',
-      //   populate: { path: 'tags', model: TagModel },
-      // });
     } else {
       // If the requester is not the owner, retrieve public collections or private collections they are permitted to view
       collections = await BookmarkCollectionModel.find({
@@ -1085,34 +1010,6 @@ export const getUserBookmarkCollections = async (
         populate: { path: 'tags', model: TagModel },
       });
     }
-
-    // Apply sorting if a sortOption is provided
-    // if (sortOption) {
-    //   collections.forEach(collection => {
-    //     if (sortOption === 'date') {
-    //       collection.savedPosts.sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime());
-    //     } else if (sortOption === 'numberOfAnswers') {
-    //       collection.savedPosts.sort((a, b) => {
-    //         const aAnswers = (a.postId as Question).answers.length;
-    //         const bAnswers = (b.postId as Question).answers.length;
-    //         return bAnswers - aAnswers;
-    //       });
-    //     } else if (sortOption === 'views') {
-    //       collection.savedPosts.sort((a, b) => {
-    //         const aViews = (a.postId as Question).views.length;
-    //         const bViews = (b.postId as Question).views.length;
-    //         return bViews - aViews;
-    //       });
-    //     } else if (sortOption === 'title') {
-    //       collection.savedPosts.sort((a, b) => {
-    //         const aTitle = (a.postId as Question).title.toLowerCase();
-    //         const bTitle = (b.postId as Question).title.toLowerCase();
-    //         return aTitle.localeCompare(bTitle);
-    //       });
-    //     } // Add more sorting options if needed
-    //   });
-    // }
-
     return collections;
   } catch (error) {
     return [];
@@ -1273,7 +1170,6 @@ export const updateActivityHistoryWithQuestionID = async (
       );
     }
   } catch (error) {
-    // Log the error for debugging purposes
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     // eslint-disable-next-line no-console
     console.log('Error when updating activity history with question ID:', errorMessage);
@@ -1310,11 +1206,6 @@ export const getBookmarkCollectionById = async (
 ): Promise<BookmarkCollectionResponse> => {
   try {
     const collection = await BookmarkCollectionModel.findOne({ _id: collectionId });
-    // .populate({
-    //   path: 'savedPosts.postId',
-    //   model: 'Question',
-    //   // populate: { path: 'questions', model: QuestionModel },
-    // });
     if (!collection) {
       throw new Error('Bookmark collection not found');
     }
