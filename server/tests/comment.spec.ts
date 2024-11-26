@@ -3,6 +3,7 @@ import supertest from 'supertest';
 import { app } from '../app';
 import * as util from '../models/application';
 import { Question } from '../types';
+import * as utill from '../profanityFilter';
 
 const saveCommentSpy = jest.spyOn(util, 'saveComment');
 const addCommentSpy = jest.spyOn(util, 'addComment');
@@ -469,5 +470,33 @@ describe('POST /addComment', () => {
 
     expect(response.status).toBe(500);
     expect(response.text).toBe('Error when adding comment: Unexpected Error');
+  });
+
+  it('should return bad request error if comment contains profanity', async () => {
+    const validQid = new mongoose.Types.ObjectId();
+    const mockReqBody = {
+      id: validQid.toString(),
+      type: 'question',
+      comment: {
+        text: 'This is a profane comment',
+        commentBy: 'dummyUserId',
+        commentDateTime: new Date('2024-06-03'),
+      },
+    };
+
+    const mockProfanityResponse = {
+      hasProfanity: true,
+      censored: 'This is a *** comment',
+    };
+
+    // Mock the checkProfanity function to return a profanity detection result
+    jest.spyOn(utill, 'checkProfanity').mockResolvedValueOnce(mockProfanityResponse);
+
+    const response = await supertest(app).post('/comment/addComment').send(mockReqBody);
+
+    expect(response.status).toBe(400);
+    expect(response.text).toBe(
+      `Profanity detected in comment text: ${mockProfanityResponse.censored}`,
+    );
   });
 });
