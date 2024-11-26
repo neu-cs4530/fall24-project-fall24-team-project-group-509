@@ -24,6 +24,9 @@ export const checkProfanity = async (
 
     throw new Error('Unexpected response from profanity filter API.');
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unexpected response from profanity filter API.') {
+      throw error;
+    }
     throw new Error('Failed to validate content for profanity.');
   }
 };
