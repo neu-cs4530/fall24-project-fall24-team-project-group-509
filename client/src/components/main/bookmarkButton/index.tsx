@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { FaBookmark, FaRegBookmark } from 'react-icons/fa';
+import { FaRegBookmark } from 'react-icons/fa';
 import useBookmark from '../../../hooks/useBookmark';
 import './index.css';
 
 const BookmarkButton = ({ questionId }: { questionId: string }) => {
   const {
-    isBookmarked,
     collections,
     isDropdownOpen,
     toggleBookmark,
@@ -19,7 +18,7 @@ const BookmarkButton = ({ questionId }: { questionId: string }) => {
   return (
     <div className='bookmark-button-container' onClick={e => e.stopPropagation()}>
       <button onClick={toggleBookmark}>
-        {isBookmarked ? <FaBookmark size={24} /> : <FaRegBookmark size={24} />}
+        <FaRegBookmark size={24} />
       </button>
 
       {isDropdownOpen && (
