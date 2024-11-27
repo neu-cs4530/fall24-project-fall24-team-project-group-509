@@ -37,19 +37,32 @@ const ProfileView = () => {
 
   return (
     <div className='user-profile'>
-      <div className='profile-image-container'>
-        <div className='profile-image'>
-          <img src={pfp || 'defaultpfp.jpg'}></img>
-          {requesterUsername === username && (
-            <>
-              <input type='file' ref={fileInputRef} onChange={handleImgUpdate} />
-            </>
-          )}
+      <div className='profile-header'>
+        <div className='profile-image-container'>
+          <div className='profile-image'>
+            <img src={pfp || 'defaultpfp.jpg'} alt='Profile'></img>
+            {requesterUsername === username && (
+              <>
+                <input type='file' ref={fileInputRef} onChange={handleImgUpdate} />
+              </>
+            )}
+          </div>
+          <div className='username-display'>
+            <h1>{username}</h1>
+          </div>
         </div>
-        <div className='username-display'>
-          <h1>{username}</h1>
+        {/* Search Bar */}
+        <div className='search-bar'>
+          <input
+            type='text'
+            placeholder='Search for users...'
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          <button onClick={handleSearch}>Search</button>
         </div>
       </div>
+
       <div className='biography'>
         {isEditingBio ? (
           <div>
@@ -73,6 +86,20 @@ const ProfileView = () => {
           </div>
         )}
       </div>
+
+      <div className='collections'>
+        <h3>Bookmark Collections</h3>
+        {bookmarks && bookmarks.length > 0 ? (
+          bookmarks.map(collection => (
+            <li key={collection._id} className='bookmark-collection'>
+              <Link to={`/user/bookmarks/${collection._id}`}>{collection.title}</Link>
+            </li>
+          ))
+        ) : (
+          <p>{username} has no bookmarked posts</p>
+        )}
+      </div>
+
       <div className='history'>
         <h3>Activity History</h3>
         <ul className='history-list'>
@@ -89,28 +116,6 @@ const ProfileView = () => {
             <p>No activity history for {username}</p>
           )}
         </ul>
-      </div>
-      {/* Search Bar */}
-      <div className='search-bar'>
-        <input
-          type='text'
-          placeholder='Search for users...'
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-        />
-        <button onClick={handleSearch}>Search</button>
-      </div>
-      <div className='collections'>
-        <h3>Bookmark Collections</h3>
-        {bookmarks && bookmarks.length > 0 ? (
-          bookmarks.map(collection => (
-            <li key={collection._id} className='bookmark-collection'>
-              <Link to={`/user/bookmarks/${collection._id}`}>{collection.title}</Link>
-            </li>
-          ))
-        ) : (
-          <p>{username} has no bookmarked posts</p>
-        )}
       </div>
     </div>
   );
