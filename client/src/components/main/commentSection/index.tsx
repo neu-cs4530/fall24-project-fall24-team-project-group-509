@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AxiosError } from 'axios';
+import { FaFlag } from 'react-icons/fa';
 import { getMetaData } from '../../../tool';
 import { Comment, Flag } from '../../../types';
 import './index.css';
@@ -117,12 +118,24 @@ const CommentSection = ({
                       <Link to={`/user/${comment.commentBy}`}>{comment.commentBy}</Link>,{' '}
                       {getMetaData(new Date(comment.commentDateTime))}
                     </small>
-                    <button
-                      onClick={() =>
-                        handleFlagComment(comment._id as string, comment.text, comment.commentBy)
-                      }>
-                      Flag Comment
-                    </button>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        width: '100%',
+                      }}>
+                      <FaFlag
+                        onClick={() => {
+                          handleFlagComment(comment._id as string, comment.text, comment.commentBy);
+                        }}
+                        style={{
+                          cursor: 'pointer',
+                          color: '#007bff', // Matching color of other buttons
+                          fontSize: '24px', // Adjust the size as needed
+                          marginRight: '20px',
+                        }}
+                      />
+                    </div>
                   </li>
                 );
               })

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import useModeratorPage from '../../../hooks/useModeratorPage';
+import './index.css';
 
 const ModeratorPage = () => {
   const { user, pendingFlags } = useModeratorPage();
@@ -12,7 +13,7 @@ const ModeratorPage = () => {
         {pendingFlags.map(flag => (
           <li key={flag._id}>
             <Link to={`/flags/${flag._id}`}>
-              {flag.flaggedBy} flagged {flag.postType} for {flag.reason} {flag._id}
+              {flag.flaggedBy} flagged {flag.postType} for {flag.reason}
             </Link>
           </li>
         ))}

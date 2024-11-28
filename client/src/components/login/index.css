@@ -1,4 +1,4 @@
-.container {
+.login-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -7,10 +7,10 @@
   background-color: #f7f7f7;
 }
 
-.container h2,
-.container p,
-.container h4,
-.container form {
+.login-container h2,
+.login-container p,
+.login-container h4,
+.login-container form {
   text-align: center;
   width: 100%;
   margin: 10px 0;

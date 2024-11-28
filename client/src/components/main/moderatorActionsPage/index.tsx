@@ -10,6 +10,7 @@ import {
 } from '../../../services/moderatorService'; // Adjust paths as necessary
 import { Flag } from '../../../types';
 import useUserContext from '../../../hooks/useUserContext';
+import './index.css';
 
 const ModeratorActionPage = () => {
   const { user } = useUserContext();
@@ -96,10 +97,18 @@ const ModeratorActionPage = () => {
         <strong>Reason:</strong> {flag.reason}
       </p>
       <div>
-        <button onClick={handleBanUser}>Ban User</button>
-        <button onClick={handleRestrictUser}>Restrict User</button>
-        <button onClick={handleIgnoreFlag}>Ignore Flag</button>
-        <button onClick={handleDeletePost}>Delete Post</button>
+        <button className='m-action-page' onClick={handleBanUser}>
+          Ban User
+        </button>
+        <button className='m-action-page' onClick={handleRestrictUser}>
+          Restrict User
+        </button>
+        <button className='m-action-page' onClick={handleIgnoreFlag}>
+          Ignore Flag
+        </button>
+        <button className='m-action-page' onClick={handleDeletePost}>
+          Delete Post
+        </button>
       </div>
     </div>
   );

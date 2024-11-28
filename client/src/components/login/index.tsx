@@ -17,8 +17,8 @@ const Login = () => {
   } = useLogin();
 
   return (
-    <div className='container'>
-      <h2>Welcome to FakeStackOverflow!</h2>
+    <div className='login-container'>
+      <h2>Welcome to MindSync!</h2>
       <form onSubmit={handleSubmit}>
         <input
           type='text'
