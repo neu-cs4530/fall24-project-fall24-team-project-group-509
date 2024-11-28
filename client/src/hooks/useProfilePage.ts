@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BookmarkCollection, UserProfile } from '../types';
+import { BookmarkCollection, ProfileUpdatePayload, UserProfile } from '../types';
 import useUserContext from './useUserContext';
 import { addUserBio, addUserProfilePicture, getUserByUsername } from '../services/userService';
 import { getUserBookmarkCollections } from '../services/bookmarkService';
@@ -55,6 +55,16 @@ const useProfilePage = () => {
 
     fetchUserDetails();
 
+    socket.on('profileUpdate', (data: ProfileUpdatePayload) => {
+      if (data.username === username) {
+        if ('bio' in data) {
+          setBio(data.bio); // Handle bio updates
+        }
+        if ('profilePictureURL' in data) {
+          setPfp(data.profilePictureURL); // Handle profile picture updates
+        }
+      }
+    });
     socket.on(
       'activityHistoryUpdate',
       (
@@ -74,6 +84,7 @@ const useProfilePage = () => {
     });
 
     return () => {
+      socket.off('profileUpdate');
       socket.off('activityHistoryUpdate');
       socket.off('bookmarkUpdate');
     };
