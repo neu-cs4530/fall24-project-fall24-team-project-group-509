@@ -29,7 +29,6 @@ const flagController = (socket: FakeSOSocket) => {
 
       // Emit the 'postFlagged' event to the client
       socket.emit('postFlagged', { id, type });
-
       res.json({ message: 'Post flagged successfully' });
     } catch (err) {
       res.status(500).send(`Error when flagging post: ${(err as Error).message}`);

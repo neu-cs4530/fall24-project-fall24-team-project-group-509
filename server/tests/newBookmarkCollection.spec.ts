@@ -261,4 +261,43 @@ describe('Bookmark Controller Tests', () => {
       expect(response.body).toEqual([]);
     });
   });
+
+  describe('POST /createCollection (Banned and Shadow-Banned Users)', () => {
+    afterEach(async () => {
+      jest.resetAllMocks(); // Reset all mocks
+    });
+
+    it('should return 403 if the user is banned', async () => {
+      const mockReqBody = {
+        username: 'bannedUser',
+        title: 'Collection Title',
+        isPublic: true,
+      };
+
+      jest.spyOn(util, 'isUserBanned').mockResolvedValueOnce(true);
+
+      const response = await supertest(app).post('/bookmark/createCollection').send(mockReqBody);
+
+      expect(response.status).toBe(403);
+      expect(response.text).toBe('Your account has been banned');
+    });
+
+    it('should return 403 if the user is shadow-banned', async () => {
+      const mockReqBody = {
+        username: 'shadowBannedUser',
+        title: 'Collection Title',
+        isPublic: true,
+      };
+
+      jest.spyOn(util, 'isUserBanned').mockResolvedValueOnce(false);
+      jest.spyOn(util, 'isUserShadowBanned').mockResolvedValueOnce(true);
+
+      const response = await supertest(app).post('/bookmark/createCollection').send(mockReqBody);
+
+      expect(response.status).toBe(403);
+      expect(response.text).toBe(
+        'You are not allowed to post since you did not adhere to community guidelines',
+      );
+    });
+  });
 });
