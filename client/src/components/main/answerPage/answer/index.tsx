@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { handleHyperlink } from '../../../../tool';
 import CommentSection from '../../commentSection';
 import './index.css';
-import { Comment } from '../../../../types';
+import { Comment, Flag } from '../../../../types';
 
 /**
  * Interface representing the props for the AnswerView component.
@@ -20,6 +20,7 @@ interface AnswerProps {
   ansBy: string;
   meta: string;
   comments: Comment[];
+  flags?: Flag[];
   handleAddComment: (comment: Comment) => void;
   handleFlagAnswer: (aid: string, aText: string, answeredBy: string) => void;
   handleFlagComment: (cid: string, cText: string, commentedBy: string) => void;
@@ -41,34 +42,48 @@ const AnswerView = ({
   ansBy,
   meta,
   comments,
+  flags = [],
   handleAddComment,
   handleFlagAnswer,
   handleFlagComment,
-}: AnswerProps) => (
-  <div className='answer right_padding'>
-    <div id='answerText' className='answerText'>
-      {handleHyperlink(text)}
-    </div>
-    <div className='answerAuthor'>
-      <div className='answer_author'>
-        <Link to={`/user/${ansBy}`}>{ansBy}</Link>
+}: AnswerProps) => {
+  // Filter the flags to include only those with a status of 'pending'
+  const pendingFlags = flags.filter(flag => flag.status === 'pending');
+  // Determine the warning message based on the flags
+  const warningMessage =
+    pendingFlags.length > 0 ? `This answer has been flagged for: ${flags[0].reason}` : '';
+
+  return (
+    <div className={`answer-container ${warningMessage ? 'flagged-answer' : ''}`}>
+      {warningMessage && (
+        <div className='warning-banner'>
+          <span className='warning-icon'>⚠️</span>
+          <span className='warning-text'>{warningMessage}</span>
+        </div>
+      )}
+      <div className='answer right_padding'>
+        <div id='answerText' className='answerText'>
+          {handleHyperlink(text)}
+        </div>
+        <div className='answerAuthor'>
+          <div className='answer_author'>
+            <Link to={`/user/${ansBy}`}>{ansBy}</Link>
+          </div>
+          <div className='answer_question_meta'>{meta}</div>
+        </div>
+        <button
+          className='bluebtn FlagQuestionButton'
+          onClick={() => handleFlagAnswer(_id, text, ansBy)}>
+          Flag Answer, {_id}
+        </button>
+        <CommentSection
+          comments={comments}
+          handleAddComment={handleAddComment}
+          handleFlagComment={handleFlagComment}
+        />
       </div>
-      <div className='answer_question_meta'>{meta}</div>
     </div>
-    <button
-      className='bluebtn FlagQuestionButton'
-      onClick={() => {
-        // handleFlagQuestion(question.title, question.text);
-        handleFlagAnswer(_id, text, ansBy);
-      }}>
-      Flag Answer, {_id}
-    </button>
-    <CommentSection
-      comments={comments}
-      handleAddComment={handleAddComment}
-      handleFlagComment={handleFlagComment}
-    />
-  </div>
-);
+  );
+};
 
 export default AnswerView;

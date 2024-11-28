@@ -48,7 +48,11 @@ const useQuestionPage = () => {
     const fetchData = async () => {
       try {
         const res = await getQuestionsByFilter(user.username, questionOrder, search);
-        setQlist(res || []);
+        const updatedQuestions = res.map(q => ({
+          ...q,
+          flags: q.flags || [], // Ensure flags property exists
+        }));
+        setQlist(updatedQuestions || []);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.log(error);

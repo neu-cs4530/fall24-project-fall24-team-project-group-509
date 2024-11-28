@@ -21,6 +21,7 @@ import {
   getBookmarkCollectionById,
   isUserBanned,
   isUserShadowBanned,
+  notifyFollowersOfCollectionUpdate,
 } from '../models/application';
 
 const bookmarkController = (socket: FakeSOSocket) => {
@@ -89,10 +90,9 @@ const bookmarkController = (socket: FakeSOSocket) => {
       if ('error' in updatedCollection) {
         throw new Error(updatedCollection.error);
       }
-      socket.to(collectionId).emit('collectionUpdate', {
-        collectionId,
-        updatedCollection,
-      } as BookmarkCollectionUpdatePayload);
+
+      // Emit collection update to followers
+      await notifyFollowersOfCollectionUpdate(collectionId, updatedCollection, socket);
 
       res.json(updatedCollection);
     } catch (err: unknown) {
@@ -277,9 +277,6 @@ const bookmarkController = (socket: FakeSOSocket) => {
   router.post('/followCollection', followBookmarkCollectionRoute);
   router.post('/unfollowCollection', unfollowBookmarkCollectionRoute);
   router.get('/getBookmarkCollectionById/:collectionId', getBookmarkCollectionByIdRoute);
-  router.get('/test', (req, res) => {
-    res.send('test route');
-  });
 
   return router;
 };

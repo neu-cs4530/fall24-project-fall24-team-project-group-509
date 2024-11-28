@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { getMetaData } from '../../../tool';
-import { Comment } from '../../../types';
+import { Comment, Flag } from '../../../types';
 import './index.css';
 import useUserContext from '../../../hooks/useUserContext';
 
@@ -17,6 +17,7 @@ interface CommentSectionProps {
   comments: Comment[];
   handleAddComment: (comment: Comment) => void;
   handleFlagComment: (cid: string, cText: string, commentBy: string) => void;
+  flags?: Flag[];
 }
 
 /**
@@ -25,7 +26,12 @@ interface CommentSectionProps {
  * @param comments: an array of Comment objects
  * @param handleAddComment: function to handle the addition of a new comment
  */
-const CommentSection = ({ comments, handleAddComment, handleFlagComment }: CommentSectionProps) => {
+const CommentSection = ({
+  comments,
+  flags = [],
+  handleAddComment,
+  handleFlagComment,
+}: CommentSectionProps) => {
   const { user } = useUserContext();
   const [text, setText] = useState<string>('');
   const [textErr, setTextErr] = useState<string>('');
@@ -84,22 +90,42 @@ const CommentSection = ({ comments, handleAddComment, handleFlagComment }: Comme
         <div className='comments-container'>
           <ul className='comments-list'>
             {comments.length > 0 ? (
-              comments.map((comment, index) => (
-                <li key={index} className='comment-item'>
-                  <p className='comment-text'>{comment.text}</p>
-                  <p className='comment-text'>{comment._id}</p>
-                  <small className='comment-meta'>
-                    <Link to={`/user/${comment.commentBy}`}>{comment.commentBy}</Link>,{' '}
-                    {getMetaData(new Date(comment.commentDateTime))}
-                  </small>
-                  <button
-                    onClick={() =>
-                      handleFlagComment(comment._id as string, comment.text, comment.commentBy)
-                    }>
-                    Flag Comment
-                  </button>
-                </li>
-              ))
+              comments.map((comment, index) => {
+                // Determine the warning message for each individual comment with 'pending' flags only
+                const pendingFlags = comment.flags?.filter(flag => flag.status === 'pending') || [];
+                // Determine the warning message for each individual comment
+                const warningMessage =
+                  pendingFlags && pendingFlags.length > 0
+                    ? `This comment has been flagged for: ${pendingFlags
+                        .map(flag => flag.reason)
+                        .join(', ')}`
+                    : null;
+
+                return (
+                  <li
+                    key={index}
+                    className={`comment-item ${warningMessage ? 'flagged-comment' : ''}`}>
+                    {/* Warning banner for flagged comments */}
+                    {warningMessage && (
+                      <div className='warning-banner'>
+                        <span className='warning-icon'>⚠️</span>
+                        <span className='warning-text'>{warningMessage}</span>
+                      </div>
+                    )}
+                    <p className='comment-text'>{comment.text}</p>
+                    <small className='comment-meta'>
+                      <Link to={`/user/${comment.commentBy}`}>{comment.commentBy}</Link>,{' '}
+                      {getMetaData(new Date(comment.commentDateTime))}
+                    </small>
+                    <button
+                      onClick={() =>
+                        handleFlagComment(comment._id as string, comment.text, comment.commentBy)
+                      }>
+                      Flag Comment
+                    </button>
+                  </li>
+                );
+              })
             ) : (
               <p className='no-comments'>No comments yet.</p>
             )}

@@ -37,19 +37,32 @@ const ProfileView = () => {
 
   return (
     <div className='user-profile'>
-      <div className='profile-image-container'>
-        <div className='profile-image'>
-          <img src={pfp || 'defaultpfp.jpg'}></img>
-          {requesterUsername === username && (
-            <>
-              <input type='file' ref={fileInputRef} onChange={handleImgUpdate} />
-            </>
-          )}
+      <div className='profile-header'>
+        <div className='profile-image-container'>
+          <div className='profile-image'>
+            <img src={pfp || 'defaultpfp.jpg'} alt='Profile'></img>
+            {requesterUsername === username && (
+              <>
+                <input type='file' ref={fileInputRef} onChange={handleImgUpdate} />
+              </>
+            )}
+          </div>
+          <div className='username-display'>
+            <h1>{username}</h1>
+          </div>
         </div>
-        <div className='username-display'>
-          <h1>{username}</h1>
+        {/* Search Bar */}
+        <div className='search-bar'>
+          <input
+            type='text'
+            placeholder='Search for users...'
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          <button onClick={handleSearch}>Search</button>
         </div>
       </div>
+
       <div className='biography'>
         {isEditingBio ? (
           <div>
@@ -73,33 +86,7 @@ const ProfileView = () => {
           </div>
         )}
       </div>
-      <div className='history'>
-        <h3>Activity History</h3>
-        <ul className='history-list'>
-          {activityHistory.length > 0 ? (
-            activityHistory.map(post => (
-              <li key={post.postID} className='history-item'>
-                <p className='history-text'>
-                  {username} added {getArticle(post.postType)} {post.postType.toLowerCase()} on{' '}
-                  <Link to={`/question/${post.postID}`}>{post.qTitle}</Link>
-                </p>
-              </li>
-            ))
-          ) : (
-            <p>No activity history for {username}</p>
-          )}
-        </ul>
-      </div>
-      {/* Search Bar */}
-      <div className='search-bar'>
-        <input
-          type='text'
-          placeholder='Search for users...'
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-        />
-        <button onClick={handleSearch}>Search</button>
-      </div>
+
       <div className='collections'>
         <h3>Bookmark Collections</h3>
         {bookmarks && bookmarks.length > 0 ? (
@@ -111,6 +98,24 @@ const ProfileView = () => {
         ) : (
           <p>{username} has no bookmarked posts</p>
         )}
+      </div>
+
+      <div className='history'>
+        <h3>Activity History</h3>
+        <ul className='history-list'>
+          {activityHistory.length > 0 ? (
+            activityHistory.map(post => (
+              <li key={post.postID + post.postType} className='history-item'>
+                <p className='history-text'>
+                  {username} added {getArticle(post.postType)} {post.postType.toLowerCase()} on{' '}
+                  <Link to={`/question/${post.postID}`}>{post.qTitle}</Link>
+                </p>
+              </li>
+            ))
+          ) : (
+            <p>No activity history for {username}</p>
+          )}
+        </ul>
       </div>
     </div>
   );
