@@ -30,7 +30,7 @@ const SideBarNav = () => {
         to={`/user/${username}`}
         id='menu_user'
         className={({ isActive }) => `menu_button ${isActive ? 'menu_selected' : ''}`}>
-        User Profile
+        Profile
       </NavLink>
       {modUsernames.includes(username) && (
         <NavLink
@@ -44,7 +44,7 @@ const SideBarNav = () => {
         to='/notifications'
         id='menu_notifications'
         className={({ isActive }) => `menu_button ${isActive ? 'menu_selected' : ''}`}>
-        Notifications
+        Inbox
       </NavLink>
       <NavLink
         to='/'

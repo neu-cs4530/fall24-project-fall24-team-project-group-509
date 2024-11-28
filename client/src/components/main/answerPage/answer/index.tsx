@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { FaFlag } from 'react-icons/fa';
 import { handleHyperlink } from '../../../../tool';
 import CommentSection from '../../commentSection';
 import './index.css';
@@ -71,11 +72,24 @@ const AnswerView = ({
           </div>
           <div className='answer_question_meta'>{meta}</div>
         </div>
-        <button
-          className='bluebtn FlagQuestionButton'
-          onClick={() => handleFlagAnswer(_id, text, ansBy)}>
-          Flag Answer, {_id}
-        </button>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            width: '100%',
+          }}>
+          <FaFlag
+            onClick={() => {
+              handleFlagAnswer(_id, text, ansBy);
+            }}
+            style={{
+              cursor: 'pointer',
+              color: '#007bff', // Matching color of other buttons
+              fontSize: '24px', // Adjust the size as needed
+              marginRight: '20px',
+            }}
+          />
+        </div>
         <CommentSection
           comments={comments}
           handleAddComment={handleAddComment}

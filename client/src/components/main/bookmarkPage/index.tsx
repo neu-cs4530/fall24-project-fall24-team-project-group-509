@@ -38,20 +38,22 @@ const BookmarkPage = () => {
         </select>
       </div>
       <h3>Bookmarked Posts</h3>
-      {sortedPosts && sortedPosts.length > 0 ? (
-        sortedPosts.map(post => (
-          <li key={post._id}>
-            <Link to={`/question/${post.postId}`}>{post.qTitle}</Link>
-            {user.username === collection.owner && (
-              <button className='deleteq' onClick={() => handleDeleteFromCollection(post.postId)}>
-                Delete from this collection
-              </button>
-            )}
-          </li>
-        ))
-      ) : (
-        <p>There are no saved posts in this bookmark collection.</p>
-      )}
+      <ul>
+        {sortedPosts && sortedPosts.length > 0 ? (
+          sortedPosts.map(post => (
+            <li key={post._id}>
+              <Link to={`/question/${post.postId}`}>{post.qTitle}</Link>
+              {user.username === collection.owner && (
+                <button className='deleteq' onClick={() => handleDeleteFromCollection(post.postId)}>
+                  Delete from this collection
+                </button>
+              )}
+            </li>
+          ))
+        ) : (
+          <p>There are no saved posts in this bookmark collection.</p>
+        )}
+      </ul>
       <Modal
         show={showModal}
         onClose={() => setShowModal(false)}
