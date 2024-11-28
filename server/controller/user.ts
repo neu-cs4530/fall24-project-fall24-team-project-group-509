@@ -11,6 +11,7 @@ import {
   isUserBannedRequest,
   SearchUserByUsernameRequest,
   GetUserNotificationsRequest,
+  ValidateUserCredentialsRequest,
 } from '../types';
 import {
   saveUser,
@@ -286,6 +287,50 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Validates the credentials of a user.
+   * @param req - The HTTP request object containing the username and password in the body.
+   * @param res - The HTTP response object used to send back the validation result.
+   */
+  const validateUserCredentials = async (
+    req: ValidateUserCredentialsRequest,
+    res: Response,
+  ): Promise<void> => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      res.status(400).send('Username and password are required');
+      return;
+    }
+
+    try {
+      // Fetch user by username
+      const user = await getUserByUsername(username, username);
+      if (!user) {
+        res.status(404).send({ success: false, message: 'User not found' });
+        return;
+      }
+
+      // Compare the password
+      if ('password' in user) {
+        const isPasswordValid = user.password === password;
+        if (!isPasswordValid) {
+          res.status(401).send({ success: false, message: 'Invalid credentials' });
+          return;
+        }
+      } else {
+        res.status(500).send({ success: false, message: 'User data is invalid' });
+        return;
+      }
+
+      res.status(200).send({ success: true });
+    } catch (error: unknown) {
+      res
+        .status(500)
+        .send({ success: false, message: `Server error: ${(error as Error).message}` });
+    }
+  };
+
   router.get('/notifications/:username', getUserNotifications);
   router.post('/addUser', addUser);
   router.post('/addUserBio', addUserBioRoute);
@@ -293,6 +338,7 @@ const userController = (socket: FakeSOSocket) => {
   router.get('/getUser/:username', getUserByUsernameRoute);
   router.get('/isBanned/:username', isUserBannedRoute);
   router.get('/search/:username', searchUsersByUsernameRoute);
+  router.post('/validate', validateUserCredentials);
 
   return router;
 };

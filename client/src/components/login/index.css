@@ -51,3 +51,18 @@
 .login-button:active {
   background-color: #003f7f;
 }
+
+/* Error message styling */
+.error {
+  color: #ff0000; /* Bright red for visibility */
+  font-size: 14px; /* Slightly larger text */
+  font-weight: bold; /* Bold to draw attention */
+  margin-top: 0px; /* Space above the message */
+  text-align: center; /* Center-align the text */
+  background-color: #ffe6e6; /* Light red background for emphasis */
+  padding: 10px; /* Padding for spacing */
+  border-radius: 5px; /* Rounded corners for a modern look */
+  max-width: 300px; /* Match the width of the input fields */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for emphasis */
+  position:fixed; /* Position relative for absolute positioning */
+}

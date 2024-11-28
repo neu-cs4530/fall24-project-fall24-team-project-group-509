@@ -14,11 +14,13 @@ const Login = () => {
     handleUsernameChange,
     handlePasswordChange,
     banMessage,
+    errorMessage,
   } = useLogin();
 
   return (
     <div className='container'>
-      <h2>Welcome to FakeStackOverflow!</h2>
+      <h2>Welcome Back to FakeStackOverflow!</h2>
+      <h4>Please log in to continue</h4>
       <form onSubmit={handleSubmit}>
         <input
           type='text'
@@ -27,7 +29,7 @@ const Login = () => {
           placeholder='Enter your username'
           required
           className='input-text'
-          id={'usernameInput'}
+          id='loginUsernameInput'
         />
         <input
           type='password'
@@ -36,15 +38,24 @@ const Login = () => {
           placeholder='Enter your password'
           required
           className='input-text'
-          id={'passwordInput'}
+          id='loginPasswordInput'
         />
-        <button type='submit' className='login-button'>
-          Submit
-        </button>
+        <div>
+          <button type='submit' className='login-button'>
+            Log In
+          </button>
+        </div>
         {banMessage === 'You are banned from the site.' && (
           <div className='error'>{banMessage}</div>
         )}
+        {errorMessage && <div className='error'>{errorMessage}</div>}
       </form>
+      <p>
+        Don’t have an account?{' '}
+        <a href='/signup' className='switch-link'>
+          Sign Up
+        </a>
+      </p>
     </div>
   );
 };

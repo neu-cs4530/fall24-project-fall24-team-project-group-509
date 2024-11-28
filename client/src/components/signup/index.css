@@ -1,0 +1,55 @@
+/* Common Styles */
+.container {
+    text-align: center;
+  }
+  
+  .input-text {
+    padding: 10px;
+    margin: 10px 0;
+    width: 60%;
+  }
+  
+  .signup-button {
+    padding: 10px 20px;
+    margin: 10px 0;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+  
+  /* Log In Page Styles */
+  .login-container {
+    background-color: #f0f8ff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 30%;
+    margin: auto;
+  }
+  
+  .login-button {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  /* Sign-Up Page Styles */
+  .signup-container {
+    background-color: #f7f7f7;
+    padding: 20px;
+    border-radius: 10px;
+    width: 30%;
+    margin: auto;
+  }
+  
+  .signup-button {
+    background-color: #28a745;
+    color: white;
+  }
+  
+  /* Shared Link Styling */
+  .switch-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  

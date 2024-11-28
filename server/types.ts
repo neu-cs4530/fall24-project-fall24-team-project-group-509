@@ -530,6 +530,18 @@ export interface isUserBannedRequest extends Request {
 }
 
 /**
+ * Interface representing the request to validate credentials.
+ * - username - The username of the user to check.
+ * - password - The password of the user to check.
+ */
+export interface ValidateUserCredentialsRequest extends Request {
+  body: {
+    username: string;
+    password: string;
+  };
+}
+
+/**
  * Type representing the possible responses for a user search operation.
  */
 export type UserSearchResponse = User[] | { error: string };
