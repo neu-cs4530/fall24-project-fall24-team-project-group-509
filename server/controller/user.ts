@@ -208,7 +208,7 @@ const userController = (socket: FakeSOSocket) => {
       }
       throw new Error('Error while fetching user by username');
     } catch (err: unknown) {
-      if (err instanceof Error) {
+      if (err instanceof Error && err.message) {
         res.status(500).send(`Error when fetching user by username: ${err.message}`);
       } else {
         res.status(500).send(`Error when fetching user by username`);

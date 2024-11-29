@@ -160,6 +160,38 @@ describe('Bookmark Controller Tests', () => {
       // Asserting the response
       expect(response.status).toBe(400);
     });
+
+    it('should notify followers of a collection update successfully', async () => {
+      const mockReqBody = {
+        collectionId: '507f191e810c19729de860ea',
+        postId: '65e9b58910afe6e94fc6e6fe',
+      };
+
+      const updatedCollection = {
+        ...mockBookmarkCollection,
+        followers: ['user456', 'user789'],
+      };
+
+      jest.spyOn(util, 'addQuestionToBookmarkCollection').mockResolvedValueOnce(updatedCollection);
+      const mockSocketEmit = jest
+        .spyOn(util, 'notifyFollowersOfCollectionUpdate')
+        .mockResolvedValue();
+
+      const response = await supertest(app)
+        .post('/bookmark/addQuestionToCollection')
+        .send(mockReqBody);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        ...updatedCollection,
+        _id: updatedCollection._id?.toString(),
+      });
+      expect(mockSocketEmit).toHaveBeenCalledWith(
+        mockReqBody.collectionId,
+        updatedCollection,
+        expect.any(Object), // Ensure socket is passed
+      );
+    });
   });
 
   // Test Add Question to Bookmark Collection

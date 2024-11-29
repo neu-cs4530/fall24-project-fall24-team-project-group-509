@@ -40,4 +40,20 @@ describe('Post /addUser', () => {
     expect(response.status).toBe(500);
     expect(response.text).toBe('Error when adding user: Database error');
   });
+
+  it('should return 500 when saveUser returns an error', async () => {
+    const mockRequestBody = {
+      username: 'testuser',
+      password: 'password123',
+    };
+
+    jest.spyOn(util, 'saveUser').mockResolvedValueOnce({ error: 'Unable to save user' });
+
+    // Making the request
+    const response = await supertest(app).post('/user/addUser').send(mockRequestBody);
+
+    // Asserting the response
+    expect(response.status).toBe(500);
+    expect(response.text).toBe('Error when adding user: Unable to save user');
+  });
 });
