@@ -154,10 +154,24 @@ const questionController = (socket: FakeSOSocket) => {
       return;
     }
     try {
-      const { hasProfanity, censored } = await checkProfanity(question.text);
+      // Check profanity in question fields (title, text)
+      const { hasProfanity: textProfanity, censored: textCensored } = await checkProfanity(
+        question.text,
+      );
+      const { hasProfanity: titleProfanity, censored: titleCensored } = await checkProfanity(
+        question.title,
+      );
 
-      if (hasProfanity) {
-        res.status(400).send(`Profanity detected in question text: ${censored}`);
+      // Check profanity in tags concurrently
+      const tagProfanityResults = await Promise.all(
+        question.tags.map(tag => checkProfanity(tag.name)),
+      );
+
+      const tagWithProfanity = tagProfanityResults.find(result => result.hasProfanity);
+
+      if (textProfanity || titleProfanity || tagWithProfanity) {
+        const censoredText = textCensored || titleCensored || tagWithProfanity?.censored;
+        res.status(400).send(`Profanity detected: ${censoredText}`);
         return;
       }
 

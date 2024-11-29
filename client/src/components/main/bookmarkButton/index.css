@@ -11,10 +11,6 @@
     color: #22252B; /* Dark text color */
   }
   
-  .bookmark-button-container button:hover {
-    color: #53655C; /* Subtle hover effect */
-  }
-  
   .bookmark-dropdown {
     position: absolute;
     top: 40px;
@@ -53,14 +49,9 @@
     background-color: #FFFFFF; /* Default white background */
   }
   
-  .bookmark-dropdown ul li:hover {
-    background-color: #B09F95; /* Accent hover background */
-    color: #E5E8EB; /* Light hover text */
-  }
-  
   .bookmark-dropdown ul li button {
-    background: #53655C; /* Secondary greenish-gray button background */
-    color: #E5E8EB; /* Light button text */
+    background: #007bff;
+    color: white;
     border: none;
     border-radius: 4px;
     padding: 5px 8px;
@@ -70,7 +61,7 @@
   }
   
   .bookmark-dropdown ul li button:hover {
-    background-color: #22252B; /* Darker hover color for buttons */
+    background-color: #0056b3;
   }
   
   .create-collection {
@@ -95,8 +86,8 @@
   }
   
   .create-collection button {
-    background: #B09F95; /* Accent color */
-    color: #E5E8EB; /* Light text */
+    background-color: #007bff;
+    color: white;
     border: none;
     border-radius: 4px;
     padding: 8px 10px;
@@ -106,6 +97,6 @@
   }
   
   .create-collection button:hover {
-    background-color: #22252B; /* Darker hover color */
+    background-color: #0056b3;
   }
-  
+

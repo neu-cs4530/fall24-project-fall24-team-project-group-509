@@ -21,6 +21,9 @@ const Login = () => {
     <div className='container'>
       <h2>Welcome Back to FakeStackOverflow!</h2>
       <h4>Please log in to continue</h4>
+    <div className='login-container'>
+      <h2>Welcome to MindSync!</h2>
+      <h4>Please log in to continue</h4>
       <form onSubmit={handleSubmit}>
         <input
           type='text'

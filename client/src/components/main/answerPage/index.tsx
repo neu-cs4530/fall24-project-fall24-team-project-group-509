@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaFlag } from 'react-icons/fa';
 import { getMetaData } from '../../../tool';
 import AnswerView from './answer';
 import AnswerHeader from './header';
@@ -32,6 +33,24 @@ const AnswerPage = () => {
     <>
       <VoteComponent question={question} />
       <AnswerHeader ansCount={question.answers.length} title={question.title} />
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          width: '100%',
+        }}>
+        <FaFlag
+          onClick={() => {
+            handleFlagQuestion(question.title, question.text, question.askedBy);
+          }}
+          style={{
+            cursor: 'pointer',
+            color: '#007bff', // Matching color of other buttons
+            fontSize: '24px', // Adjust the size as needed
+            marginRight: '80px',
+          }}
+        />
+      </div>
       <QuestionBody
         views={question.views.length}
         text={question.text}
@@ -64,13 +83,6 @@ const AnswerPage = () => {
           handleNewAnswer();
         }}>
         Answer Question
-      </button>
-      <button
-        className='bluebtn FlagQuestionButton'
-        onClick={() => {
-          handleFlagQuestion(question.title, question.text, question.askedBy);
-        }}>
-        Flag Question
       </button>
     </>
   );

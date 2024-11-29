@@ -37,17 +37,11 @@ const userController = (socket: FakeSOSocket) => {
    * @param user The user object to validate.
    * @returns 'true' if the user object is valid, otherwise 'false'.
    */
-  const isUserBodyValid = async (user: User): Promise<boolean> => {
-    if (
-      user.username !== undefined ||
-      user.username !== '' ||
-      user.password !== undefined ||
-      user.password !== ''
-    ) {
-      return false;
-    }
-    return true;
-  };
+  const isUserBodyValid = async (user: User): Promise<boolean> =>
+    user.username !== undefined &&
+    user.username !== '' &&
+    user.password !== undefined &&
+    user.password !== '';
 
   /**
    * Validates the addUserBio request to ensure all required fields are present.
@@ -215,7 +209,7 @@ const userController = (socket: FakeSOSocket) => {
       }
       throw new Error('Error while fetching user by username');
     } catch (err: unknown) {
-      if (err instanceof Error) {
+      if (err instanceof Error && err.message) {
         res.status(500).send(`Error when fetching user by username: ${err.message}`);
       } else {
         res.status(500).send(`Error when fetching user by username`);

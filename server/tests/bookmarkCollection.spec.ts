@@ -353,3 +353,14 @@ describe('Get /getBookmarkCollectionById/:collectionId', () => {
     expect(response.body).toEqual(expectedResponse);
   });
 });
+
+describe('GET /getUserCollections/:username/:requesterUsername (Invalid Sort Option)', () => {
+  it('should return 400 if the sortOption is invalid', async () => {
+    const response = await supertest(app).get(
+      '/bookmark/getUserCollections/username/requesterUsername?sortOption=invalidOption',
+    );
+
+    expect(response.status).toBe(400);
+    expect(response.text).toBe('Invalid sortOption');
+  });
+});

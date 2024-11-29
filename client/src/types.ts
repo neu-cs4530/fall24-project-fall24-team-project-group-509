@@ -193,6 +193,21 @@ export interface BookmarkCollectionUpdatePayload {
   updatedCollection: BookmarkCollection;
 }
 
+export interface BioUpdatePayload {
+  username: string;
+  bio: string;
+}
+
+export interface ProfilePictureUpdatePayload {
+  username: string;
+  profilePictureURL: string;
+}
+
+/**
+ * Union type for profile update events, ensuring only relevant fields are included.
+ */
+export type ProfileUpdatePayload = BioUpdatePayload | ProfilePictureUpdatePayload;
+
 /**
  * Interface representing the possible events that the server can emit to the client.
  */
@@ -208,6 +223,7 @@ export interface ServerToClientEvents {
   bookmarkUpdate: (update: BookmarkCollection[]) => void;
   flagUpdate: (update: Flag) => void;
   collectionUpdate: (update: BookmarkCollectionUpdatePayload) => void;
+  profileUpdate: (update: ProfileUpdatePayload) => void;
 }
 
 /**

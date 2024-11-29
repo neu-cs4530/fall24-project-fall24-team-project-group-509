@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useUserContext from '../../../hooks/useUserContext';
 import flagPost from '../../../services/flagService';
+import './index.css';
 
 /**
  * FlagAnswerPage component allows a user to flag a question for moderator review.
@@ -58,9 +59,9 @@ const FlagAnswerPage = () => {
 
   return (
     <div>
-      <h1>Flag Question</h1>
+      <h1>Flag Answer</h1>
       <form>
-        <div>
+        <div className='flag-buttons'>
           <button type='button' onClick={() => submitFlaggedAnswer('spam')}>
             Spam
           </button>

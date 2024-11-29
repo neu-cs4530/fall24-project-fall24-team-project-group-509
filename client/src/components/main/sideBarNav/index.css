@@ -14,13 +14,23 @@
 .menu_button {
   height: 40px;
   width: 80%;
-  margin-top: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   border-radius: 5px;
   text-align: center;
-  line-height: 40px;
+  line-height: 20px;
   color: cornflowerblue;
 }
 
 .menu_selected {
   background: #cccccc;
+  display: flex; /* Add flex display */
+  align-items: center; /* Center vertically */
+  justify-content: center; /* Center horizontally */
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px; /* Preserve border radius */
+  text-align: center; /* Ensure text alignment is centered for compatibility */
+  line-height: normal; /* Adjust if needed to prevent conflicts */
 }
+
