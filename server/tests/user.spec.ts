@@ -98,6 +98,37 @@ describe('Get /getUser/:username', () => {
     expect(response.status).toBe(500);
     expect(response.text).toBe('Error when fetching user by username: Database error');
   });
+
+  it('should return 400 when username is an empty string', async () => {
+    // Making the request with an empty string as username
+    const response = await supertest(app).get(`/user/getUser/%20`);
+
+    // Asserting the response
+    expect(response.status).toBe(400);
+    expect(response.text).toBe('Invalid username');
+  });
+
+  it('should return 500 when an unexpected error occurs', async () => {
+    const mockReqParams = {
+      username: 'testuser',
+    };
+    const mockReqQuery = {
+      requesterUsername: 'requester',
+    };
+
+    jest.spyOn(util, 'getUserByUsername').mockImplementationOnce(() => {
+      throw new Error(); // Simulate unexpected error
+    });
+
+    // Making the request
+    const response = await supertest(app).get(
+      `/user/getUser/${mockReqParams.username}?requesterUsername=${mockReqQuery.requesterUsername}`,
+    );
+
+    // Asserting the response
+    expect(response.status).toBe(500);
+    expect(response.text).toBe('Error when fetching user by username');
+  });
 });
 
 describe('Post /addUserBio', () => {
@@ -227,6 +258,28 @@ describe('Post /addUserBio', () => {
     // Asserting the response
     expect(response.status).toBe(500);
     expect(response.text).toBe('Error when adding user bio: Database error');
+  });
+
+  it('should return 500 when addUserBio returns an error', async () => {
+    const mockRequestBody = {
+      username: 'user1',
+      bio: 'I love capybaras',
+    };
+
+    jest.spyOn(util, 'isUserBanned').mockResolvedValueOnce(false);
+    jest.spyOn(util, 'isUserShadowBanned').mockResolvedValueOnce(false);
+    jest.spyOn(utils, 'checkProfanity').mockResolvedValueOnce({
+      hasProfanity: false,
+      censored: 'I love capybaras',
+    });
+    jest.spyOn(util, 'addUserBio').mockResolvedValueOnce({ error: 'Unable to save bio' });
+
+    // Making the request
+    const response = await supertest(app).post('/user/addUserBio').send(mockRequestBody);
+
+    // Asserting the response
+    expect(response.status).toBe(500);
+    expect(response.text).toBe('Error when adding user bio: Unable to save bio');
   });
 });
 
@@ -380,6 +433,32 @@ describe('Post /addUserProfilePic', () => {
     expect(response.status).toBe(500);
     expect(response.text).toBe('Error when adding user profile picture: Database error');
   });
+
+  it('should return 500 when addUserProfilePicture returns an error', async () => {
+    const mockRequestBody = {
+      username: 'user1',
+    };
+
+    const mockFileBuffer = Buffer.from('fake image content');
+
+    jest.spyOn(util, 'isUserBanned').mockResolvedValueOnce(false);
+    jest.spyOn(util, 'isUserShadowBanned').mockResolvedValueOnce(false);
+    jest
+      .spyOn(util, 'addUserProfilePicture')
+      .mockResolvedValueOnce({ error: 'Unable to upload profile picture' });
+
+    // Making the request
+    const response = await supertest(app)
+      .post('/user/addUserProfilePic')
+      .field('username', mockRequestBody.username)
+      .attach('profilePictureFile', mockFileBuffer, 'profile.jpg');
+
+    // Asserting the response
+    expect(response.status).toBe(500);
+    expect(response.text).toBe(
+      'Error when adding user profile picture: Unable to upload profile picture',
+    );
+  });
 });
 
 describe('Get /search/:username', () => {
@@ -469,5 +548,66 @@ describe('Get /isBanned/:username', () => {
     // Asserting the response
     expect(response.status).toBe(500);
     expect(response.text).toBe('Error when checking if user is banned: Database error');
+  });
+});
+
+describe('Get /notifications/:username', () => {
+  afterEach(async () => {
+    jest.resetAllMocks();
+  });
+
+  afterAll(async () => {
+    await mongoose.disconnect(); // Ensure mongoose is disconnected after all tests
+  });
+
+  it('should return notifications when a valid username is provided', async () => {
+    const mockUsername = 'user1';
+    const mockNotifications = [
+      {
+        message: 'User1 followed you',
+        timestamp: '2024-11-29T12:00:00Z',
+        qTitle: 'How to fix errors in TypeScript?',
+        collectionId: 'collection123',
+        bookmarkCollectionTitle: 'My Favorites',
+        createdAt: new Date('2024-11-29T12:00:00Z'),
+      },
+      {
+        message: 'User2 liked your post',
+        timestamp: '2024-11-29T12:30:00Z',
+        qTitle: 'Understanding Express.js Middleware',
+        collectionId: 'collection456',
+        bookmarkCollectionTitle: 'Work Notes',
+        createdAt: new Date('2024-11-29T12:30:00Z'),
+      },
+    ];
+
+    jest.spyOn(util, 'getUserFollowUpdateNotifications').mockResolvedValueOnce(mockNotifications);
+
+    // Making the request
+    const response = await supertest(app).get(`/user/notifications/${mockUsername}`);
+
+    // Asserting the response
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(
+      mockNotifications.map(notification => ({
+        ...notification,
+        createdAt: notification.createdAt.toISOString(), // Convert Date to ISO string for comparison
+      })),
+    );
+  });
+
+  it('should return 500 when getUserFollowUpdateNotifications throws an error', async () => {
+    const mockUsername = 'user1';
+
+    jest
+      .spyOn(util, 'getUserFollowUpdateNotifications')
+      .mockRejectedValueOnce(new Error('Database error'));
+
+    // Making the request
+    const response = await supertest(app).get(`/user/notifications/${mockUsername}`);
+
+    // Asserting the response
+    expect(response.status).toBe(500);
+    expect(response.text).toBe('Error retrieving notifications: Database error');
   });
 });
