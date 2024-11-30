@@ -133,5 +133,41 @@ describe('Flag Controller Tests', () => {
       expect(response.status).toBe(500);
       expect(response.text).toContain('Error when flagging post');
     });
+
+    it('should handle errors when removing a post from user collections', async () => {
+      const mockReqBody = {
+        id: MOCKPOSTID,
+        type: 'question',
+        reason: 'spam',
+        flaggedBy: 'user123',
+      };
+
+      jest
+        .spyOn(util, 'removePostFromUserCollections')
+        .mockRejectedValueOnce(new Error('Database error'));
+
+      const response = await supertest(app).post('/flag/flagPost').send(mockReqBody);
+
+      expect(response.status).toBe(500);
+      expect(response.text).toContain('Error when flagging post');
+    });
+
+    it('should handle errors when removing a post from user activity history', async () => {
+      const mockReqBody = {
+        id: MOCKPOSTID,
+        type: 'question',
+        reason: 'spam',
+        flaggedBy: 'user123',
+      };
+
+      jest
+        .spyOn(util, 'removePostFromUserActivityHistory')
+        .mockRejectedValueOnce(new Error('Database error'));
+
+      const response = await supertest(app).post('/flag/flagPost').send(mockReqBody);
+
+      expect(response.status).toBe(500);
+      expect(response.text).toContain('Error when flagging post');
+    });
   });
 });

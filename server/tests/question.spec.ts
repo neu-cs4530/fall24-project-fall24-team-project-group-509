@@ -5,7 +5,10 @@ import * as util from '../models/application';
 import { Question } from '../types';
 
 const addVoteToQuestionSpy = jest.spyOn(util, 'addVoteToQuestion');
-
+const fetchAndIncrementQuestionViewsByIdSpy = jest.spyOn(
+  util,
+  'fetchAndIncrementQuestionViewsById',
+);
 interface MockResponse {
   msg: string;
   upVotes: string[];
@@ -474,5 +477,23 @@ describe('GET /getQuestionById/:qid', () => {
 
     // Asserting the response
     expect(response.status).toBe(500);
+  });
+
+  it('should return 500 if fetchAndIncrementQuestionViewsById throws an error', async () => {
+    const mockQid = '65e9b58910afe6e94fc6e6dc';
+    const mockUsername = 'test_user';
+
+    fetchAndIncrementQuestionViewsByIdSpy.mockRejectedValueOnce(
+      new Error('Error fetching question by ID'),
+    );
+
+    // Making the request
+    const response = await supertest(app)
+      .get(`/question/getQuestionById/${mockQid}`)
+      .query({ username: mockUsername });
+
+    // Asserting the response
+    expect(response.status).toBe(500);
+    expect(response.text).toContain('Error when fetching question by id:');
   });
 });
