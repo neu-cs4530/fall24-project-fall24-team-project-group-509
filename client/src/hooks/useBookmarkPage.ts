@@ -47,6 +47,34 @@ const useBookmarkPage = () => {
     };
   }, [collectionID, socket]);
 
+  useEffect(() => {
+    // Handle flag notification
+    const handleFlagNotification = (payload: {
+      postId: string;
+      postType: string;
+      message: string;
+    }) => {
+      setSavedPosts(prevPosts => prevPosts.filter(post => post.postId !== payload.postId));
+    };
+
+    // Handle delete notification
+    const handleDeletePostNotification = (payload: {
+      postId: string;
+      postType: string;
+      message: string;
+    }) => {
+      setSavedPosts(prevPosts => prevPosts.filter(post => post.postId !== payload.postId));
+    };
+
+    socket.on('flagNotification', handleFlagNotification);
+    socket.on('deletePostNotification', handleDeletePostNotification);
+
+    return () => {
+      socket.off('flagNotification', handleFlagNotification);
+      socket.off('deletePostNotification', handleDeletePostNotification);
+    };
+  }, [socket]);
+
   const handleFollowCollection = async () => {
     const updatedCollection = await followBookmarkCollection(collectionID, user.username);
     setCollection(updatedCollection);

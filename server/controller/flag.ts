@@ -1,6 +1,10 @@
 import express, { Response } from 'express';
 import { FlagPostRequest, FakeSOSocket } from '../types';
-import { flagPost } from '../models/application';
+import {
+  flagPost,
+  removePostFromUserActivityHistory,
+  removePostFromUserCollections,
+} from '../models/application';
 
 const flagController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -27,8 +31,19 @@ const flagController = (socket: FakeSOSocket) => {
         throw new Error(result.error as string);
       }
 
-      // Emit the 'postFlagged' event to the client
-      socket.emit('postFlagged', { id, type });
+      // Remove flagged post from the user's collections and activity history
+      await removePostFromUserCollections(flaggedBy, id, type);
+      await removePostFromUserActivityHistory(flaggedBy, id);
+
+      // Notify the user about the action
+      socket.emit('flagNotification', {
+        flaggedBy,
+        postId: id,
+        postType: type,
+        reason,
+        message: 'The flagged post has been removed from your collections and activity history.',
+      });
+
       res.json({ message: 'Post flagged successfully' });
     } catch (err) {
       res.status(500).send(`Error when flagging post: ${(err as Error).message}`);

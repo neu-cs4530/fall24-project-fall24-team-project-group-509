@@ -1597,3 +1597,61 @@ export const isUserShadowBanned = async (username: string): Promise<boolean> => 
     return false;
   }
 };
+
+/**
+ * Removes a post from all users' bookmark collections.
+ * @param postId The ID of the post to remove.
+ * @param postType The type of the post (e.g., 'question', 'answer').
+ */
+export const removePostFromAllCollections = async (
+  postId: string,
+  postType: string,
+): Promise<void> => {
+  await BookmarkCollectionModel.updateMany(
+    { posts: { $elemMatch: { postId, postType } } },
+    { $pull: { posts: { postId, postType } } },
+  );
+};
+
+/**
+ * Removes a post from all users' activity histories.
+ * @param postId The ID of the post to remove.
+ */
+export const removePostFromActivityHistory = async (postId: string): Promise<void> => {
+  await UserModel.updateMany(
+    { 'activityHistory.postId': postId },
+    { $pull: { activityHistory: { postId } } },
+  );
+};
+
+/**
+ * Removes a post from a specific user's bookmark collections.
+ * @param username The username of the user.
+ * @param postId The ID of the post to remove.
+ * @param postType The type of the post (e.g., 'question', 'answer').
+ */
+export const removePostFromUserCollections = async (
+  username: string,
+  postId: string,
+  postType: string,
+): Promise<void> => {
+  await BookmarkCollectionModel.updateMany(
+    { username, posts: { $elemMatch: { postId, postType } } },
+    { $pull: { posts: { postId, postType } } },
+  );
+};
+
+/**
+ * Removes a post from a specific user's activity history.
+ * @param username The username of the user.
+ * @param postId The ID of the post to remove.
+ */
+export const removePostFromUserActivityHistory = async (
+  username: string,
+  postId: string,
+): Promise<void> => {
+  await UserModel.updateOne(
+    { username, 'activityHistory.postId': postId },
+    { $pull: { activityHistory: { postId } } },
+  );
+};

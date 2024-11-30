@@ -478,6 +478,20 @@ describe('application module', () => {
         expect(result.views).toEqual([]);
         expect(result.answers.length).toEqual(0);
       });
+
+      test('saveQuestion with missing required fields should throw an error', async () => {
+        const invalidQuestion = {
+          title: 'New Question Title',
+          // Missing 'text', 'tags', and other fields
+        };
+
+        try {
+          await saveQuestion(invalidQuestion as Question);
+        } catch (err: unknown) {
+          expect(err).toBeInstanceOf(Error);
+          if (err instanceof Error) expect(err.message).toBe('Invalid question data');
+        }
+      });
     });
 
     describe('addVoteToQuestion', () => {
@@ -1691,6 +1705,28 @@ describe('application module', () => {
         const result = await deletePost('invalidId', 'question', 'mod1');
 
         expect(result).toEqual({ success: false, message: 'Question not found' });
+      });
+
+      test('should return an error if the answer does not exist', async () => {
+        mockingoose(AnswerModel).toReturn(null, 'findById');
+
+        const result = await deletePost('invalidId', 'answer', 'mod1');
+
+        expect(result).toEqual({ success: false, message: 'Answer not found' });
+      });
+
+      test('should delete a comment and its references in questions and answers', async () => {
+        const commentId = '507f191e810c19729de860ea';
+        const moderatorUsername = 'mod1';
+
+        mockingoose(CommentModel).toReturn({}, 'deleteOne');
+        mockingoose(QuestionModel).toReturn({}, 'updateMany');
+        mockingoose(AnswerModel).toReturn({}, 'updateMany');
+        mockingoose(FlagModel).toReturn({}, 'deleteMany');
+
+        const result = await deletePost(commentId, 'comment', moderatorUsername);
+
+        expect(result).toEqual({ success: true });
       });
     });
 

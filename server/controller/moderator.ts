@@ -5,6 +5,7 @@ import {
   DeletePostRequest,
   BanUserRequest,
   GetFlagByIdRequest,
+  FakeSOSocket,
 } from '../types';
 import {
   MODERATORUSERNAME,
@@ -16,9 +17,11 @@ import {
   shadowBanUser,
   unshadowBanUser,
   getFlag,
+  removePostFromAllCollections,
+  removePostFromActivityHistory,
 } from '../models/application';
 
-const moderatorController = () => {
+const moderatorController = (socket: FakeSOSocket) => {
   const router = express.Router();
 
   const getPendingFlagsRoute = async (
@@ -81,6 +84,17 @@ const moderatorController = () => {
     try {
       const result = await deletePost(id, type, moderatorUsername);
       if (result.success) {
+        await removePostFromAllCollections(id, type);
+        await removePostFromActivityHistory(id);
+
+        // Notify all users about the deletion
+        socket.emit('deletePostNotification', {
+          postId: id,
+          postType: type,
+          message:
+            'A post has been deleted by a moderator and removed from your collections and activity history.',
+        });
+
         res.json({ message: 'Post deleted successfully' });
       } else {
         res.status(500).send(result.message || 'Error when deleting post');
