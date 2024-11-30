@@ -90,6 +90,50 @@ const useProfilePage = () => {
     };
   }, [username, requesterUsername, socket]);
 
+  useEffect(() => {
+    // Handle flag notification
+    const handleFlagNotification = (payload: {
+      postId: string;
+      postType: string;
+      message: string;
+    }) => {
+      setActivityHistory(prevHistory =>
+        prevHistory.filter(activity => activity.postID !== payload.postId),
+      );
+      setBookmarks(prevBookmarks =>
+        prevBookmarks.map(collection => ({
+          ...collection,
+          savedPosts: collection.savedPosts.filter(post => post.postId !== payload.postId),
+        })),
+      );
+    };
+
+    // Handle delete notification
+    const handleDeletePostNotification = (payload: {
+      postId: string;
+      postType: string;
+      message: string;
+    }) => {
+      setActivityHistory(prevHistory =>
+        prevHistory.filter(activity => activity.postID !== payload.postId),
+      );
+      setBookmarks(prevBookmarks =>
+        prevBookmarks.map(collection => ({
+          ...collection,
+          savedPosts: collection.savedPosts.filter(post => post.postId !== payload.postId),
+        })),
+      );
+    };
+
+    socket.on('flagNotification', handleFlagNotification);
+    socket.on('deletePostNotification', handleDeletePostNotification);
+
+    return () => {
+      socket.off('flagNotification', handleFlagNotification);
+      socket.off('deletePostNotification', handleDeletePostNotification);
+    };
+  }, [socket]);
+
   const handleImgUpdate = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];

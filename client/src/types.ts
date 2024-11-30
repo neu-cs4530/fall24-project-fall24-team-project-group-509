@@ -209,6 +209,24 @@ export interface ProfilePictureUpdatePayload {
 export type ProfileUpdatePayload = BioUpdatePayload | ProfilePictureUpdatePayload;
 
 /**
+ * Interface representing the payload for a flag notification event.
+ */
+export interface FlagNotificationPayload {
+  postId: string; // ID of the flagged post
+  postType: 'question' | 'answer' | 'comment'; // Type of the flagged post
+  message: string; // Notification message
+}
+
+/**
+ * Interface representing the payload for a delete post notification event.
+ */
+export interface DeletePostNotificationPayload {
+  postId: string; // ID of the deleted post
+  postType: 'question' | 'answer' | 'comment'; // Type of the deleted post
+  message: string; // Notification message
+}
+
+/**
  * Interface representing the possible events that the server can emit to the client.
  */
 export interface ServerToClientEvents {
@@ -224,6 +242,8 @@ export interface ServerToClientEvents {
   flagUpdate: (update: Flag) => void;
   collectionUpdate: (update: BookmarkCollectionUpdatePayload) => void;
   profileUpdate: (update: ProfileUpdatePayload) => void;
+  flagNotification: (payload: FlagNotificationPayload) => void;
+  deletePostNotification: (payload: DeletePostNotificationPayload) => void;
 }
 
 /**
