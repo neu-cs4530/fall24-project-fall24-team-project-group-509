@@ -8,6 +8,8 @@ import bookmarkCollectionSchema from './schema/bookmarkCollection';
  * This model is created using the `BookmarkCollection` interface and the `bookmarkCollectionSchema`, representing the
  * `BookmarkCollection` collection in the MongoDB database, and provides an interface for interacting with
  * the stored bookmark collections.
+ *
+ * @type {Model<BookmarkCollection>}
  */
 const BookmarkCollectionModel: Model<BookmarkCollection> = mongoose.model<BookmarkCollection>(
   'BookmarkCollection',
