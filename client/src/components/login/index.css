@@ -1,68 +1,180 @@
+/* Main container styling */
 .login-container {
+  position: relative;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f7f7f7;
+  background: linear-gradient(135deg, #2c3e50, #4ca1af); /* Gradient background */
+  color: #000; /* Black text for contrast */
+  font-family: 'Arial', sans-serif;
+  overflow: hidden; /* Prevent scrollbar visibility during animations */
+  animation: fadeIn 1.5s ease-in-out;
 }
 
-.login-container h2,
-.login-container p,
-.login-container h4,
-.login-container form {
+/* Card styling */
+.card {
+  position: relative;
+  background: #ffffff; /* White card background */
+  color: #000; /* Black text */
+  padding: 40px 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
   text-align: center;
   width: 100%;
-  margin: 10px 0;
+  max-width: 400px; /* Center card on large screens */
+  z-index: 1; /* Above animated background */
 }
 
+/* Card headings and text */
+.card h2 {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #000; /* Black text for heading */
+}
+
+.card h4 {
+  font-size: 16px;
+  font-weight: 400;
+  margin-bottom: 20px;
+  color: #333; /* Subtle gray */
+}
+
+.card p {
+  font-size: 14px;
+  color: #000; /* Black text */
+}
+
+.card a {
+  color: #4ca1af; /* Teal link */
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.card a:hover {
+  color: #3e8c99; /* Darker teal hover effect */
+}
+
+/* Input field styling */
 .input-text {
-  padding: 10px;
+  padding: 12px;
   font-size: 16px;
   width: 100%;
-  max-width: 300px;
   margin-bottom: 15px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+  border: 1px solid #cccccc; /* Light gray border */
+  border-radius: 8px;
   outline: none;
-  box-sizing: border-box;
+  background: #f9f9f9; /* Light gray input background */
+  color: #000; /* Black text */
+  transition: all 0.3s ease;
 }
 
 .input-text:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  border-color: #4ca1af; /* Teal border on focus */
+  box-shadow: 0 0 10px rgba(76, 161, 175, 0.5); /* Teal glow */
 }
 
+/* Button styling */
 .login-button {
-  padding: 10px 20px;
+  padding: 12px 24px;
   font-size: 16px;
-  background-color: #007bff;
+  font-weight: bold;
+  background-color: #4ca1af; /* Teal button */
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  margin-left: 20px;
+  transition: all 0.3s ease;
+  width: 100%; /* Full-width button */
 }
 
 .login-button:hover {
-  background-color: #0056b3;
+  background-color: #3e8c99;
+  box-shadow: 0 4px 15px rgba(76, 161, 175, 0.5); /* Hover effect */
 }
 
 .login-button:active {
-  background-color: #003f7f;
+  background-color: #326e78;
+  transform: scale(0.98); /* Click effect */
 }
 
 /* Error message styling */
 .error {
-  color: #ff0000; /* Bright red for visibility */
-  font-size: 14px; /* Slightly larger text */
-  font-weight: bold; /* Bold to draw attention */
-  margin-top: 0px; /* Space above the message */
-  text-align: center; /* Center-align the text */
-  background-color: #ffe6e6; /* Light red background for emphasis */
-  padding: 10px; /* Padding for spacing */
-  border-radius: 5px; /* Rounded corners for a modern look */
-  max-width: 300px; /* Match the width of the input fields */
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for emphasis */
-  position:fixed; /* Position relative for absolute positioning */
+  color: #000; /* Black error text */
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 10px;
+  text-align: center;
+  background-color: #f5c6cb; /* Light pink error background */
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
+
+/* Animation for fade-in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animated shapes for background */
+.login-container::before,
+.login-container::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1); /* Semi-transparent white circles */
+  animation: moveCircles 12s linear infinite;
+  z-index: 0;
+}
+
+.login-container::before {
+  width: 300px;
+  height: 300px;
+  top: 10%;
+  left: 20%;
+}
+
+.login-container::after {
+  width: 200px;
+  height: 200px;
+  bottom: 20%;
+  right: 15%;
+}
+
+/* Animation for Circles */
+@keyframes moveCircles {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.2) translate(30px, -30px);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .card {
+    padding: 30px 20px;
+  }
+
+  .input-text {
+    margin-bottom: 12px;
+  }
+
+  .login-button {
+    font-size: 14px;
+  }
+}
+
