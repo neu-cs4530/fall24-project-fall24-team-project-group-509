@@ -31,11 +31,9 @@ const flagController = (socket: FakeSOSocket) => {
         throw new Error(result.error as string);
       }
 
-      // Remove flagged post from the user's collections and activity history
       await removePostFromUserCollections(flaggedBy, id, type);
       await removePostFromUserActivityHistory(flaggedBy, id);
 
-      // Notify the user about the action
       socket.emit('flagNotification', {
         flaggedBy,
         postId: id,
@@ -50,7 +48,6 @@ const flagController = (socket: FakeSOSocket) => {
     }
   };
 
-  // Define routes
   router.post('/flagPost', flagPostRoute);
 
   return router;

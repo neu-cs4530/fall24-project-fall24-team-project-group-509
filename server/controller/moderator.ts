@@ -87,7 +87,6 @@ const moderatorController = (socket: FakeSOSocket) => {
         await removePostFromAllCollections(id, type);
         await removePostFromActivityHistory(id);
 
-        // Notify all users about the deletion
         socket.emit('deletePostNotification', {
           postId: id,
           postType: type,
@@ -153,7 +152,6 @@ const moderatorController = (socket: FakeSOSocket) => {
     }
   };
 
-  // Unban a user
   const unbanUserRoute = async (req: BanUserRequest, res: Response): Promise<void> => {
     const { username, moderatorUsername } = req.body;
 
@@ -178,7 +176,6 @@ const moderatorController = (socket: FakeSOSocket) => {
     }
   };
 
-  // Shadow ban a user
   const shadowBanUserRoute = async (req: BanUserRequest, res: Response): Promise<void> => {
     const { username, moderatorUsername } = req.body;
 
@@ -203,7 +200,6 @@ const moderatorController = (socket: FakeSOSocket) => {
     }
   };
 
-  // Un-shadow ban a user
   const unshadowBanUserRoute = async (req: BanUserRequest, res: Response): Promise<void> => {
     const { username, moderatorUsername } = req.body;
 
