@@ -77,6 +77,6 @@ app.use('/comment', commentController(socket));
 app.use('/user', userController(socket));
 app.use('/bookmark', bookmarkController(socket));
 app.use('/flag', flagController(socket));
-app.use('/moderator', moderatorController());
+app.use('/moderator', moderatorController(socket));
 // Export the app instance
 export { app, server, startServer };

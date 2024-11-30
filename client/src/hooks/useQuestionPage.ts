@@ -111,6 +111,38 @@ const useQuestionPage = () => {
     };
   }, [questionOrder, search, socket, user.username]);
 
+  useEffect(() => {
+    // Handle flag notification
+    const handleFlagNotification = (payload: {
+      postId: string;
+      postType: string;
+      message: string;
+    }) => {
+      if (payload.postType === 'question') {
+        setQlist(prevQlist => prevQlist.filter(q => q._id !== payload.postId));
+      }
+    };
+
+    // Handle delete notification
+    const handleDeletePostNotification = (payload: {
+      postId: string;
+      postType: string;
+      message: string;
+    }) => {
+      if (payload.postType === 'question') {
+        setQlist(prevQlist => prevQlist.filter(q => q._id !== payload.postId));
+      }
+    };
+
+    socket.on('flagNotification', handleFlagNotification);
+    socket.on('deletePostNotification', handleDeletePostNotification);
+
+    return () => {
+      socket.off('flagNotification', handleFlagNotification);
+      socket.off('deletePostNotification', handleDeletePostNotification);
+    };
+  }, [socket]);
+
   return { titleText, qlist, setQuestionOrder };
 };
 

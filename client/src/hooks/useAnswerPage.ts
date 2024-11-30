@@ -272,6 +272,42 @@ const useAnswerPage = () => {
     };
   }, [filterFlaggedContentOfQuestion, questionID, socket, user.username]);
 
+  useEffect(() => {
+    const handleFlagNotification = (payload: { postId: string; postType: string }) => {
+      if (payload.postType === 'question' && payload.postId === questionID) {
+        navigate('/home');
+      } else {
+        setQuestion(prev => {
+          if (!prev) return null;
+          const updatedAnswers = prev.answers.filter(a => a._id !== payload.postId);
+          const updatedComments = prev.comments.filter(c => c._id !== payload.postId);
+          return { ...prev, answers: updatedAnswers, comments: updatedComments };
+        });
+      }
+    };
+
+    const handleDeletePostNotification = (payload: { postId: string; postType: string }) => {
+      if (payload.postType === 'question' && payload.postId === questionID) {
+        navigate('/home');
+      } else {
+        setQuestion(prev => {
+          if (!prev) return null;
+          const updatedAnswers = prev.answers.filter(a => a._id !== payload.postId);
+          const updatedComments = prev.comments.filter(c => c._id !== payload.postId);
+          return { ...prev, answers: updatedAnswers, comments: updatedComments };
+        });
+      }
+    };
+
+    socket.on('flagNotification', handleFlagNotification);
+    socket.on('deletePostNotification', handleDeletePostNotification);
+
+    return () => {
+      socket.off('flagNotification', handleFlagNotification);
+      socket.off('deletePostNotification', handleDeletePostNotification);
+    };
+  }, [questionID, socket, navigate]);
+
   return {
     questionID,
     question,

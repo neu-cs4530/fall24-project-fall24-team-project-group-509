@@ -254,8 +254,37 @@ export interface ServerToClientEvents {
   profileUpdate: (update: ProfileUpdatePayload) => void;
   collectionUpdate: (update: BookmarkCollectionUpdatePayload) => void;
   postFlagged: (payload: { id: string; type: 'question' | 'answer' | 'comment' }) => void;
+  flagNotification: (payload: FlagNotificationPayload) => void; 
+  deletePostNotification: (payload: DeletePostNotificationPayload) => void; 
 }
 
+/**
+ * Interface representing the payload for a flag notification event, which contains:
+ * - flaggedBy - The username of the user who flagged the post.
+ * - postId - The unique identifier of the post that was flagged.
+ * - postType - The type of the flagged post (question, answer, or comment).
+ * - reason - The reason for flagging the post.
+ * - message - A message describing the flagging action.
+ */
+export interface FlagNotificationPayload {
+  flaggedBy: string;
+  postId: string;
+  postType: 'question' | 'answer' | 'comment';
+  reason: FlagReason;
+  message: string;
+}
+
+/**
+ * Interface representing the payload for a delete post notification event, which contains:
+ * - postId - The unique identifier of the post that was deleted.
+ * - postType - The type of the deleted post (question, answer, or comment).
+ * - message - A message describing the deletion action.
+ */
+export interface DeletePostNotificationPayload {
+  postId: string;
+  postType: 'question' | 'answer' | 'comment';
+  message: string;
+}
 /**
  * Interface representing the possible events that the client can emit to the server.
  */
