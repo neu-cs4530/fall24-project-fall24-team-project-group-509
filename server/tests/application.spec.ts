@@ -37,6 +37,10 @@ import {
   markFlagAsReviewed,
   deletePost,
   getFlag,
+  populateDocument,
+  getUserFollowUpdateNotifications,
+  findQuestionIDByAnswerID,
+  flagPost,
 } from '../models/application';
 import { Answer, Question, Tag, Comment, User, BookmarkCollection } from '../types';
 import { T1_DESC, T2_DESC, T3_DESC } from '../data/posts_strings';
@@ -494,6 +498,53 @@ describe('application module', () => {
       });
     });
 
+    describe('populateDocument', () => {
+      beforeEach(() => {
+        mockingoose.resetAll();
+      });
+
+      test('should return an error if ID is undefined', async () => {
+        const result = await populateDocument(undefined, 'question');
+
+        expect(result).toEqual({
+          error:
+            'Error when fetching and populating a document: Provided question ID is undefined.',
+        });
+      });
+
+      test('should return an error if question is not found', async () => {
+        mockingoose(QuestionModel).toReturn(null, 'findOne');
+
+        const result = await populateDocument('507f191e810c19729de860ea', 'question');
+
+        expect(result).toEqual({
+          error:
+            'Error when fetching and populating a document: Failed to fetch and populate a question',
+        });
+      });
+
+      test('should return an error if answer is not found', async () => {
+        mockingoose(AnswerModel).toReturn(null, 'findOne');
+
+        const result = await populateDocument('507f191e810c19729de860eb', 'answer');
+
+        expect(result).toEqual({
+          error:
+            'Error when fetching and populating a document: Failed to fetch and populate a answer',
+        });
+      });
+
+      test('should return an error if an exception occurs during fetching', async () => {
+        mockingoose(QuestionModel).toReturn(new Error('Database error'), 'findOne');
+
+        const result = await populateDocument('507f191e810c19729de860ea', 'question');
+
+        expect(result).toEqual({
+          error: 'Error when fetching and populating a document: Database error',
+        });
+      });
+    });
+
     describe('addVoteToQuestion', () => {
       test('addVoteToQuestion should upvote a question', async () => {
         const mockQuestion = {
@@ -674,6 +725,36 @@ describe('application module', () => {
       });
     });
 
+    describe('findQuestionIDByAnswerID', () => {
+      beforeEach(() => {
+        mockingoose.resetAll();
+      });
+
+      test('should return the question ID if the answer exists within a question', async () => {
+        const mockAnswerID = '507f191e810c19729de860ea';
+        const mockQuestionID = '507f191e810c19729de860eb';
+        const mockQuestion = {
+          _id: new ObjectId(mockQuestionID),
+          answers: [new ObjectId(mockAnswerID)],
+        };
+
+        mockingoose(QuestionModel).toReturn(mockQuestion, 'findOne');
+
+        const result = await findQuestionIDByAnswerID(mockAnswerID);
+
+        expect(result).toEqual(mockQuestionID);
+      });
+
+      test('should throw an error if the database query fails', async () => {
+        const mockAnswerID = '507f191e810c19729de860ea';
+
+        mockingoose(QuestionModel).toReturn(new Error('Database error'), 'findOne');
+
+        await expect(findQuestionIDByAnswerID(mockAnswerID)).rejects.toThrow(
+          'Error when finding question ID by answer ID',
+        );
+      });
+    });
     describe('addAnswerToQuestion', () => {
       test('addAnswerToQuestion should return the updated question', async () => {
         const question = QUESTIONS.filter(
@@ -1477,6 +1558,42 @@ describe('application module', () => {
       });
     });
 
+    describe('getUserFollowUpdateNotifications', () => {
+      test('should return an empty array if the user has no notifications', async () => {
+        const username = 'testUserWithoutNotifications';
+
+        mockingoose(UserModel).toReturn({ followUpdateNotifications: [] }, 'findOne');
+
+        const result = await getUserFollowUpdateNotifications(username);
+
+        expect(result).toEqual([]);
+      });
+
+      test('should return an error if the user is not found', async () => {
+        const username = 'nonExistentUser';
+
+        mockingoose(UserModel).toReturn(null, 'findOne');
+
+        const result = await getUserFollowUpdateNotifications(username);
+
+        expect(result).toEqual({
+          error: 'Error when unfollowing bookmark collection: User not found',
+        });
+      });
+
+      test('should return an error if an exception occurs during database access', async () => {
+        const username = 'testUser';
+
+        mockingoose(UserModel).toReturn(new Error('Database error'), 'findOne');
+
+        const result = await getUserFollowUpdateNotifications(username);
+
+        expect(result).toEqual({
+          error: 'Error when unfollowing bookmark collection: Database error',
+        });
+      });
+    });
+
     describe('unfollowBookmarkCollection', () => {
       test('unfollowBookmarkCollection should return the updated bookmark collection', async () => {
         const bookmarkCollection: BookmarkCollection = {
@@ -1627,6 +1744,19 @@ describe('application module', () => {
         expect(result).toEqual({
           error: 'Error when retrieving pending flags: Database error',
         });
+      });
+    });
+
+    describe('flagPost', () => {
+      beforeEach(() => {
+        mockingoose.resetAll();
+      });
+      test('should return an error if the post is not found', async () => {
+        mockingoose(QuestionModel).toReturn(null, 'findById');
+
+        const result = await flagPost('nonExistentId', 'question', 'other', 'testUser');
+
+        expect(result).toEqual({ error: 'Error when flagging post: Post not found' });
       });
     });
 
