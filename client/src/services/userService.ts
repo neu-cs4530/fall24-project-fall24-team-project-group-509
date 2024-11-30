@@ -110,6 +110,24 @@ const searchUsersByUsername = async (username: string): Promise<User[]> => {
   return res.data;
 };
 
+export const validateUserCredentials = async ({
+  username,
+  password,
+}: {
+  username: string;
+  password: string;
+}): Promise<boolean> => {
+  try {
+    const response = await api.post(`${USER_API_URL}/validate`, {
+      username,
+      password,
+    });
+    return response.data.success;
+  } catch (error) {
+    return false;
+  }
+};
+
 export {
   addUser,
   addUserBio,

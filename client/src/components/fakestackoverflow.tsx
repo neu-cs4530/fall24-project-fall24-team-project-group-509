@@ -19,6 +19,7 @@ import ModeratorPage from './main/moderatorPage';
 import ModeratorActionPage from './main/moderatorActionsPage';
 import SearchResultsPage from './main/searchResultsPage';
 import NotificationPage from './main/notificationsPage';
+import Signup from './signup';
 
 const ProtectedRoute = ({
   user,
@@ -48,6 +49,7 @@ const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
       <Routes>
         {/* Public Route */}
         <Route path='/' element={<Login />} />
+        <Route path='/signup' element={<Signup />} />
 
         {/* Protected Routes */}
         {

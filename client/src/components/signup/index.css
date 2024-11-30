@@ -1,14 +1,14 @@
 /* Main container styling */
-.login-container {
+.signup-container {
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #2c3e50, #4ca1af); /* Gradient background */
-  color: #000; /* Black text for contrast */
+  background: linear-gradient(135deg, #2c3e50, #4ca1af); /* Cool gradient background */
+  color: #000; /* Black text */
   font-family: 'Arial', sans-serif;
-  overflow: hidden; /* Prevent scrollbar visibility during animations */
+  overflow: hidden;
   animation: fadeIn 1.5s ease-in-out;
 }
 
@@ -32,13 +32,6 @@
   font-weight: bold;
   margin-bottom: 10px;
   color: #000; /* Black text for heading */
-}
-
-.card h4 {
-  font-size: 16px;
-  font-weight: 400;
-  margin-bottom: 20px;
-  color: #333; /* Subtle gray */
 }
 
 .card p {
@@ -77,7 +70,7 @@
 }
 
 /* Button styling */
-.login-button {
+.signup-button {
   padding: 12px 24px;
   font-size: 16px;
   font-weight: bold;
@@ -90,12 +83,12 @@
   width: 100%; /* Full-width button */
 }
 
-.login-button:hover {
+.signup-button:hover {
   background-color: #3e8c99;
   box-shadow: 0 4px 15px rgba(76, 161, 175, 0.5); /* Hover effect */
 }
 
-.login-button:active {
+.signup-button:active {
   background-color: #326e78;
   transform: scale(0.98); /* Click effect */
 }
@@ -113,7 +106,7 @@
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Animation for fade-in */
+/* Fade-in animation */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -126,8 +119,8 @@
 }
 
 /* Animated shapes for background */
-.login-container::before,
-.login-container::after {
+.signup-container::before,
+.signup-container::after {
   content: '';
   position: absolute;
   border-radius: 50%;
@@ -136,14 +129,14 @@
   z-index: 0;
 }
 
-.login-container::before {
+.signup-container::before {
   width: 300px;
   height: 300px;
   top: 10%;
   left: 20%;
 }
 
-.login-container::after {
+.signup-container::after {
   width: 200px;
   height: 200px;
   bottom: 20%;
@@ -173,8 +166,12 @@
     margin-bottom: 12px;
   }
 
-  .login-button {
+  .signup-button {
     font-size: 14px;
   }
 }
 
+
+
+
+  
