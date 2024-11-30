@@ -1234,8 +1234,6 @@ export const findQuestionIDByAnswerID = async (answerID: string): Promise<string
     if (!question) {
       throw new Error('Question not found');
     }
-    // eslint-disable-next-line no-console
-    console.log(question._id.toString());
     return question._id.toString();
   } catch (error) {
     throw new Error('Error when finding question ID by answer ID');
