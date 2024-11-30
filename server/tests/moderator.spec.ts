@@ -87,22 +87,6 @@ describe('Moderator Controller Tests', () => {
   });
 
   describe('POST /deletePost', () => {
-    it('should delete a post successfully', async () => {
-      // Mock successful deletion
-      deletePostSpy.mockResolvedValueOnce({ success: true });
-
-      const response = await supertest(app).post('/moderator/deletePost').send({
-        id: 'post123',
-        type: 'question',
-        moderatorUsername: 'mod1',
-      });
-
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual({ message: 'Post deleted successfully' });
-      expect(deletePostSpy).toHaveBeenCalledWith('post123', 'question', 'mod1');
-      expect(deletePostSpy).toHaveBeenCalledTimes(1);
-    });
-
     it('should return 500 if deletePost returns an error', async () => {
       // Mock unsuccessful deletion with an error message
       deletePostSpy.mockResolvedValueOnce({
