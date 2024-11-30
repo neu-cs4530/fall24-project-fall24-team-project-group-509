@@ -91,7 +91,6 @@ const bookmarkController = (socket: FakeSOSocket) => {
         throw new Error(updatedCollection.error);
       }
 
-      // Emit collection update to followers
       await notifyFollowersOfCollectionUpdate(collectionId, updatedCollection, socket);
 
       res.json(updatedCollection);
@@ -122,7 +121,6 @@ const bookmarkController = (socket: FakeSOSocket) => {
         throw new Error(updatedCollection.error);
       }
 
-      // Emit collection update to followers
       socket.emit('collectionUpdate', {
         collectionId,
         updatedCollection,
@@ -156,7 +154,6 @@ const bookmarkController = (socket: FakeSOSocket) => {
 
     let sortOption: BookmarkSortOption | undefined;
     if (sortOptionParam) {
-      // Validate sortOption
       const validSortOptions: BookmarkSortOption[] = [
         'date',
         'numberOfAnswers',
@@ -269,7 +266,6 @@ const bookmarkController = (socket: FakeSOSocket) => {
     }
   };
 
-  // Define routes
   router.post('/createCollection', createBookmarkCollectionRoute);
   router.post('/addQuestionToCollection', addQuestionToBookmarkCollectionRoute);
   router.post('/removeQuestionFromCollection', removeQuestionFromBookmarkCollectionRoute);

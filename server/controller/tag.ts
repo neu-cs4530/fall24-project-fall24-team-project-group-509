@@ -43,22 +43,21 @@ const tagController = () => {
    */
   const getTagByName = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { name } = req.params; // Get the tag name from the request parameters
-      const tag = await TagModel.findOne({ name }); // Use the model's method to find the tag
+      const { name } = req.params;
+      const tag = await TagModel.findOne({ name });
 
       if (!tag) {
         res.status(404).send(`Tag with name "${name}" not found`);
       } else {
-        res.json(tag); // Return the tag as JSON
+        res.json(tag);
       }
     } catch (err) {
       res.status(500).send(`Error when fetching tag: ${(err as Error).message}`);
     }
   };
 
-  // Add appropriate HTTP verbs and their endpoints to the router.
   router.get('/getTagsWithQuestionNumber', getTagsWithQuestionNumber);
-  router.get('/getTagByName/:name', getTagByName); // New endpoint to get tag by name
+  router.get('/getTagByName/:name', getTagByName);
 
   return router;
 };
