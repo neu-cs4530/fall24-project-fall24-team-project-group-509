@@ -3,6 +3,7 @@ import supertest from 'supertest';
 import { app } from '../app';
 import * as util from '../models/application';
 import { Answer, Question, Tag } from '../types';
+import * as utils from '../profanityFilter';
 
 const tag1: Tag = {
   _id: new mongoose.Types.ObjectId('507f191e810c19729de860ea'),
@@ -147,5 +148,52 @@ describe('POST /addQuestion', () => {
         tags: [tag1, tag2],
       }),
     );
+  });
+
+  it('should return 403 if user is banned', async () => {
+    jest.spyOn(util, 'isUserBanned').mockResolvedValueOnce(true);
+
+    const response = await supertest(app).post('/question/addQuestion').send(mockQuestion);
+
+    expect(response.status).toBe(403);
+    expect(response.text).toBe('Your account has been banned');
+  });
+
+  it('should return 403 if user is shadow banned', async () => {
+    jest.spyOn(util, 'isUserBanned').mockResolvedValueOnce(false);
+    jest.spyOn(util, 'isUserShadowBanned').mockResolvedValueOnce(true);
+
+    const response = await supertest(app).post('/question/addQuestion').send(mockQuestion);
+
+    expect(response.status).toBe(403);
+    expect(response.text).toBe(
+      'You are not allowed to post since you did not adhere to community guidelines',
+    );
+  });
+
+  it('should return 400 if tags are missing or empty', async () => {
+    const questionWithoutTags = {
+      ...mockQuestion,
+      tags: '',
+    };
+
+    const response = await supertest(app).post('/question/addQuestion').send(questionWithoutTags);
+
+    expect(response.status).toBe(400);
+    expect(response.text).toBe('Invalid question body');
+  });
+
+  it('should return 400 if profanity is detected in title or text', async () => {
+    jest.spyOn(utils, 'checkProfanity').mockImplementation(async (text: string) => {
+      if (text === 'New Question Title') {
+        return { hasProfanity: true, censored: 'Censored Title' };
+      }
+      return { hasProfanity: false, censored: text };
+    });
+
+    const response = await supertest(app).post('/question/addQuestion').send(mockQuestion);
+
+    expect(response.status).toBe(400);
+    expect(response.text).toBe('Profanity detected: New Question Text');
   });
 });

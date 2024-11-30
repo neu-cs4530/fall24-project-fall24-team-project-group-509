@@ -6,6 +6,7 @@ import { Answer, Question, Tag } from '../types';
 
 const getQuestionsByOrderSpy: jest.SpyInstance = jest.spyOn(util, 'getQuestionsByOrder');
 const filterQuestionsBySearchSpy: jest.SpyInstance = jest.spyOn(util, 'filterQuestionsBySearch');
+const filterQuestionsByAskedBySpy: jest.SpyInstance = jest.spyOn(util, 'filterQuestionsByAskedBy');
 
 const tag1: Tag = {
   _id: new mongoose.Types.ObjectId('507f191e810c19729de860ea'),
@@ -167,5 +168,52 @@ describe('GET /getQuestion', () => {
 
     // Asserting the response
     expect(response.status).toBe(500);
+  });
+
+  it('should filter questions by askedBy if askedBy is provided in query', async () => {
+    // Mock request query parameters
+    const mockReqQuery = {
+      askedBy: 'question1_user',
+    };
+
+    getQuestionsByOrderSpy.mockResolvedValueOnce(MOCK_QUESTIONS);
+    filterQuestionsByAskedBySpy.mockReturnValueOnce(
+      MOCK_QUESTIONS.filter(question => question.askedBy === mockReqQuery.askedBy),
+    );
+    filterQuestionsBySearchSpy.mockResolvedValueOnce(
+      MOCK_QUESTIONS.filter(question => question.askedBy === mockReqQuery.askedBy),
+    );
+
+    // Making the request
+    const response = await supertest(app).get('/question/getQuestion').query(mockReqQuery);
+
+    // Asserting the response
+    const expectedFilteredQuestions = EXPECTED_QUESTIONS.filter(
+      question => question.askedBy === mockReqQuery.askedBy,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(expectedFilteredQuestions);
+  });
+
+  it('should return error if filterQuestionsByAskedBy throws an error', async () => {
+    // Mock request query parameters
+    const mockReqQuery = {
+      askedBy: 'question1_user',
+    };
+
+    getQuestionsByOrderSpy.mockResolvedValueOnce(MOCK_QUESTIONS);
+    filterQuestionsByAskedBySpy.mockImplementationOnce(() => {
+      throw new Error('Error filtering questions by askedBy');
+    });
+
+    // Making the request
+    const response = await supertest(app).get('/question/getQuestion').query(mockReqQuery);
+
+    // Asserting the response
+    expect(response.status).toBe(500);
+    expect(response.text).toContain(
+      'Error when fetching questions by filter: Error filtering questions by askedBy',
+    );
   });
 });
