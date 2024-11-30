@@ -109,7 +109,6 @@ const commentController = (socket: FakeSOSocket) => {
         throw new Error(status.error);
       }
 
-      // update user's activityHistory
       if (type === 'question') {
         await updateActivityHistoryWithQuestionID(
           comment.commentBy,
@@ -117,9 +116,7 @@ const commentController = (socket: FakeSOSocket) => {
           'comment',
           comment.commentDateTime,
         );
-      }
-      // currently failing right now this condition
-      else if (type === 'answer') {
+      } else if (type === 'answer') {
         const gainedQID = await findQuestionIDByAnswerID(id);
         await updateActivityHistoryWithQuestionID(
           comment.commentBy,
@@ -129,8 +126,6 @@ const commentController = (socket: FakeSOSocket) => {
         );
       }
 
-      // Populates the fields of the question or answer that this comment
-      // was added to, and emits the updated object
       const populatedDoc = await populateDocument(id, type);
 
       if (populatedDoc && 'error' in populatedDoc) {

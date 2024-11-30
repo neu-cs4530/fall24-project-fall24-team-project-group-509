@@ -26,7 +26,6 @@ import { checkProfanity } from '../profanityFilter';
 const userController = (socket: FakeSOSocket) => {
   const router = express.Router();
 
-  // Set up Multer for file uploads using memory storage
   const storage = multer.memoryStorage();
   const upload = multer({ storage });
 

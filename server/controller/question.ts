@@ -41,11 +41,9 @@ const questionController = (socket: FakeSOSocket) => {
     const { username } = req.query;
     try {
       let qlist: Question[] = await getQuestionsByOrder(order, username);
-      // Filter by askedBy if provided
       if (askedBy) {
         qlist = filterQuestionsByAskedBy(qlist, askedBy);
       }
-      // Filter by search keyword and tags
       const resqlist: Question[] = await filterQuestionsBySearch(qlist, search);
       res.json(resqlist);
     } catch (err: unknown) {
@@ -148,13 +146,11 @@ const questionController = (socket: FakeSOSocket) => {
         .send('You are not allowed to post since you did not adhere to community guidelines');
       return;
     }
-    // Handle empty tags separately
     if (!question.tags || question.tags.length === 0) {
       res.status(400).send('Invalid tags');
       return;
     }
     try {
-      // Check profanity in question fields (title, text)
       const { hasProfanity: textProfanity, censored: textCensored } = await checkProfanity(
         question.text,
       );
@@ -162,7 +158,6 @@ const questionController = (socket: FakeSOSocket) => {
         question.title,
       );
 
-      // Check profanity in tags concurrently
       const tagProfanityResults = await Promise.all(
         question.tags.map(tag => checkProfanity(tag.name)),
       );
@@ -180,7 +175,6 @@ const questionController = (socket: FakeSOSocket) => {
         tags: await processTags(question.tags),
       };
 
-      // If processTags returns an empty array
       if (questionswithtags.tags.length === 0) {
         res.status(400).send('Invalid tags');
         return;
@@ -236,7 +230,6 @@ const questionController = (socket: FakeSOSocket) => {
         throw new Error(status.error as string);
       }
 
-      // Emit the updated vote counts to all connected clients
       socket.emit('voteUpdate', { qid, upVotes: status.upVotes, downVotes: status.downVotes });
       res.json({ msg: status.msg, upVotes: status.upVotes, downVotes: status.downVotes });
     } catch (err) {
@@ -270,7 +263,6 @@ const questionController = (socket: FakeSOSocket) => {
     voteQuestion(req, res, 'downvote');
   };
 
-  // add appropriate HTTP verbs and their endpoints to the router
   router.get('/getQuestion', getQuestionsByFilter);
   router.get('/getQuestionById/:qid', getQuestionById);
   router.post('/addQuestion', addQuestion);
