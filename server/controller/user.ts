@@ -2,7 +2,6 @@ import express, { Response } from 'express';
 import path from 'path';
 import multer from 'multer';
 import {
-  User,
   AddUserRequest,
   FakeSOSocket,
   AddUserBioRequest,
@@ -32,17 +31,6 @@ const userController = (socket: FakeSOSocket) => {
   const upload = multer({ storage });
 
   /**
-   * Validates the user object to ensure all required fields are present.
-   * @param user The user object to validate.
-   * @returns 'true' if the user object is valid, otherwise 'false'.
-   */
-  const isUserBodyValid = async (user: User): Promise<boolean> =>
-    user.username !== undefined &&
-    user.username !== '' &&
-    user.password !== undefined &&
-    user.password !== '';
-
-  /**
    * Validates the addUserBio request to ensure all required fields are present.
    * @param req The AddUserBioRequest object containing the username and bio to be validated
    * @returns 'true' if the request is valid, otherwise 'false'.
@@ -59,11 +47,6 @@ const userController = (socket: FakeSOSocket) => {
    * @returns A Promise that resolves to void.
    */
   const addUser = async (req: AddUserRequest, res: Response): Promise<void> => {
-    if (!isUserBodyValid(req.body)) {
-      res.status(400).send('Invalid user body');
-      return;
-    }
-
     const user = req.body;
     try {
       const result = await saveUser(user);
@@ -227,7 +210,7 @@ const userController = (socket: FakeSOSocket) => {
   ): Promise<void> => {
     const { username } = req.params;
 
-    if (!username || typeof username !== 'string') {
+    if (!username || typeof username !== 'string' || username.trim() === '') {
       res.status(400).send('Username query parameter is required');
       return;
     }
@@ -267,7 +250,7 @@ const userController = (socket: FakeSOSocket) => {
   ): Promise<void> => {
     const { username } = req.params;
 
-    if (!username) {
+    if (!username || username.trim() === '') {
       res.status(400).send('Username is required');
       return;
     }
