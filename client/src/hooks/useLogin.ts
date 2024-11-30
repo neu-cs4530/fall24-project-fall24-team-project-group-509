@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ChangeEvent, useState } from 'react';
 import useLoginContext from './useLoginContext';
-import { addUser, isUserBanned } from '../services/userService';
+import { isUserBanned, validateUserCredentials } from '../services/userService';
 
 /**
  * Custom hook to handle login input and submission.
@@ -15,6 +15,7 @@ const useLogin = () => {
   const { setUser } = useLoginContext();
   const navigate = useNavigate();
   const [password, setPassword] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const [banMessage, setBanMessage] = useState<string>('');
 
   /**
@@ -40,22 +41,30 @@ const useLogin = () => {
    *
    * @param event - the form event object.
    */
+  /**
+   * Function to handle the form submission event.
+   */
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     try {
       const isBanned = await isUserBanned(username);
       if (isBanned) {
         setBanMessage('You are banned from the site.');
         return;
       }
-      await addUser({ username, password });
-      setUser({ username, password });
-      navigate('/home');
+
+      // Validate user credentials
+      const userValid = await validateUserCredentials({ username, password });
+
+      if (userValid) {
+        setUser({ username, password });
+        navigate('/home');
+      } else {
+        setErrorMessage('Invalid username or password.');
+      }
     } catch (error) {
-      // REMOVE THIS LATER
-      // eslint-disable-next-line no-console
-      console.error('Error adding user:', error);
-      // Proceed with login as usual if there is an error (e.g., user already exists)
+      setErrorMessage('An error occurred during login. Please try again.');
     }
   };
 
@@ -66,6 +75,7 @@ const useLogin = () => {
     handlePasswordChange,
     handleSubmit,
     banMessage,
+    errorMessage,
   };
 };
 
