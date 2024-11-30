@@ -5,3 +5,73 @@
 .ansButton {
   margin: 2% 0 2% 2%;
 }
+
+/* General container styles for the answer list */
+.answer_list {
+  width: 90%; /* Make the list span across the screen */
+  margin: 20px auto; /* Center the list with some vertical spacing */
+  padding: 20px;
+  background-color: #f9f9f9; /* Light background for clarity */
+  border-radius: 8px; /* Keep rounded edges */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #dcdcdc; /* Subtle border for separation */
+}
+
+/* Header title and count styles for each answer */
+.answer_header {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2c3e50; /* Dark text for emphasis */
+  margin-bottom: 10px;
+}
+
+/* Answer item styles */
+.answer_item {
+  background-color: #ffffff; /* White background for contrast */
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 6px; /* Keep rounded corners for each item */
+  border: 1px solid #e0e0e0;
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.answer_item:hover {
+  background-color: #ecf0f1; /* Subtle hover effect */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Button styling for adding an answer */
+.ansButton {
+  padding: 12px 24px;
+  background-color: #3498db; /* Blue background */
+  color: #ffffff; /* White text */
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+/* Hover effect for the Answer button */
+.ansButton:hover {
+  background-color: #2980b9; /* Darker blue on hover */
+  transform: translateY(-3px);
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Active effect for the Answer button */
+.ansButton:active {
+  background-color: #1c6382;
+  transform: translateY(0);
+}
+
+/* Focus effect for the Answer button */
+.ansButton:focus {
+  outline: none;
+  box-shadow: 0px 0px 5px 2px rgba(52, 152, 219, 0.5);
+}
+

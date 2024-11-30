@@ -325,6 +325,7 @@ export interface User {
   }>;
   bookmarkCollections?: BookmarkCollection[];
   followedBookmarkCollections?: ObjectId[];
+  sharedCollections?: ObjectId[];
   isBanned?: boolean;
   isShadowBanned?: boolean;
   followUpdateNotifications?: FollowNotificationLog[];

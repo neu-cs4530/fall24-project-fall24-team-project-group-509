@@ -1,6 +1,5 @@
-/* eslint-disable no-console */
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import useUserContext from '../../../hooks/useUserContext';
 import flagPost from '../../../services/flagService';
 import './index.css';
@@ -18,9 +17,6 @@ const FlagQuestionPage = () => {
   const [textErr, setTextErr] = useState<string>('');
   const [questionID, setQuestionID] = useState<string>('');
 
-  const location = useLocation();
-  const { allQuestionText, askedBy } = location.state || {};
-
   useEffect(() => {
     if (!qid) {
       setTextErr('Question ID is missing.');
@@ -32,27 +28,11 @@ const FlagQuestionPage = () => {
   }, [qid, navigate]);
 
   const submitFlaggedQuestion = async (reason: string) => {
-    console.log('Flag reason:', reason);
-    console.log('Content type: Question');
-    console.log('Question ID:', questionID);
-    console.log('Username:', askedBy);
-    console.log('FlagBy:', user.username);
-    console.log('Question:', allQuestionText);
     const res = await flagPost(questionID, 'question', reason, user.username);
     if (res) {
       navigate('/home');
-      console.log('done');
     }
-    // if (res && res._id) {
-    // navigate('/home');
-    // }
-    // Perform the flagging action here (e.g., send the reason to the server)
   };
-
-  //   const handleSubmit = (event: React.FormEvent) => {
-  //     event.preventDefault();
-  //     submitFlaggedQuestion();
-  //   };
 
   return (
     <div>

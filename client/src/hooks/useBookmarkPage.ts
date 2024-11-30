@@ -8,6 +8,7 @@ import {
 } from '../services/bookmarkService';
 import { Bookmark, BookmarkCollection } from '../types';
 import useUserContext from './useUserContext';
+import { getUserByUsername } from '../services/userService';
 
 const useBookmarkPage = () => {
   const { user, socket } = useUserContext();
@@ -64,6 +65,13 @@ const useBookmarkPage = () => {
       const updatedCollection = await followBookmarkCollection(collectionID, username);
       setCollection(updatedCollection);
       socket.emit('bookmarkUpdate', [updatedCollection]);
+      const userSharedWith = await getUserByUsername(username, username);
+      const collections = userSharedWith.followedBookmarkCollections || [];
+      const collectionToAdd = await getBookmarkCollectionById(collectionID);
+      if (collectionToAdd) {
+        collections.push(collectionToAdd);
+      }
+      userSharedWith.followedBookmarkCollections = collections;
     }
   };
 

@@ -60,6 +60,10 @@ const userSchema: Schema = new Schema(
       type: [{ type: Schema.Types.ObjectId, ref: 'BookmarkCollection' }],
       default: [],
     },
+    sharedBookmarkCollections: {
+      type: [{ type: Schema.Types.ObjectId, ref: 'BookmarkCollection' }],
+      default: [],
+    },
     followUpdateNotifications: {
       type: [
         {

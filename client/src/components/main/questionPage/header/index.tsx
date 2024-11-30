@@ -30,7 +30,9 @@ const QuestionHeader = ({ titleText, qcnt, setQuestionOrder }: QuestionHeaderPro
   <div>
     <div className='space_between right_padding'>
       <div className='bold_title'>{titleText}</div>
-      <AskQuestionButton />
+      <div className='aqbtn'>
+        <AskQuestionButton />
+      </div>
     </div>
     <div className='space_between right_padding'>
       <div id='question_count'>{qcnt} questions</div>
