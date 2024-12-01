@@ -1,23 +1,34 @@
-/* Button styling for "Ask a Question" */
-.bluebtn {
-    padding: 10px 20px;
-    background-color: #007bff; /* Match user profile button background */
-    color: white; /* White text */
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
-  }
-  
-  .bluebtn:hover {
-    background-color: #0056b3; /* Match hover color */
-    transform: scale(1.05); /* Slightly enlarge on hover */
-  }
-  
-  .bluebtn:active {
-    background-color: #003f7f; /* Darker color for active state */
-    transform: scale(0.95); /* Slightly shrink on click */
-  }
-  
+/* Button styling for adding an answer */
+.ansButton {
+  padding: 10px 20px;
+  background-color: #3498db; /* Blue background */
+  color: #ffffff; /* White text */
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+/* Hover effect for the Answer button */
+.ansButton:hover {
+  background-color: #2980b9; /* Darker blue on hover */
+  transform: translateY(-3px);
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Active effect for the Answer button */
+.ansButton:active {
+  background-color: #1c6382;
+  transform: translateY(0);
+}
+
+/* Focus effect for the Answer button */
+.ansButton:focus {
+  outline: none;
+  box-shadow: 0px 0px 5px 2px rgba(52, 152, 219, 0.5);
+}

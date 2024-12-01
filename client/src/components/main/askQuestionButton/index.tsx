@@ -18,7 +18,7 @@ const AskQuestionButton = () => {
 
   return (
     <button
-      className='bluebtn'
+      className='bluebtn ansButton'
       onClick={() => {
         handleNewQuestion();
       }}>
