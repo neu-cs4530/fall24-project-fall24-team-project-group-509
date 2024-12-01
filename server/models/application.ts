@@ -772,7 +772,7 @@ export const addUserBio = async (username: string, bio: string): Promise<UserRes
   }
 };
 
-const CREDENTIALS_PATH = path.join('../googleCloudCredentials.json');
+const CREDENTIALS_PATH = path.join(__dirname, '../googleCloudCredentials.json');
 const storage = new Storage({ keyFilename: CREDENTIALS_PATH }); // Google Cloud Storage client
 const bucket = storage.bucket('cs4530-509-userprofile-pictures'); // Google Cloud Storage bucket
 /**
