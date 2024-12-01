@@ -44,7 +44,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "jest -w=1 --coverage --detectOpenHandles",
-    "build": "tsc",
+    "build": "tsc && cp ../server/googleCloudCredentials.json dist/server/googleCloudCredentials.json",
     "start:prod": "node ./dist/server.js",
     "stryker": "stryker run"
   }
