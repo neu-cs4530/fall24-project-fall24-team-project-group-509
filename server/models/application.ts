@@ -773,24 +773,7 @@ export const addUserBio = async (username: string, bio: string): Promise<UserRes
 };
 
 
-import * as fs from 'fs';
-function ls(path: string): void {
-  fs.readdir(path, (err, files) => {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      files.forEach(file => {
-        console.log(file);
-      });
-    });
-}
-ls(".");
-ls(__dirname);
-ls("../");
-ls(__dirname + "../");
-
-const CREDENTIALS_PATH = path.join(__dirname, '../googleCloudCredentials.json');
+const CREDENTIALS_PATH = path.join('../googleCloudCredentials.json');
 const storage = new Storage({ keyFilename: CREDENTIALS_PATH }); // Google Cloud Storage client
 const bucket = storage.bucket('cs4530-509-userprofile-pictures'); // Google Cloud Storage bucket
 /**
@@ -806,16 +789,13 @@ export const addUserProfilePicture = async (
 ): Promise<UserResponse> => {
   try {
     // Define the destination of the file in the bucket
-    console.log(CREDENTIALS_PATH);
     const destination = `${username}/${file.originalname}`;
     const gcsFile = bucket.file(destination);
 
     // Upload the file buffer to the bucket
     await gcsFile.save(file.buffer, { contentType: file.mimetype });
-    console.log("uploaded file to bucket");
 
     await gcsFile.makePublic(); // Make the file public
-    console.log("made file public in bucket");
 
     // Get the URL of the uploaded file
     const publicURL = `https://storage.googleapis.com/cs4530-509-userprofile-pictures/${destination}`;
@@ -826,13 +806,11 @@ export const addUserProfilePicture = async (
       { profilePictureURL: publicURL },
       { new: true },
     );
-    console.log('database result:', result);
     if (result === null) {
       throw new Error('Error when adding profile picture to user');
     }
     return result;
   } catch (error) {
-    console.log("Error: ", error);
     return { error: 'Error when adding profile picture to user' };
   }
 };
@@ -1024,7 +1002,9 @@ export const getUserBookmarkCollections = async (
     let collections;
     if (username === requesterUsername) {
       // If the requester is the owner, retrieve all collections
-      collections = await BookmarkCollectionModel.find({ owner: username });
+      collections = await BookmarkCollectionModel.find({ 
+        $or: [{owner: username}, { followers: requesterUsername }],
+       });
     } else {
       // If the requester is not the owner, retrieve public collections or private collections they are permitted to view
       collections = await BookmarkCollectionModel.find({
