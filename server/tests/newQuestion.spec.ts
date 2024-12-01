@@ -196,4 +196,35 @@ describe('POST /addQuestion', () => {
     expect(response.status).toBe(400);
     expect(response.text).toBe('Profanity detected: New Question Text');
   });
+
+  it('should return 500 if error occurs in `populateDocument`', async () => {
+    const newMockQuestion: Question = {
+      _id: new mongoose.Types.ObjectId('507f1f77bcf86cd799439011'), // New ObjectId
+      title: 'How to implement a binary search in Python?',
+      text: 'Can someone explain how to write a binary search algorithm in Python with an example?',
+      tags: [tag1],
+      answers: [],
+      askedBy: 'user123',
+      askDateTime: new Date('2024-12-01T12:00:00Z'),
+      views: [],
+      upVotes: [],
+      downVotes: [],
+      comments: [],
+      flags: [],
+    };
+    jest.spyOn(util, 'processTags').mockResolvedValue(newMockQuestion.tags);
+    jest.spyOn(util, 'saveQuestion').mockResolvedValue(newMockQuestion);
+    jest.spyOn(util, 'populateDocument').mockResolvedValue({
+      error: 'Error while populating question',
+    });
+
+    const response = await supertest(app)
+      .post('/question/addQuestion')
+      .send({
+        ...newMockQuestion,
+      });
+
+    expect(response.status).toBe(500); // Ensure it returns a 500 status code
+    expect(response.text).toBe('Error when saving question: Error while populating question');
+  });
 });
