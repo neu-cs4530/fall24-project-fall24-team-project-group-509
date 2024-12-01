@@ -788,13 +788,16 @@ export const addUserProfilePicture = async (
 ): Promise<UserResponse> => {
   try {
     // Define the destination of the file in the bucket
+    console.log(CREDENTIALS_PATH);
     const destination = `${username}/${file.originalname}`;
     const gcsFile = bucket.file(destination);
 
     // Upload the file buffer to the bucket
     await gcsFile.save(file.buffer, { contentType: file.mimetype });
+    console.log("uploaded file to bucket");
 
     await gcsFile.makePublic(); // Make the file public
+    console.log("made file public in bucket");
 
     // Get the URL of the uploaded file
     const publicURL = `https://storage.googleapis.com/cs4530-509-userprofile-pictures/${destination}`;
@@ -805,11 +808,13 @@ export const addUserProfilePicture = async (
       { profilePictureURL: publicURL },
       { new: true },
     );
+    console.log('database result:', result);
     if (result === null) {
       throw new Error('Error when adding profile picture to user');
     }
     return result;
   } catch (error) {
+    console.log("Error: ", error);
     return { error: 'Error when adding profile picture to user' };
   }
 };
