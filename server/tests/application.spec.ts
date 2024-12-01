@@ -41,6 +41,11 @@ import {
   getUserFollowUpdateNotifications,
   findQuestionIDByAnswerID,
   flagPost,
+  addQuestionToBookmarkCollection,
+  removePostFromAllCollections,
+  removePostFromActivityHistory,
+  removePostFromUserCollections,
+  removePostFromUserActivityHistory,
 } from '../models/application';
 import { Answer, Question, Tag, Comment, User, BookmarkCollection } from '../types';
 import { T1_DESC, T2_DESC, T3_DESC } from '../data/posts_strings';
@@ -952,6 +957,144 @@ describe('application module', () => {
     });
   });
 
+  describe('Post Removal Utilities', () => {
+    afterEach(() => {
+      jest.restoreAllMocks(); // Restore mocks after each test
+    });
+
+    describe('removePostFromAllCollections', () => {
+      test('should remove a post from all bookmark collections', async () => {
+        const postId = '507f191e810c19729de860ea';
+        const postType = 'question';
+
+        const mockResponse = { matchedCount: 1, modifiedCount: 1, acknowledged: true };
+        jest
+          .spyOn(BookmarkCollectionModel, 'updateMany')
+          .mockResolvedValue(
+            mockResponse as unknown as ReturnType<typeof BookmarkCollectionModel.updateMany>,
+          );
+
+        await expect(removePostFromAllCollections(postId, postType)).resolves.not.toThrow();
+
+        expect(BookmarkCollectionModel.updateMany).toHaveBeenCalledTimes(1);
+        expect(BookmarkCollectionModel.updateMany).toHaveBeenCalledWith(
+          { posts: { $elemMatch: { postId, postType } } },
+          { $pull: { posts: { postId, postType } } },
+        );
+      });
+
+      test('should throw an error if the database operation fails', async () => {
+        const postId = '507f191e810c19729de860ea';
+        const postType = 'question';
+
+        jest
+          .spyOn(BookmarkCollectionModel, 'updateMany')
+          .mockRejectedValue(new Error('Database error'));
+
+        await expect(removePostFromAllCollections(postId, postType)).rejects.toThrow(
+          'Database error',
+        );
+      });
+    });
+
+    describe('removePostFromActivityHistory', () => {
+      test('should remove a post from all users’ activity histories', async () => {
+        const postId = '507f191e810c19729de860ea';
+
+        const mockResponse = { matchedCount: 1, modifiedCount: 1, acknowledged: true };
+        jest
+          .spyOn(UserModel, 'updateMany')
+          .mockResolvedValue(mockResponse as unknown as ReturnType<typeof UserModel.updateMany>);
+
+        await expect(removePostFromActivityHistory(postId)).resolves.not.toThrow();
+
+        expect(UserModel.updateMany).toHaveBeenCalledTimes(1);
+        expect(UserModel.updateMany).toHaveBeenCalledWith(
+          { 'activityHistory.postId': postId },
+          { $pull: { activityHistory: { postId } } },
+        );
+      });
+
+      test('should throw an error if the database operation fails', async () => {
+        const postId = '507f191e810c19729de860ea';
+
+        jest.spyOn(UserModel, 'updateMany').mockRejectedValue(new Error('Database error'));
+
+        await expect(removePostFromActivityHistory(postId)).rejects.toThrow('Database error');
+      });
+    });
+
+    describe('removePostFromUserCollections', () => {
+      test('should remove a post from a specific user’s bookmark collections', async () => {
+        const username = 'testUser';
+        const postId = '507f191e810c19729de860ea';
+        const postType = 'question';
+
+        const mockResponse = { matchedCount: 1, modifiedCount: 1, acknowledged: true };
+        jest
+          .spyOn(BookmarkCollectionModel, 'updateMany')
+          .mockResolvedValue(
+            mockResponse as unknown as ReturnType<typeof BookmarkCollectionModel.updateMany>,
+          );
+
+        await expect(
+          removePostFromUserCollections(username, postId, postType),
+        ).resolves.not.toThrow();
+
+        expect(BookmarkCollectionModel.updateMany).toHaveBeenCalledTimes(1);
+        expect(BookmarkCollectionModel.updateMany).toHaveBeenCalledWith(
+          { username, posts: { $elemMatch: { postId, postType } } },
+          { $pull: { posts: { postId, postType } } },
+        );
+      });
+
+      test('should throw an error if the database operation fails', async () => {
+        const username = 'testUser';
+        const postId = '507f191e810c19729de860ea';
+        const postType = 'question';
+
+        jest
+          .spyOn(BookmarkCollectionModel, 'updateMany')
+          .mockRejectedValue(new Error('Database error'));
+
+        await expect(removePostFromUserCollections(username, postId, postType)).rejects.toThrow(
+          'Database error',
+        );
+      });
+    });
+
+    describe('removePostFromUserActivityHistory', () => {
+      test('should remove a post from a specific user’s activity history', async () => {
+        const username = 'testUser';
+        const postId = '507f191e810c19729de860ea';
+
+        const mockResponse = { matchedCount: 1, modifiedCount: 1, acknowledged: true };
+        jest
+          .spyOn(UserModel, 'updateOne')
+          .mockResolvedValue(mockResponse as unknown as ReturnType<typeof UserModel.updateOne>);
+
+        await expect(removePostFromUserActivityHistory(username, postId)).resolves.not.toThrow();
+
+        expect(UserModel.updateOne).toHaveBeenCalledTimes(1);
+        expect(UserModel.updateOne).toHaveBeenCalledWith(
+          { username, 'activityHistory.postId': postId },
+          { $pull: { activityHistory: { postId } } },
+        );
+      });
+
+      test('should throw an error if the database operation fails', async () => {
+        const username = 'testUser';
+        const postId = '507f191e810c19729de860ea';
+
+        jest.spyOn(UserModel, 'updateOne').mockRejectedValue(new Error('Database error'));
+
+        await expect(removePostFromUserActivityHistory(username, postId)).rejects.toThrow(
+          'Database error',
+        );
+      });
+    });
+  });
+
   describe('Comment model', () => {
     describe('saveComment', () => {
       test('saveComment should return the saved comment', async () => {
@@ -1693,6 +1836,45 @@ describe('application module', () => {
         const result = await getFollowedBookmarkCollections('nonExistentUsername');
 
         expect(result.length).toEqual(0);
+      });
+    });
+
+    describe('addQuestionToBookmarkCollection', () => {
+      beforeEach(() => {
+        mockingoose.resetAll();
+      });
+
+      test('should return error if question is not found', async () => {
+        const collectionId = '507f191e810c19729de860eb';
+        const questionId = 'nonexistentQuestionId';
+
+        mockingoose(QuestionModel).toReturn(null, 'findOne');
+
+        const result = await addQuestionToBookmarkCollection(collectionId, questionId);
+
+        expect(result).toEqual({
+          error: 'Error when adding question to bookmark collection: Question not found',
+        });
+      });
+
+      test('should return error if bookmark collection is not found', async () => {
+        const questionId = '507f191e810c19729de860ea';
+        const collectionId = 'nonexistentCollectionId';
+
+        const mockQuestion = {
+          _id: questionId,
+          title: 'Sample Question Title',
+          answers: [],
+        };
+
+        mockingoose(QuestionModel).toReturn(mockQuestion, 'findOne');
+        mockingoose(BookmarkCollectionModel).toReturn(null, 'findById');
+
+        const result = await addQuestionToBookmarkCollection(collectionId, questionId);
+
+        expect(result).toEqual({
+          error: 'Error when adding question to bookmark collection: Bookmark collection not found',
+        });
       });
     });
 
