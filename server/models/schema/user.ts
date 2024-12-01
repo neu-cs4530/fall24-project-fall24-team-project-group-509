@@ -14,6 +14,7 @@ import { Schema } from 'mongoose';
  * - `followedBookmarkCollections`: An array of bookmark collections the user is following.
  * - `isBanned`: A boolean indicating whether the user is banned.
  * - `isShadowBanned`: A boolean indicating whether the user is shadow banned.
+ * - `followUpdateNotifications`: An array of notifications for updates to followed bookmark collections.
  */
 const userSchema: Schema = new Schema(
   {
@@ -43,7 +44,6 @@ const userSchema: Schema = new Schema(
           postId: {
             type: Schema.Types.ObjectId,
             required: true,
-            // refPath: 'activityHistory.postType',
           },
           postType: { type: String, required: true, enum: ['Question', 'Answer', 'Comment'] },
           qTitle: { type: String, required: true },

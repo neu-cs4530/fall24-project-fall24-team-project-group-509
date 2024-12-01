@@ -8,6 +8,7 @@ import { Schema } from 'mongoose';
  * - `text`: The content of the comment.
  * - `commentBy`: The username of the user who commented.
  * - `commentDateTime`: The date and time when the comment was posted.
+ * - `flags`: Flags that have been added to the comment by users.
  */
 const commentSchema: Schema = new Schema(
   {

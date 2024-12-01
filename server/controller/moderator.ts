@@ -24,6 +24,12 @@ import {
 const moderatorController = (socket: FakeSOSocket) => {
   const router = express.Router();
 
+  /**
+   * Route to get all pending flags.
+   * @param req - The GetPendingFlagsRequest object containing the username of the moderator.
+   * @param res - The HTTP response object used to send back the result of the operation.
+   * @returns - A Promise that resolves to void.
+   */
   const getPendingFlagsRoute = async (
     req: GetPendingFlagsRequest,
     res: Response,
@@ -46,6 +52,12 @@ const moderatorController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Route to get a flag by its ID.
+   * @param req - The GetFlagByIdRequest object containing the flag ID and the username of the moderator.
+   * @param res - The HTTP response object used to send back the result of the operation.
+   * @returns - A Promise that resolves to void.
+   */
   const getFlagByIdRoute = async (req: GetFlagByIdRequest, res: Response): Promise<void> => {
     const { fid } = req.params;
     const { username } = req.query;
@@ -64,6 +76,12 @@ const moderatorController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Route to delete a post.
+   * @param req - The DeletePostRequest object containing the post ID, type, and moderator username.
+   * @param res - The HTTP response object used to send back the result of the operation.
+   * @returns - A Promise that resolves to void.
+   */
   const deletePostRoute = async (req: DeletePostRequest, res: Response): Promise<void> => {
     const { id, type, moderatorUsername } = req.body;
 
@@ -99,6 +117,12 @@ const moderatorController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Route to mark a flag as reviewed.
+   * @param req - The ReviewFlagRequest object containing the flag ID and moderator username.
+   * @param res - The HTTP response object used to send back the result of the operation.
+   * @returns - A Promise that resolves to void.
+   */
   const reviewFlagRoute = async (req: ReviewFlagRequest, res: Response): Promise<void> => {
     const { flagId, moderatorUsername } = req.body;
 
@@ -124,6 +148,12 @@ const moderatorController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Route to ban a user.
+   * @param req - The BanUserRequest object containing the username of the user to ban and the moderator username.
+   * @param res - The HTTP response object used to send back the result of the operation.
+   * @returns - A Promise that resolves to void.
+   */
   const banUserRoute = async (req: BanUserRequest, res: Response): Promise<void> => {
     const { username, moderatorUsername } = req.body;
 
@@ -148,6 +178,12 @@ const moderatorController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Route to unban a user.
+   * @param req - The BanUserRequest object containing the username of the user to unban and the moderator username.
+   * @param res - The HTTP response object used to send back the result of the operation.
+   * @returns - A Promise that resolves to void.
+   */
   const unbanUserRoute = async (req: BanUserRequest, res: Response): Promise<void> => {
     const { username, moderatorUsername } = req.body;
 
@@ -172,6 +208,12 @@ const moderatorController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Route to shadow ban a user.
+   * @param req - The BanUserRequest object containing the username of the user to shadow ban and the moderator username.
+   * @param res - The HTTP response object used to send back the result of the operation.
+   * @returns - A Promise that resolves to void.
+   */
   const shadowBanUserRoute = async (req: BanUserRequest, res: Response): Promise<void> => {
     const { username, moderatorUsername } = req.body;
 
@@ -196,6 +238,12 @@ const moderatorController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Route to un-shadow ban a user.
+   * @param req - The BanUserRequest object containing the username of the user to un-shadow ban and the moderator username.
+   * @param res - The HTTP response object used to send back the result of the operation.
+   * @returns - A Promise that resolves to void.
+   */
   const unshadowBanUserRoute = async (req: BanUserRequest, res: Response): Promise<void> => {
     const { username, moderatorUsername } = req.body;
 

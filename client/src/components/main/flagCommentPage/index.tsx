@@ -33,18 +33,7 @@ const FlagCommentPage = () => {
     if (res) {
       navigate('/home');
     }
-
-    // const res = await flagContent(questionID, 'question', selectedReason, user.username);
-    // if (res && res._id) {
-    // navigate('/home');
-    // }
-    // Perform the flagging action here (e.g., send the reason to the server)
   };
-
-  //   const handleSubmit = (event: React.FormEvent) => {
-  //     event.preventDefault();
-  //     submitFlaggedComment();
-  //   };
 
   return (
     <div>

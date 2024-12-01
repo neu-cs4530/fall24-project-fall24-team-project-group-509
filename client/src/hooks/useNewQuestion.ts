@@ -107,10 +107,6 @@ const useNewQuestion = () => {
       comments: [],
     };
 
-    // const res = await addQuestion(question);
-
-    /// if resres._id    //   navigate('/home');
-    // }
     try {
       const res = await addQuestion(question);
 
