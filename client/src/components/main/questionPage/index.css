@@ -5,3 +5,15 @@
 .question_list:last-child {
   border-bottom: #000000 1px dashed;
 }
+
+/* General container styles for the question list */
+.question_list {
+  width: 90%; /* Make the list span across the entire screen */
+  margin: 20px 0; /* Vertical spacing from other elements */
+  padding: 20px;
+  margin-left: 30px;
+  background-color: #f9f9f9; /* Light background for clarity */
+  border-radius: 8px; /* Keep rounded edges */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #dcdcdc; /* Subtle border for separation */
+}

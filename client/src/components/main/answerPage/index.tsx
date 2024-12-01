@@ -63,20 +63,23 @@ const AnswerPage = () => {
         handleAddComment={(comment: Comment) => handleNewComment(comment, 'question', questionID)}
         handleFlagComment={handleFlagComment}
       />
-      {question.answers.map((a, idx) => (
-        <AnswerView
-          key={idx}
-          _id={a._id as string}
-          text={a.text}
-          ansBy={a.ansBy}
-          meta={getMetaData(new Date(a.ansDateTime))}
-          comments={a.comments}
-          flags={a.flags}
-          handleAddComment={(comment: Comment) => handleNewComment(comment, 'answer', a._id)}
-          handleFlagAnswer={handleFlagAnswer}
-          handleFlagComment={handleFlagComment}
-        />
-      ))}
+      <div className='answer_list'>
+        {question.answers.map((a, idx) => (
+          <div key={idx} className='answer_item'>
+            <AnswerView
+              _id={a._id as string}
+              text={a.text}
+              ansBy={a.ansBy}
+              meta={getMetaData(new Date(a.ansDateTime))}
+              comments={a.comments}
+              flags={a.flags}
+              handleAddComment={(comment: Comment) => handleNewComment(comment, 'answer', a._id)}
+              handleFlagAnswer={handleFlagAnswer}
+              handleFlagComment={handleFlagComment}
+            />
+          </div>
+        ))}
+      </div>
       <button
         className='bluebtn ansButton'
         onClick={() => {
