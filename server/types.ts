@@ -305,7 +305,6 @@ export interface Bookmark {
   qTitle: string;
   savedAt: Date;
   numAnswers?: number;
-  //  continue leveraging the tags from the Question documents without modifying the Bookmark structure for 1.5
 }
 
 /**
@@ -397,6 +396,11 @@ export interface AddUserBioRequest extends Request {
   };
 }
 
+/**
+ * Interface representing the request to add a profile picture to a user, which contains:
+ * - username - The unique identifier for the user.
+ * - profilePictureURL - The URL of the profile picture to add to the user.
+ */
 export interface AddUserProfilePicRequest extends Request {
   body: {
     username: string;
@@ -429,6 +433,11 @@ export interface FindUserByUsernameRequest extends Request {
  */
 export type BookmarkSortOption = 'date' | 'numberOfAnswers' | 'views' | 'title' | 'tags';
 
+/**
+ * Interface representing the response for a bookmark collection operation, which contains one of the following:
+ * - collection - The bookmark collection document.
+ * - error - An error message.
+ */
 export type BookmarkCollectionResponse = BookmarkCollection | { error: string };
 
 /**
@@ -543,6 +552,10 @@ export interface SearchUserByUsernameRequest extends Request {
   };
 }
 
+/**
+ * Interface representing the request to get a user by their username.
+ * - username - The unique identifier of the user.
+ */
 export interface GetUserNotificationsRequest extends Request {
   params: {
     username: string;
@@ -625,6 +638,10 @@ export interface FlagPostRequest extends Request {
   };
 }
 
+/**
+ * Interface for the request to get all flagged posts.
+ * - username: The username of the user requesting the flagged posts.
+ */
 export interface GetFlaggedPostsRequest extends Request {
   query: {
     username: string;
@@ -644,6 +661,11 @@ export interface GetFlagByIdRequest extends Request {
   };
 }
 
+/**
+ * Interface for the request to review a flag.
+ * - flagId: The unique identifier of the flag.
+ * - moderatorUsername: The username of the moderator reviewing the flag.
+ */
 export interface ReviewFlagRequest extends Request {
   body: {
     flagId: string;
@@ -651,8 +673,19 @@ export interface ReviewFlagRequest extends Request {
   };
 }
 
+/**
+ * Type representing the possible responses for a flag-related operation. Can be a Flag object or an error message.
+ * - flag - The flag object.
+ * - error - An error message.
+ */
 export type FlagResponse = Flag | { error: string };
 
+/**
+ * Interface representing the request to delete a post.
+ * - id - The unique identifier of the post to delete.
+ * - type - The type of the post, either 'question', 'answer', or 'comment'.
+ * - moderatorUsername - The username of the moderator performing the action.
+ */
 export interface DeletePostRequest extends Request {
   body: {
     id: string;
@@ -661,6 +694,10 @@ export interface DeletePostRequest extends Request {
   };
 }
 
+/**
+ * Interface representing the request to get all pending flags.
+ * - username - The username of the user requesting the pending flags.
+ */
 export interface GetPendingFlagsRequest extends Request {
   query: {
     username: string;

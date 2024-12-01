@@ -72,8 +72,6 @@ const useAnswerPage = () => {
    * qTitle and qText are the title and text of the question to be flagged.
    */
   const handleFlagQuestion = (qTitle: string, qText: string, askedBy: string) => {
-    // const allQuestionText = `${question?.title ?? ''}\n${question?.text ?? ''}`;
-    // navigate(`/flag/question/${questionID}`, { state: allQuestionText }); // need to define a route for this in fakestackoverflow.tsx
     console.log('Flagging question:', qTitle, qText);
     const allQuestionText = `${qTitle}\n${qText}`;
     navigate(`/flag/question/${questionID}`, { state: { allQuestionText, askedBy } });
@@ -115,16 +113,6 @@ const useAnswerPage = () => {
     targetType: 'question' | 'answer',
     targetId: string | undefined,
   ) => {
-    // try {
-    //   if (targetId === undefined) {
-    //     throw new Error('No target ID provided.');
-    //   }
-
-    //   await addComment(targetId, targetType, comment);
-    // } catch (error) {
-    //   // eslint-disable-next-line no-console
-    //   console.error('Error adding comment:', error);
-    // }
     if (targetId === undefined) {
       return;
     }
@@ -144,7 +132,6 @@ const useAnswerPage = () => {
         } else {
           setQuestion(res || null);
         }
-        // setQuestion(res || null);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Error fetching question:', error);
@@ -162,12 +149,10 @@ const useAnswerPage = () => {
      * @param answer - The updated answer object.
      */
     const handleAnswerUpdate = ({ qid: id, answer }: { qid: string; answer: Answer }) => {
-      // need to do filtering here for flagged answers
       if (id === questionID) {
         setQuestion(prevQuestion =>
           prevQuestion
-            ? // Creates a new Question object with the new answer appended to the end
-              { ...prevQuestion, answers: [...prevQuestion.answers, answer] }
+            ? { ...prevQuestion, answers: [...prevQuestion.answers, answer] }
             : prevQuestion,
         );
       }
@@ -186,15 +171,12 @@ const useAnswerPage = () => {
       result: Question | Answer;
       type: 'question' | 'answer';
     }) => {
-      // need to do filtering here
-      // need to filter the question/answer object received from backend
       if (type === 'question') {
         const questionResult = result as Question;
 
         if (questionResult._id === questionID) {
-          // need to do filtering here before the setQuestion
           const filteredQuestion = filterFlaggedContentOfQuestion(questionResult);
-          // setQuestion(questionResult);
+
           setQuestion(filteredQuestion);
         }
       } else if (type === 'answer') {
@@ -229,13 +211,7 @@ const useAnswerPage = () => {
      */
     const handleViewsUpdate = (q: Question) => {
       if (q._id === questionID) {
-        // const fileteredQuestion = q.answers.filter(a => !a.flagged);
-        // filteredQuestion = q.comments.filter(c => !c.flagged);
-        // also need to fiter comments in answers
-        // make a helper for filtering
         const filteredQuestion = filterFlaggedContentOfQuestion(q);
-        // setQuestion(q);
-        // at the end do: setQuestion(filteredQuestion)
         setQuestion(filteredQuestion);
       }
     };

@@ -64,13 +64,6 @@ const useAnswerForm = () => {
       comments: [],
     };
 
-    // const res = await addAnswer(questionID, answer);
-
-    // if (res && res._id) {
-    //   // navigate to the question that was answered
-    //   navigate(`/question/${questionID}`);
-    // }
-
     try {
       const res = await addAnswer(questionID, answer);
 

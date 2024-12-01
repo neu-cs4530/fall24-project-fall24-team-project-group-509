@@ -53,10 +53,6 @@ const CommentSection = ({
       commentDateTime: new Date(),
     };
 
-    // handleAddComment(newComment);
-    // setText('');
-    // setTextErr('');
-
     try {
       await handleAddComment(newComment);
       setText('');
