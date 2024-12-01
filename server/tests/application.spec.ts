@@ -47,7 +47,7 @@ import {
   removePostFromUserCollections,
   removePostFromUserActivityHistory,
 } from '../models/application';
-import { Answer, Question, Tag, Comment, User, BookmarkCollection } from '../types';
+import { Answer, Question, Tag, Comment, User, BookmarkCollection, FlagReason } from '../types';
 import { T1_DESC, T2_DESC, T3_DESC } from '../data/posts_strings';
 import AnswerModel from '../models/answers';
 import UserModel from '../models/user';
@@ -1389,6 +1389,14 @@ describe('application module', () => {
       });
     });
 
+    // Mock Google Cloud Storage
+    jest.mock('@google-cloud/storage', () => {
+      const mockedStorage = {
+        bucket: jest.fn(),
+      };
+      return { Storage: jest.fn(() => mockedStorage) };
+    });
+
     describe('isUserBanned', () => {
       test('isUserBanned should return true if the user is banned', async () => {
         const username = 'testUser';
@@ -1929,10 +1937,116 @@ describe('application module', () => {
       });
     });
 
-    describe('flagPost', () => {
-      beforeEach(() => {
+    describe('flagPost functionality', () => {
+      const mockFlagReason: FlagReason = 'spam'; // Replace with actual reasons defined in your system
+      const mockFlaggedBy = 'testUser';
+
+      afterEach(() => {
         mockingoose.resetAll();
       });
+
+      test('should create a flag for a question and update the question flags array', async () => {
+        const mockQuestion = {
+          _id: new mongoose.Types.ObjectId('507f191e810c19729de860ea'),
+          text: 'This is a question',
+          askedBy: 'questionUser',
+          flags: [],
+        };
+
+        const mockFlag = {
+          _id: new mongoose.Types.ObjectId('507f191e810c19729de860eb'),
+          flaggedBy: mockFlaggedBy,
+          reason: mockFlagReason,
+          postText: mockQuestion.text,
+          flaggedUser: mockQuestion.askedBy,
+          status: 'pending',
+        };
+
+        mockingoose(QuestionModel).toReturn(mockQuestion, 'findOne');
+        mockingoose(FlagModel).toReturn(mockFlag, 'save');
+        mockingoose(QuestionModel).toReturn(
+          { ...mockQuestion, flags: [mockFlag._id] },
+          'findOneAndUpdate',
+        );
+
+        const result = await flagPost(
+          mockQuestion._id.toString(),
+          'question',
+          mockFlagReason,
+          mockFlaggedBy,
+        );
+
+        expect(result.toString()).toContain(mockQuestion._id.toString());
+      });
+
+      test('should create a flag for an answer and update the answer flags array', async () => {
+        const mockAnswer = {
+          _id: new mongoose.Types.ObjectId('507f191e810c19729de860eb'),
+          text: 'This is an answer',
+          ansBy: 'answerUser',
+          flags: [],
+        };
+
+        const mockFlag = {
+          _id: new mongoose.Types.ObjectId('507f191e810c19729de860ec'),
+          flaggedBy: mockFlaggedBy,
+          reason: mockFlagReason,
+          postText: mockAnswer.text,
+          flaggedUser: mockAnswer.ansBy,
+          status: 'pending',
+        };
+
+        mockingoose(AnswerModel).toReturn(mockAnswer, 'findOne');
+        mockingoose(FlagModel).toReturn(mockFlag, 'save');
+        mockingoose(AnswerModel).toReturn(
+          { ...mockAnswer, flags: [mockFlag._id] },
+          'findOneAndUpdate',
+        );
+
+        const result = await flagPost(
+          mockAnswer._id.toString(),
+          'answer',
+          mockFlagReason,
+          mockFlaggedBy,
+        );
+
+        expect(result.toString()).toContain(mockAnswer._id.toString());
+      });
+
+      test('should create a flag for a comment and update the comment flags array', async () => {
+        const mockComment = {
+          _id: new mongoose.Types.ObjectId('507f191e810c19729de860ec'),
+          text: 'This is a comment',
+          commentBy: 'commentUser',
+          flags: [],
+        };
+
+        const mockFlag = {
+          _id: new mongoose.Types.ObjectId('507f191e810c19729de860ed'),
+          flaggedBy: mockFlaggedBy,
+          reason: mockFlagReason,
+          postText: mockComment.text,
+          flaggedUser: mockComment.commentBy,
+          status: 'pending',
+        };
+
+        mockingoose(CommentModel).toReturn(mockComment, 'findOne');
+        mockingoose(FlagModel).toReturn(mockFlag, 'save');
+        mockingoose(CommentModel).toReturn(
+          { ...mockComment, flags: [mockFlag._id] },
+          'findOneAndUpdate',
+        );
+
+        const result = await flagPost(
+          mockComment._id.toString(),
+          'comment',
+          mockFlagReason,
+          mockFlaggedBy,
+        );
+
+        expect(result.toString()).toContain(mockComment._id.toString());
+      });
+
       test('should return an error if the post is not found', async () => {
         mockingoose(QuestionModel).toReturn(null, 'findById');
 
@@ -1951,6 +2065,80 @@ describe('application module', () => {
         const result = await getFlaggedPosts();
 
         expect(result).toEqual({ questions: [], answers: [], comments: [] });
+      });
+
+      test('should return flagged answers with populated flags', async () => {
+        const mockFlag = {
+          _id: new mongoose.Types.ObjectId('507f191e810c19729de860ea'),
+          flaggedBy: 'testUser',
+          reason: 'spam',
+          status: 'pending',
+        };
+
+        const mockAnswer = {
+          _id: new mongoose.Types.ObjectId('507f191e810c19729de860eb'),
+          text: 'Test Answer',
+          ansBy: 'answerUser',
+          ansDateTime: new Date(),
+          flags: [mockFlag],
+        };
+
+        mockingoose(AnswerModel).toReturn([mockAnswer], 'find');
+        mockingoose(FlagModel).toReturn(mockFlag, 'find');
+
+        const result = await getFlaggedPosts();
+
+        expect(result.answers.length).toBe(1);
+        expect(result.answers[0]._id?.toString()).toEqual(mockAnswer._id.toString());
+      });
+
+      test('should return flagged comments with populated flags', async () => {
+        const mockFlag = {
+          _id: new mongoose.Types.ObjectId('507f191e810c19729de860ea'),
+          flaggedBy: 'testUser',
+          reason: 'offensive language',
+          status: 'pending',
+        };
+
+        const mockComment = {
+          _id: new mongoose.Types.ObjectId('507f191e810c19729de860ec'),
+          text: 'Test Comment',
+          commentBy: 'commentUser',
+          commentDateTime: new Date(),
+          flags: [mockFlag],
+        };
+
+        mockingoose(CommentModel).toReturn([mockComment], 'find');
+        mockingoose(FlagModel).toReturn(mockFlag, 'find');
+
+        const result = await getFlaggedPosts();
+
+        expect(result.comments.length).toBe(1);
+        expect(result.comments[0]._id?.toString()).toEqual(mockComment._id.toString());
+      });
+
+      test('should return empty arrays if no flagged posts exist', async () => {
+        mockingoose(AnswerModel).toReturn([], 'find');
+        mockingoose(CommentModel).toReturn([], 'find');
+        mockingoose(QuestionModel).toReturn([], 'find');
+
+        const result = await getFlaggedPosts();
+
+        expect(result.questions.length).toBe(0);
+        expect(result.answers.length).toBe(0);
+        expect(result.comments.length).toBe(0);
+      });
+
+      test('should return empty arrays if an error occurs', async () => {
+        mockingoose(AnswerModel).toReturn(new Error('Database error'), 'find');
+        mockingoose(CommentModel).toReturn(new Error('Database error'), 'find');
+        mockingoose(QuestionModel).toReturn(new Error('Database error'), 'find');
+
+        const result = await getFlaggedPosts();
+
+        expect(result.questions.length).toBe(0);
+        expect(result.answers.length).toBe(0);
+        expect(result.comments.length).toBe(0);
       });
     });
 
