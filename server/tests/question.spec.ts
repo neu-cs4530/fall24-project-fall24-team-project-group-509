@@ -496,4 +496,22 @@ describe('GET /getQuestionById/:qid', () => {
     expect(response.status).toBe(500);
     expect(response.text).toContain('Error when fetching question by id:');
   });
+
+  it('should return 500 with a generic error message if an unknown error occurs', async () => {
+    const mockQid = '65e9b58910afe6e94fc6e6dc';
+    const mockUsername = 'test_user';
+
+    // Mock `fetchAndIncrementQuestionViewsById` to throw a non-`Error` value
+    fetchAndIncrementQuestionViewsByIdSpy.mockImplementationOnce(() => {
+      throw 'Unexpected error'; // A string instead of an Error object
+    });
+
+    // Make the request
+    const response = await supertest(app).get(`/question/getQuestionById/${mockQid}`).query({
+      username: mockUsername,
+    });
+
+    // Assert the response
+    expect(response.status).toBe(500);
+  });
 });

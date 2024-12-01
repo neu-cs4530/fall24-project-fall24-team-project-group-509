@@ -569,3 +569,86 @@ describe('Get /notifications/:username', () => {
     expect(response.text).toBe('Username is required');
   });
 });
+
+describe('POST /validate', () => {
+  afterEach(async () => {
+    jest.resetAllMocks();
+  });
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+  });
+
+  it('should return 400 if username or password is missing', async () => {
+    const response = await supertest(app).post('/user/validate').send({ username: '' });
+
+    expect(response.status).toBe(400);
+    expect(response.text).toBe('Username and password are required');
+  });
+
+  it('should return 404 if the user does not exist', async () => {
+    jest.spyOn(util, 'getUserByUsername').mockResolvedValueOnce(null);
+
+    const response = await supertest(app)
+      .post('/user/validate')
+      .send({ username: 'nonexistentUser', password: 'password123' });
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ success: false, message: 'User not found' });
+  });
+
+  it('should return 401 if the password is incorrect', async () => {
+    const mockUser = { username: 'testuser', password: 'hashedpassword' };
+    jest.spyOn(util, 'getUserByUsername').mockResolvedValueOnce(mockUser);
+
+    const response = await supertest(app)
+      .post('/user/validate')
+      .send({ username: 'testuser', password: 'wrongpassword' });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ success: false, message: 'Invalid credentials' });
+  });
+
+  it('should return 200 if the username and password are valid', async () => {
+    const mockUser = { username: 'testuser', password: 'password123' };
+    jest.spyOn(util, 'getUserByUsername').mockResolvedValueOnce(mockUser);
+
+    const response = await supertest(app)
+      .post('/user/validate')
+      .send({ username: 'testuser', password: 'password123' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ success: true });
+  });
+
+  it('should return 500 if a server error occurs', async () => {
+    jest.spyOn(util, 'getUserByUsername').mockRejectedValueOnce(new Error('Database error'));
+
+    const response = await supertest(app)
+      .post('/user/validate')
+      .send({ username: 'testuser', password: 'password123' });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({
+      success: false,
+      message: 'Server error: Database error',
+    });
+  });
+
+  it('should return 500 if the user data is invalid', async () => {
+    const mockUser = { username: 'testuser' } as User;
+
+    jest.spyOn(util, 'getUserByUsername').mockResolvedValueOnce(mockUser);
+
+    const response = await supertest(app)
+      .post('/user/validate')
+      .send({ username: 'testuser', password: 'password123' });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({
+      success: false,
+      message: 'User data is invalid',
+    });
+    expect(util.getUserByUsername).toHaveBeenCalledWith('testuser', 'testuser');
+  });
+});

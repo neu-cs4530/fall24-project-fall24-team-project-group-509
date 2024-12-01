@@ -156,6 +156,44 @@ describe('Moderator Controller Tests', () => {
       expect(response.body).toEqual({ message: 'Post deleted successfully' });
       expect(deletePostSpy).toHaveBeenCalledWith('post123', 'question', 'mod1');
     });
+
+    it('should return 500 with an error message if deletePost fails', async () => {
+      // Mock unsuccessful deletion with a specific error message
+      deletePostSpy.mockResolvedValueOnce({
+        success: false,
+        message: 'Post could not be deleted due to dependency issues',
+      });
+
+      const response = await supertest(app).post('/moderator/deletePost').send({
+        id: 'post123',
+        type: 'question',
+        moderatorUsername: 'mod1',
+      });
+
+      expect(response.status).toBe(500);
+      expect(response.text).toContain('Post could not be deleted due to dependency issues');
+      expect(deletePostSpy).toHaveBeenCalledWith('post123', 'question', 'mod1');
+      expect(deletePostSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return 500 with a default error message if deletePost fails without a specific message', async () => {
+      // Mock unsuccessful deletion without a specific error message
+      deletePostSpy.mockResolvedValueOnce({
+        success: false,
+        message: undefined, // No specific message provided
+      });
+
+      const response = await supertest(app).post('/moderator/deletePost').send({
+        id: 'post123',
+        type: 'question',
+        moderatorUsername: 'mod1',
+      });
+
+      expect(response.status).toBe(500);
+      expect(response.text).toContain('Error when deleting post');
+      expect(deletePostSpy).toHaveBeenCalledWith('post123', 'question', 'mod1');
+      expect(deletePostSpy).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('POST /banUser', () => {
@@ -390,6 +428,44 @@ describe('Moderator Controller Tests', () => {
 
       expect(response.status).toBe(500);
       expect(response.text).toContain('Error when marking flag as reviewed: Database error');
+      expect(markFlagAsReviewedSpy).toHaveBeenCalledWith('flag123', 'mod1');
+      expect(markFlagAsReviewedSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return 500 with an error message if marking flag as reviewed fails', async () => {
+      // Mock failure response with a specific error message
+      markFlagAsReviewedSpy.mockResolvedValueOnce({
+        success: false,
+        message: 'Flag could not be marked as reviewed due to database constraints',
+      });
+
+      const response = await supertest(app).post('/moderator/reviewFlag').send({
+        flagId: 'flag123',
+        moderatorUsername: 'mod1',
+      });
+
+      expect(response.status).toBe(500);
+      expect(response.text).toContain(
+        'Flag could not be marked as reviewed due to database constraints',
+      );
+      expect(markFlagAsReviewedSpy).toHaveBeenCalledWith('flag123', 'mod1');
+      expect(markFlagAsReviewedSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return 500 with a default error message if marking flag as reviewed fails without a specific message', async () => {
+      // Mock failure response without a specific error message
+      markFlagAsReviewedSpy.mockResolvedValueOnce({
+        success: false,
+        message: undefined, // No specific message provided
+      });
+
+      const response = await supertest(app).post('/moderator/reviewFlag').send({
+        flagId: 'flag123',
+        moderatorUsername: 'mod1',
+      });
+
+      expect(response.status).toBe(500);
+      expect(response.text).toContain('Error when marking flag as reviewed');
       expect(markFlagAsReviewedSpy).toHaveBeenCalledWith('flag123', 'mod1');
       expect(markFlagAsReviewedSpy).toHaveBeenCalledTimes(1);
     });

@@ -146,10 +146,6 @@ const questionController = (socket: FakeSOSocket) => {
         .send('You are not allowed to post since you did not adhere to community guidelines');
       return;
     }
-    if (!question.tags || question.tags.length === 0) {
-      res.status(400).send('Invalid tags');
-      return;
-    }
     try {
       const { hasProfanity: textProfanity, censored: textCensored } = await checkProfanity(
         question.text,

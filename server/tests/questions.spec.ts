@@ -216,4 +216,24 @@ describe('GET /getQuestion', () => {
       'Error when fetching questions by filter: Error filtering questions by askedBy',
     );
   });
+
+  it('should return 500 with a generic error message if an unknown error occurs', async () => {
+    // Mock query parameters
+    const mockReqQuery = {
+      order: 'dummyOrder',
+      search: 'dummySearch',
+    };
+
+    // Mock `getQuestionsByOrder` to throw a non-Error value
+    getQuestionsByOrderSpy.mockImplementationOnce(() => {
+      throw 'Unexpected error'; // A string instead of an Error object
+    });
+
+    // Make the request
+    const response = await supertest(app).get('/question/getQuestion').query(mockReqQuery);
+
+    // Assert the response
+    expect(response.status).toBe(500);
+    expect(response.text).toBe('Error when fetching questions by filter');
+  });
 });
