@@ -147,11 +147,6 @@ const bookmarkController = (socket: FakeSOSocket) => {
     const { requesterUsername } = req.params;
     const sortOptionParam = req.query.sortOption as string;
 
-    if (!username || !requesterUsername) {
-      res.status(400).send('Invalid request: missing username or requesterUsername');
-      return;
-    }
-
     let sortOption: BookmarkSortOption | undefined;
     if (sortOptionParam) {
       const validSortOptions: BookmarkSortOption[] = [
@@ -171,10 +166,6 @@ const bookmarkController = (socket: FakeSOSocket) => {
 
     try {
       const collections = await getUserBookmarkCollections(username, requesterUsername, sortOption);
-      if ('error' in collections) {
-        throw new Error(collections.error as string);
-      }
-
       res.json(collections);
     } catch (err: unknown) {
       res.status(500).send(`Error when retrieving bookmark collections: ${(err as Error).message}`);
@@ -248,11 +239,6 @@ const bookmarkController = (socket: FakeSOSocket) => {
     res: Response,
   ): Promise<void> => {
     const { collectionId } = req.params;
-
-    if (!collectionId) {
-      res.status(400).send('Invalid request');
-      return;
-    }
 
     try {
       const collection = await getBookmarkCollectionById(collectionId);

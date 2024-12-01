@@ -1,7 +1,9 @@
 import mongoose from 'mongoose';
 import supertest from 'supertest';
+import { ObjectId } from 'mongodb';
 import * as util from '../models/application';
 import { app } from '../app';
+import { Question } from '../types';
 
 const MOCKPOSTID = '507f191e810c19729de860ea';
 
@@ -16,6 +18,39 @@ describe('Flag Controller Tests', () => {
   });
 
   describe('POST /flagPost', () => {
+    it('should return 200 and a success message when post flagging is successful', async () => {
+      const mockReqBody = {
+        id: MOCKPOSTID,
+        type: 'question',
+        reason: 'spam',
+        flaggedBy: 'user123',
+      };
+
+      // Mock a valid Question object
+      const mockQuestion: Question = {
+        _id: new ObjectId(MOCKPOSTID),
+        title: 'Mock Question Title',
+        text: 'Mock question text',
+        tags: [],
+        askedBy: 'user123',
+        askDateTime: new Date(),
+        answers: [],
+        views: [],
+        upVotes: [],
+        downVotes: [],
+        comments: [],
+      };
+
+      jest.spyOn(util, 'flagPost').mockResolvedValueOnce(mockQuestion);
+      jest.spyOn(util, 'removePostFromUserCollections').mockResolvedValueOnce(undefined);
+      jest.spyOn(util, 'removePostFromUserActivityHistory').mockResolvedValueOnce(undefined);
+
+      const response = await supertest(app).post('/flag/flagPost').send(mockReqBody);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ message: 'Post flagged successfully' });
+    });
+
     it('should return 400 if request body is missing `id`', async () => {
       const mockReqBody = {
         type: 'question',

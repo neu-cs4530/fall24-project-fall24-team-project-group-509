@@ -118,6 +118,41 @@ describe('Post /removeQuestionFromCollection', () => {
     // Asserting the response
     expect(response.status).toBe(400);
   });
+
+  it('should return the updated collection when a question is successfully removed', async () => {
+    const mockRequestBody = {
+      collectionId: '507f191e810c19729de860ea',
+      postId: '65e9b58910afe6e94fc6e6fe',
+    };
+
+    const mockUpdatedCollection = {
+      _id: new mongoose.Types.ObjectId('507f191e810c19729de860ea'),
+      title: 'My Bookmark Collection',
+      owner: 'user123',
+      isPublic: true,
+      followers: ['user456'],
+      savedPosts: [], // Assuming the post was removed
+    };
+
+    jest
+      .spyOn(util, 'removeQuestionFromBookmarkCollection')
+      .mockResolvedValueOnce(mockUpdatedCollection);
+
+    // Making the request
+    const response = await supertest(app)
+      .post('/bookmark/removeQuestionFromCollection')
+      .send(mockRequestBody);
+
+    // Convert the _id field to a string for comparison
+    const expectedResponse = {
+      ...mockUpdatedCollection,
+      _id: mockUpdatedCollection._id.toString(),
+    };
+
+    // Asserting the response
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(expectedResponse);
+  });
 });
 
 describe('Get /getUserCollections/:username/:requesterUsername', () => {
@@ -150,6 +185,43 @@ describe('Get /getUserCollections/:username/:requesterUsername', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual([]);
+  });
+
+  // Test for valid sortOption
+  it('should correctly parse and use sortOption', async () => {
+    jest.spyOn(util, 'getUserBookmarkCollections').mockResolvedValueOnce([]);
+
+    const response = await supertest(app)
+      .get('/bookmark/getUserCollections/user123/requester456')
+      .query({ sortOption: 'date' });
+
+    // Assert that the sortOption was accepted and the request processed successfully
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([]); // Assuming mocked data is an empty array
+  });
+
+  // Test for invalid sortOption
+  it('should return 400 if sortOption is invalid', async () => {
+    const response = await supertest(app)
+      .get('/bookmark/getUserCollections/user123/requester456')
+      .query({ sortOption: 'invalidOption' });
+
+    // Asserting the response
+    expect(response.status).toBe(400);
+    expect(response.text).toBe('Invalid sortOption');
+  });
+
+  // Test for unexpected errors
+  it('should return 500 if an unexpected error occurs', async () => {
+    jest.spyOn(util, 'getUserBookmarkCollections').mockImplementationOnce(() => {
+      throw new Error('Unexpected error');
+    });
+
+    const response = await supertest(app).get('/bookmark/getUserCollections/user123/requester456');
+
+    // Asserting the response
+    expect(response.status).toBe(500);
+    expect(response.text).toBe('Error when retrieving bookmark collections: Unexpected error');
   });
 });
 
@@ -280,6 +352,39 @@ describe('Post /unfollowCollection', () => {
 
     // Asserting the response
     expect(response.status).toBe(400);
+  });
+
+  it('should return the updated collection when successfully unfollowed', async () => {
+    const mockUnfollowCollectionReqBody = {
+      collectionId: '507f191e810c19729de860ea',
+      username: 'user123',
+    };
+
+    const mockUpdatedCollection = {
+      _id: new mongoose.Types.ObjectId('507f191e810c19729de860ea'), // Use ObjectId
+      title: 'My Bookmark Collection',
+      owner: 'user123',
+      isPublic: true,
+      followers: ['user456'], // Assuming one less follower after unfollow
+      savedPosts: [],
+    };
+
+    jest.spyOn(util, 'unfollowBookmarkCollection').mockResolvedValueOnce(mockUpdatedCollection);
+
+    // Making the request
+    const response = await supertest(app)
+      .post('/bookmark/unfollowCollection')
+      .send(mockUnfollowCollectionReqBody);
+
+    // Convert the _id field to a string for comparison
+    const expectedResponse = {
+      ...mockUpdatedCollection,
+      _id: mockUpdatedCollection._id.toString(),
+    };
+
+    // Asserting the response
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(expectedResponse);
   });
 });
 

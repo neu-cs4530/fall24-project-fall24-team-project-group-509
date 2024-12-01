@@ -140,6 +140,22 @@ describe('Moderator Controller Tests', () => {
       expect(response.text).toContain('Invalid request');
       expect(deletePostSpy).not.toHaveBeenCalled();
     });
+
+    it('should return 200 and success message if post is deleted successfully', async () => {
+      deletePostSpy.mockResolvedValueOnce({ success: true });
+      jest.spyOn(util, 'removePostFromAllCollections').mockResolvedValueOnce(undefined);
+      jest.spyOn(util, 'removePostFromActivityHistory').mockResolvedValueOnce(undefined);
+
+      const response = await supertest(app).post('/moderator/deletePost').send({
+        id: 'post123',
+        type: 'question',
+        moderatorUsername: 'mod1',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ message: 'Post deleted successfully' });
+      expect(deletePostSpy).toHaveBeenCalledWith('post123', 'question', 'mod1');
+    });
   });
 
   describe('POST /banUser', () => {

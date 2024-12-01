@@ -53,10 +53,6 @@ const moderatorController = (socket: FakeSOSocket) => {
       res.status(403).send('User is not authorized to perform this action');
       return;
     }
-    if (!fid) {
-      res.status(400).send('Invalid request');
-      return;
-    }
     try {
       const flag = await getFlag(fid);
       if ('error' in flag) {
