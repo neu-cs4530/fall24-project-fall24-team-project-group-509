@@ -772,7 +772,6 @@ export const addUserBio = async (username: string, bio: string): Promise<UserRes
   }
 };
 
-
 const CREDENTIALS_PATH = path.join('../googleCloudCredentials.json');
 const storage = new Storage({ keyFilename: CREDENTIALS_PATH }); // Google Cloud Storage client
 const bucket = storage.bucket('cs4530-509-userprofile-pictures'); // Google Cloud Storage bucket
@@ -1002,9 +1001,9 @@ export const getUserBookmarkCollections = async (
     let collections;
     if (username === requesterUsername) {
       // If the requester is the owner, retrieve all collections
-      collections = await BookmarkCollectionModel.find({ 
-        $or: [{owner: username}, { followers: requesterUsername }],
-       });
+      collections = await BookmarkCollectionModel.find({
+        $or: [{ owner: username }, { followers: requesterUsername }],
+      });
     } else {
       // If the requester is not the owner, retrieve public collections or private collections they are permitted to view
       collections = await BookmarkCollectionModel.find({
