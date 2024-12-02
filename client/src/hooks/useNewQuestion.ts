@@ -117,6 +117,10 @@ const useNewQuestion = () => {
       if (error instanceof AxiosError && error.response) {
         if (error.response.status === 400) {
           setErrorMessage('Profanity detected');
+        } else if (error.response.status === 403) {
+          setErrorMessage(
+            'You are not allowed to post since you did not adhere to community guidelines',
+          );
         } else {
           setErrorMessage('An error occurred while posting the question');
         }
