@@ -750,6 +750,18 @@ describe('application module', () => {
         expect(result).toEqual(mockQuestionID);
       });
 
+      it('should throw an error when the question containing the given answer ID is not found', async () => {
+        const mockAnswerID = '1234567890abcdef12345678';
+
+        // Mock the findOne operation to return null (no question found)
+        mockingoose(QuestionModel).toReturn(null, 'findOne');
+
+        // Attempt to call the function and expect an error to be thrown
+        await expect(findQuestionIDByAnswerID(mockAnswerID)).rejects.toThrow(
+          'Error when finding question ID by answer ID',
+        );
+      });
+
       test('should throw an error if the database query fails', async () => {
         const mockAnswerID = '507f191e810c19729de860ea';
 
@@ -1440,7 +1452,6 @@ describe('application module', () => {
         expect(result).toBe(false);
       });
     });
-
     describe('isUserShadowBanned', () => {
       test('isUserShadowBanned should return true if the user is shadow banned', async () => {
         const username = 'testUser';
@@ -1896,6 +1907,35 @@ describe('application module', () => {
           error: 'Error when retrieving bookmark collection: Bookmark collection not found',
         });
       });
+
+      it('should return the bookmark collection if found', async () => {
+        const mockCollectionId = new ObjectId('1234567890abcdef12345678');
+        const mockCollection = {
+          _id: mockCollectionId,
+          title: 'My Collection',
+          owner: 'user123',
+          isPublic: true,
+          followers: ['user456', 'user789'],
+          savedPosts: [
+            {
+              _id: new ObjectId('674cf8c01b29a0965f9064fc'),
+              savedAt: new Date('2024-12-02T00:01:04.086Z'),
+            },
+            {
+              _id: new ObjectId('674cf8c01b29a0965f9064fd'),
+              savedAt: new Date('2024-12-02T00:01:04.086Z'),
+            },
+          ],
+        };
+        // Mock the findOne operation to return the mock collection
+        mockingoose(BookmarkCollectionModel).toReturn(mockCollection, 'findOne');
+
+        // Call the function
+        const result = await getBookmarkCollectionById(mockCollectionId.toString());
+
+        // Assertions
+        expect(result).toMatchObject(mockCollection);
+      });
     });
   });
 
@@ -2053,6 +2093,84 @@ describe('application module', () => {
         const result = await flagPost('nonExistentId', 'question', 'other', 'testUser');
 
         expect(result).toEqual({ error: 'Error when flagging post: Post not found' });
+      });
+
+      it('should throw an error for invalid post type', async () => {
+        const invalidType = 'invalidType' as 'question' | 'answer' | 'comment';
+        const postId = '1234567890abcdef12345678';
+        const reason = 'spam'; // Assuming FlagReason is a string or enum
+        const flaggedBy = 'user123';
+
+        // Call the function with an invalid type
+        const result = await flagPost(postId, invalidType, reason, flaggedBy);
+
+        // Assertion
+        expect(result).toEqual({
+          error: 'Error when flagging post: Invalid type specified',
+        });
+      });
+
+      it('should throw an error if the post is not found', async () => {
+        const validType = 'question'; // Valid post type
+        const postId = 'nonexistent1234567890abcdef'; // Non-existent post ID
+        const reason = 'spam'; // Assuming FlagReason is a string or enum
+        const flaggedBy = 'user123';
+
+        // Mock the findById to return null (post not found)
+        mockingoose(QuestionModel).toReturn(null, 'findOne');
+
+        // Call the function with a non-existent post ID
+        const result = await flagPost(postId, validType, reason, flaggedBy);
+
+        // Assertion
+        expect(result).toEqual({
+          error: 'Error when flagging post: Post not found',
+        });
+      });
+
+      it('should throw an error if the post update fails', async () => {
+        const validType = 'question'; // Strict typing for post type
+        const postId = '1234567890abcdef12345678'; // Valid post ID
+        const reason = 'spam'; // Strict typing for reason
+        const flaggedBy = 'user123';
+
+        // Mock findById to return a valid post
+        mockingoose(QuestionModel).toReturn(
+          {
+            _id: postId,
+            text: 'Sample question text',
+            askedBy: 'user456',
+            flags: [],
+          },
+          'findOne',
+        );
+
+        // Mock save for the flag
+        mockingoose(FlagModel).toReturn(
+          {
+            _id: 'flag123',
+            flaggedBy,
+            reason,
+            dateFlagged: new Date(),
+            status: 'pending',
+            postId,
+            postType: validType,
+            postText: 'Sample question text',
+            flaggedUser: 'user456',
+          },
+          'save',
+        );
+
+        // Mock findOneAndUpdate to return null (simulate post update failure)
+        mockingoose(QuestionModel).toReturn(null, 'findOneAndUpdate');
+
+        // Call the function and assert the result
+        const result = await flagPost(postId, validType, reason, flaggedBy);
+
+        // Assertion
+        expect(result).toEqual({
+          error: 'Error when flagging post: Post not found',
+        });
       });
     });
 
@@ -2226,6 +2344,56 @@ describe('application module', () => {
 
         const result = await deletePost(commentId, 'comment', moderatorUsername);
 
+        expect(result).toEqual({ success: true });
+      });
+
+      test('should return an error message if an exception occurs', async () => {
+        const mockErrorMessage = 'Database error';
+        jest.spyOn(QuestionModel, 'findById').mockRejectedValueOnce(new Error(mockErrorMessage));
+
+        const result = await deletePost('507f191e810c19729de860ea', 'question', 'mod1');
+
+        expect(result).toEqual({ success: false, message: mockErrorMessage });
+      });
+
+      it('should delete all comments associated with an answer and the answer itself', async () => {
+        const answerId = '1234567890abcdef12345678';
+        const questionId = 'abcdef123456789012345678';
+
+        mockingoose(AnswerModel).toReturn(
+          { _id: answerId, comments: ['comment1', 'comment2'] },
+          'findOne',
+        );
+        mockingoose(CommentModel).toReturn([{ _id: 'comment1' }, { _id: 'comment2' }], 'find');
+        mockingoose(QuestionModel).toReturn({ _id: questionId, answers: [answerId] }, 'findOne');
+
+        const result = await deletePost(answerId, 'answer', 'mod1');
+        expect(result).toEqual({ success: true });
+      });
+
+      it('should delete all answers and comments associated with a question and the question itself', async () => {
+        const questionId = '1234567890abcdef12345678';
+        const answerIds = ['answer1', 'answer2'];
+        const commentIds = ['comment1', 'comment2'];
+
+        // Mock the data returned by findById for the question
+        mockingoose(QuestionModel).toReturn(
+          { _id: questionId, answers: answerIds, comments: commentIds },
+          'findOne',
+        );
+
+        // Mock the deletion operations for answers, comments, and the question
+        mockingoose(AnswerModel).toReturn(null, 'deleteMany');
+        mockingoose(CommentModel).toReturn(null, 'deleteMany');
+        mockingoose(QuestionModel).toReturn(null, 'deleteOne');
+
+        // Mock the update operation for BookmarkCollectionModel
+        mockingoose(BookmarkCollectionModel).toReturn(null, 'updateMany');
+
+        // Call the deletePost function
+        const result = await deletePost(questionId, 'question', 'mod1');
+
+        // Assertions
         expect(result).toEqual({ success: true });
       });
     });
