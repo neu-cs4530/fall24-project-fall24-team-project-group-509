@@ -1,4 +1,4 @@
-# Mind Sync Overview
+# MindSync Overview
 MindSync is a platform focused on providing personalization and safety for users through 3 main features: user profiles, bookmarking, and content moderation.
 
 The tech stack includes the following:
