@@ -143,12 +143,12 @@ const CommentSection = ({
           <div className='add-comment'>
             <div className='input-row'>
               <textarea
-                placeholder='Comment'
+                placeholder='Write your comment here'
                 value={text}
                 onChange={e => setText(e.target.value)}
                 className='comment-textarea'
               />
-              <button className='ansButton' onClick={handleAddCommentClick}>
+              <button className='bluebtn ansButton' onClick={handleAddCommentClick}>
                 Add Comment
               </button>
             </div>
